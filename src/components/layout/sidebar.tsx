@@ -142,7 +142,7 @@ export default function Sidebar({ role, userName, userEmail }: SidebarProps) {
         <Link href={`/${role}`} className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0 bg-white/5">
             <Image
-              src="/cjc-logo.jpg"
+              src="/images/logos/cjc-logo.jpg"
               alt="CJC Logo"
               width={36}
               height={36}

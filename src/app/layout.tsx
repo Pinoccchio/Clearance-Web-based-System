@@ -24,6 +24,10 @@ export const metadata: Metadata = {
   title: "CJC Clearance System | Cor Jesu College",
   description: "Official Student Clearance Management System for Cor Jesu College - College of Computing and Information Sciences",
   keywords: ["CJC", "Cor Jesu College", "Clearance", "CCIS", "Student Portal"],
+  icons: {
+    icon: "/images/logos/cjc-logo.jpg",
+    apple: "/images/logos/cjc-logo.jpg",
+  },
 };
 
 export default function RootLayout({

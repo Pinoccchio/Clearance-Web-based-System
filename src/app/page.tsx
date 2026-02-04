@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef, RefObject } from "react";
 import Image from "next/image";
 import {
   CheckCircle2,
@@ -8,8 +8,60 @@ import {
 } from "lucide-react";
 import { AuthModal } from "@/components/features/auth-modal";
 
+// Hook to detect when element enters viewport
+function useInView(ref: RefObject<HTMLElement | null>, threshold = 0.1) {
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setInView(true);
+      },
+      { threshold }
+    );
+    if (ref.current) observer.observe(ref.current);
+    return () => observer.disconnect();
+  }, [ref, threshold]);
+  return inView;
+}
+
+// Animated counter component
+function AnimatedCounter({ value, inView }: { value: number; inView: boolean }) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!inView) return;
+    let startTime: number | null = null;
+    const duration = 1000;
+    const animate = (timestamp: number) => {
+      if (!startTime) startTime = timestamp;
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      setCount(Math.floor(progress * value));
+      if (progress < 1) requestAnimationFrame(animate);
+    };
+    requestAnimationFrame(animate);
+  }, [inView, value]);
+  return <span>{count}</span>;
+}
+
 export default function LandingPage() {
   const [authModal, setAuthModal] = useState<"login" | "register" | null>(null);
+
+  // Refs for scroll animations
+  const heroRef = useRef<HTMLElement>(null);
+  const statsRef = useRef<HTMLDivElement>(null);
+  const featuresRef = useRef<HTMLElement>(null);
+  const navyBlockRef = useRef<HTMLDivElement>(null);
+  const cardsRef = useRef<HTMLDivElement>(null);
+  const timelineRef = useRef<HTMLElement>(null);
+  const ctaRef = useRef<HTMLElement>(null);
+
+  // In-view states
+  const heroInView = useInView(heroRef, 0.1);
+  const statsInView = useInView(statsRef, 0.3);
+  const featuresInView = useInView(featuresRef, 0.1);
+  const navyBlockInView = useInView(navyBlockRef, 0.2);
+  const cardsInView = useInView(cardsRef, 0.2);
+  const timelineInView = useInView(timelineRef, 0.1);
+  const ctaInView = useInView(ctaRef, 0.2);
 
   return (
     <>
@@ -23,7 +75,7 @@ export default function LandingPage() {
                 <div className="flex items-center gap-2">
                   <div className="w-10 h-10 rounded-full overflow-hidden border border-border-warm">
                     <Image
-                      src="/cjc-logo.jpg"
+                      src="/images/logos/cjc-logo.jpg"
                       alt="CJC Logo"
                       width={40}
                       height={40}
@@ -32,7 +84,7 @@ export default function LandingPage() {
                   </div>
                   <div className="w-10 h-10 rounded-full overflow-hidden border border-border-warm">
                     <Image
-                      src="/ccis-logo.jpeg"
+                      src="/images/logos/ccis-logo.jpeg"
                       alt="CCIS Logo"
                       width={40}
                       height={40}
@@ -72,11 +124,11 @@ export default function LandingPage() {
         </header>
 
         {/* Hero Section - Editorial Typography */}
-        <section className="bg-white">
+        <section ref={heroRef} className="bg-white hero-pattern">
           <div className="max-w-6xl mx-auto px-6 py-20 lg:py-28">
             <div className="grid lg:grid-cols-5 gap-12 items-center">
               {/* Text Content - 60% */}
-              <div className="lg:col-span-3">
+              <div className={`lg:col-span-3 animate-fade-up ${heroInView ? 'in-view' : ''}`}>
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-surface-cream border border-border-warm text-sm text-warm-muted mb-8">
                   <span className="w-2 h-2 rounded-full bg-cjc-crimson"></span>
                   Academic Year 2024-2025
@@ -115,17 +167,23 @@ export default function LandingPage() {
                 </div>
 
                 {/* Stats Bar with Gold Accent */}
-                <div className="flex flex-wrap gap-10 pt-8 border-t border-border-warm">
+                <div ref={statsRef} className={`flex flex-wrap gap-10 pt-8 border-t border-border-warm animate-stagger ${statsInView ? 'in-view' : ''}`}>
                   <div>
-                    <p className="text-4xl font-bold text-cjc-gold font-display">6</p>
+                    <p className="text-4xl font-bold text-cjc-gold font-display">
+                      <AnimatedCounter value={6} inView={statsInView} />
+                    </p>
                     <p className="text-sm text-warm-muted mt-1">Departments</p>
                   </div>
                   <div>
-                    <p className="text-4xl font-bold text-cjc-gold font-display">1</p>
+                    <p className="text-4xl font-bold text-cjc-gold font-display">
+                      <AnimatedCounter value={1} inView={statsInView} />
+                    </p>
                     <p className="text-sm text-warm-muted mt-1">Portal</p>
                   </div>
                   <div>
-                    <p className="text-4xl font-bold text-cjc-gold font-display">0</p>
+                    <p className="text-4xl font-bold text-cjc-gold font-display">
+                      <AnimatedCounter value={0} inView={statsInView} />
+                    </p>
                     <p className="text-sm text-warm-muted mt-1">Paper Forms</p>
                   </div>
                 </div>
@@ -191,9 +249,9 @@ export default function LandingPage() {
         </section>
 
         {/* Features Section - Editorial Blocks */}
-        <section className="py-20 lg:py-28">
+        <section ref={featuresRef} className="py-20 lg:py-28">
           <div className="max-w-6xl mx-auto px-6">
-            <div className="mb-16">
+            <div className={`mb-16 animate-fade-up ${featuresInView ? 'in-view' : ''}`}>
               <p className="text-sm font-semibold text-cjc-crimson uppercase tracking-wider mb-3">
                 The CCIS Advantage
               </p>
@@ -203,7 +261,7 @@ export default function LandingPage() {
             </div>
 
             {/* Block A - Full Width Navy (CCIS Blue) */}
-            <div className="bg-cjc-navy text-white rounded-none sm:rounded p-8 lg:p-12 mb-6">
+            <div ref={navyBlockRef} className={`navy-gradient text-white rounded-none sm:rounded p-8 lg:p-12 mb-6 animate-fade-up ${navyBlockInView ? 'in-view' : ''}`}>
               <div className="grid lg:grid-cols-2 gap-8 items-center">
                 <div>
                   <h3 className="text-2xl lg:text-3xl font-display font-bold mb-4">
@@ -215,12 +273,12 @@ export default function LandingPage() {
                     from a single, unified dashboard.
                   </p>
                 </div>
-                <div className="grid grid-cols-2 gap-3">
+                <div className={`grid grid-cols-2 gap-3 animate-stagger ${navyBlockInView ? 'in-view' : ''}`}>
                   {["Library", "Registrar", "Finance", "Dean's Office", "Student Affairs", "Guidance"].map(
                     (dept, i) => (
                       <div
                         key={dept}
-                        className="flex items-center gap-2 py-3 px-4 rounded-lg bg-white/10"
+                        className="flex items-center gap-2 py-3 px-4 rounded-lg bg-white/10 card-hover-lift"
                       >
                         <CheckCircle2 className={`w-4 h-4 ${i < 3 ? "text-cjc-gold" : "text-cjc-crimson-light"}`} />
                         <span className="text-sm text-white/90">{dept}</span>
@@ -232,9 +290,9 @@ export default function LandingPage() {
             </div>
 
             {/* Block B - Two Columns */}
-            <div className="grid md:grid-cols-2 gap-6">
+            <div ref={cardsRef} className={`grid md:grid-cols-2 gap-6 animate-stagger ${cardsInView ? 'in-view' : ''}`}>
               {/* Role-Based Access */}
-              <div className="bg-white rounded-lg p-6 shadow-sm">
+              <div className="bg-white rounded-lg p-6 shadow-sm card-hover-lift">
                 <h3 className="text-lg font-display font-bold text-cjc-navy mb-2">
                   Role-Based Access
                 </h3>
@@ -254,7 +312,7 @@ export default function LandingPage() {
               </div>
 
               {/* Digital Documents */}
-              <div className="bg-white rounded-lg p-6 shadow-sm">
+              <div className="bg-white rounded-lg p-6 shadow-sm card-hover-lift">
                 <h3 className="text-lg font-display font-bold text-cjc-navy mb-2">
                   Digital Documents
                 </h3>
@@ -277,9 +335,9 @@ export default function LandingPage() {
         </section>
 
         {/* How It Works - Vertical Timeline */}
-        <section className="bg-surface-warm py-20 lg:py-28">
+        <section ref={timelineRef} className="bg-surface-warm py-20 lg:py-28">
           <div className="max-w-4xl mx-auto px-6">
-            <div className="text-center mb-16">
+            <div className={`text-center mb-16 animate-fade-up ${timelineInView ? 'in-view' : ''}`}>
               <h2 className="font-display text-3xl sm:text-4xl font-bold text-cjc-navy">
                 Four Steps to Freedom
               </h2>
@@ -307,10 +365,14 @@ export default function LandingPage() {
                   title: "Get Cleared",
                   desc: "Once all departments approve, receive your official clearance. Download or print your certificate.",
                 },
-              ].map((item) => (
-                <div key={item.step} className="timeline-step">
+              ].map((item, index) => (
+                <div
+                  key={item.step}
+                  className={`timeline-step timeline-step-animate ${timelineInView ? 'in-view' : ''}`}
+                  style={{ transitionDelay: `${index * 150}ms` }}
+                >
                   <div className="timeline-number">{item.step}</div>
-                  <div className="bg-white rounded p-6 shadow-sm border border-border-warm">
+                  <div className="bg-white rounded p-6 shadow-sm border border-border-warm card-hover-lift">
                     <h3 className="font-display font-bold text-cjc-navy text-lg mb-2">
                       {item.title}
                     </h3>
@@ -323,8 +385,8 @@ export default function LandingPage() {
         </section>
 
         {/* CTA Section - BOLD Crimson Background */}
-        <section className="bg-cjc-crimson py-20 lg:py-28 texture-grain">
-          <div className="max-w-4xl mx-auto px-6 text-center">
+        <section ref={ctaRef} className="bg-cjc-crimson py-20 lg:py-28 texture-grain">
+          <div className={`max-w-4xl mx-auto px-6 text-center animate-fade-up ${ctaInView ? 'in-view' : ''}`}>
             <h2 className="headline-editorial text-white mb-4">
               <span className="block text-4xl sm:text-5xl lg:text-6xl">START YOUR</span>
               <span className="block text-4xl sm:text-5xl lg:text-6xl">CLEARANCE</span>
@@ -366,7 +428,7 @@ export default function LandingPage() {
                   <div className="flex items-center gap-2">
                     <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20">
                       <Image
-                        src="/cjc-logo.jpg"
+                        src="/images/logos/cjc-logo.jpg"
                         alt="CJC Logo"
                         width={48}
                         height={48}
@@ -375,7 +437,7 @@ export default function LandingPage() {
                     </div>
                     <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20">
                       <Image
-                        src="/ccis-logo.jpeg"
+                        src="/images/logos/ccis-logo.jpeg"
                         alt="CCIS Logo"
                         width={48}
                         height={48}

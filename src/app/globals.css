@@ -730,3 +730,124 @@ body {
   transform: translateY(-2px);
   box-shadow: var(--shadow-md);
 }
+
+/* ============================================
+   SCROLL ANIMATIONS - Premium Feel
+   ============================================ */
+
+/* Base fade-up animation (initially hidden) */
+.animate-fade-up {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.6s ease, transform 0.6s ease;
+}
+
+.animate-fade-up.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Staggered children animations */
+.animate-stagger > * {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.animate-stagger.in-view > *:nth-child(1) { opacity: 1; transform: translateY(0); transition-delay: 0ms; }
+.animate-stagger.in-view > *:nth-child(2) { opacity: 1; transform: translateY(0); transition-delay: 100ms; }
+.animate-stagger.in-view > *:nth-child(3) { opacity: 1; transform: translateY(0); transition-delay: 200ms; }
+.animate-stagger.in-view > *:nth-child(4) { opacity: 1; transform: translateY(0); transition-delay: 300ms; }
+.animate-stagger.in-view > *:nth-child(5) { opacity: 1; transform: translateY(0); transition-delay: 400ms; }
+.animate-stagger.in-view > *:nth-child(6) { opacity: 1; transform: translateY(0); transition-delay: 500ms; }
+
+/* Enhanced card hover lift - more dramatic */
+.card-hover-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* Timeline step animations */
+.timeline-step-animate {
+  opacity: 0;
+  transform: translateX(-20px);
+  transition: opacity 0.5s ease, transform 0.5s ease;
+}
+
+.timeline-step-animate.in-view {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@media (min-width: 768px) {
+  .timeline-step-animate:nth-child(even) {
+    transform: translateX(20px);
+  }
+
+  .timeline-step-animate.in-view:nth-child(even) {
+    transform: translateX(0);
+  }
+}
+
+/* Navy block gradient overlay */
+.navy-gradient {
+  background: linear-gradient(135deg, var(--cjc-navy) 0%, var(--cjc-navy-light) 100%);
+}
+
+/* Subtle dot pattern for hero */
+.hero-pattern {
+  position: relative;
+}
+
+.hero-pattern::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, var(--cjc-navy) 1px, transparent 1px);
+  background-size: 24px 24px;
+  opacity: 0.03;
+  pointer-events: none;
+}
+
+/* Button hover enhancement */
+.btn-crimson {
+  transition: all 0.2s ease;
+}
+
+.btn-crimson:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(169, 30, 44, 0.3);
+}
+
+.btn-gold {
+  transition: all 0.2s ease;
+}
+
+.btn-gold:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(212, 164, 24, 0.4);
+}
+
+.btn-secondary:hover {
+  transform: translateY(-1px);
+}
+
+/* Stat number animation keyframes */
+@keyframes countUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stat-animate {
+  animation: countUp 0.6s ease forwards;
+}
