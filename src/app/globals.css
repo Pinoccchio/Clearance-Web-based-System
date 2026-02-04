@@ -1,26 +1,543 @@
 @import "tailwindcss";
 
+/* Google Fonts - loaded in layout.tsx */
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Primary Colors (From CCIS Logo) */
+  --cjc-navy: #0f2744;
+  --cjc-navy-light: #1a3a5c;
+  --cjc-blue: #2563eb;
+  --cjc-blue-soft: #3b82f6;
+  --cjc-sky: #7dd3fc;
+
+  /* Accent Colors (From CJC Logo) */
+  --cjc-gold: #d4a418;
+  --cjc-gold-light: #fbbf24;
+  --cjc-crimson: #a91e2c;
+  --cjc-crimson-dark: #7f1d1d;
+
+  /* Semantic Colors */
+  --success: #059669;
+  --success-light: #10b981;
+  --warning: #d97706;
+  --warning-light: #f59e0b;
+  --danger: #dc2626;
+  --danger-light: #ef4444;
+  --pending: #6366f1;
+  --pending-light: #818cf8;
+
+  /* Surface Colors - Clean & Solid */
+  --surface-primary: #ffffff;
+  --surface-secondary: #fafafa;
+  --surface-tertiary: #f5f5f5;
+  --surface-dark: #0f172a;
+  --border-light: #e5e5e5;
+  --border-medium: #d4d4d4;
+
+  /* Typography Scale */
+  --text-hero: 3.5rem;
+  --text-h1: 2.25rem;
+  --text-h2: 1.5rem;
+  --text-h3: 1.25rem;
+  --text-body: 1rem;
+  --text-small: 0.875rem;
+  --text-xs: 0.75rem;
+
+  /* Shadows - Subtle & Professional */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.08);
+
+  /* Spacing Scale */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+
+  /* Border Radius */
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-cjc-navy: var(--cjc-navy);
+  --color-cjc-navy-light: var(--cjc-navy-light);
+  --color-cjc-blue: var(--cjc-blue);
+  --color-cjc-blue-soft: var(--cjc-blue-soft);
+  --color-cjc-sky: var(--cjc-sky);
+  --color-cjc-gold: var(--cjc-gold);
+  --color-cjc-gold-light: var(--cjc-gold-light);
+  --color-cjc-crimson: var(--cjc-crimson);
+  --color-cjc-crimson-dark: var(--cjc-crimson-dark);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-pending: var(--pending);
+  --font-display: var(--font-playfair);
+  --font-body: var(--font-dm-sans);
+  --font-mono: var(--font-jetbrains);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* Base Styles */
+body {
+  font-family: var(--font-body), system-ui, sans-serif;
+  background: var(--surface-secondary);
+  color: var(--cjc-navy);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Typography Classes */
+.font-display {
+  font-family: var(--font-display), Georgia, serif;
+}
+
+.font-body {
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+.font-mono {
+  font-family: var(--font-mono), monospace;
+}
+
+/* ============================================
+   SURFACE & CARD STYLES - Clean, Solid
+   ============================================ */
+
+/* Base Card - Simple border, no effects */
+.card {
+  background: var(--surface-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+}
+
+/* Card with left accent */
+.card-accent {
+  background: var(--surface-primary);
+  border: 1px solid var(--border-light);
+  border-left: 3px solid var(--cjc-gold);
+  border-radius: var(--radius-lg);
+}
+
+/* Elevated card - subtle shadow */
+.card-elevated {
+  background: var(--surface-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* Interactive card - subtle hover */
+.card-interactive {
+  background: var(--surface-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.card-interactive:hover {
+  border-color: var(--border-medium);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ============================================
+   BUTTON STYLES - Flat, Professional
+   ============================================ */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--radius-md);
+  font-weight: 500;
+  font-size: 0.875rem;
+  transition: all 150ms ease;
+  cursor: pointer;
+}
+
+.btn-primary {
+  background: var(--cjc-blue);
+  color: white;
+  border: none;
+}
+
+.btn-primary:hover {
+  background: var(--cjc-blue-soft);
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: var(--surface-primary);
+  color: var(--cjc-navy);
+  border: 1px solid var(--border-medium);
+}
+
+.btn-secondary:hover {
+  background: var(--surface-tertiary);
+  border-color: var(--cjc-navy);
+}
+
+.btn-gold {
+  background: var(--cjc-gold);
+  color: var(--cjc-navy);
+  border: none;
+  font-weight: 600;
+}
+
+.btn-gold:hover {
+  background: var(--cjc-gold-light);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--cjc-navy);
+  border: none;
+}
+
+.btn-ghost:hover {
+  background: var(--surface-tertiary);
+}
+
+/* ============================================
+   STATUS BADGES - Simple & Clear
+   ============================================ */
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.625rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.badge-pending {
+  background: #eef2ff;
+  color: var(--pending);
+}
+
+.badge-approved {
+  background: #ecfdf5;
+  color: var(--success);
+}
+
+.badge-rejected {
+  background: #fef2f2;
+  color: var(--danger);
+}
+
+.badge-on-hold {
+  background: #fffbeb;
+  color: var(--warning);
+}
+
+.badge-info {
+  background: #eff6ff;
+  color: var(--cjc-blue);
+}
+
+.badge-neutral {
+  background: var(--surface-tertiary);
+  color: #525252;
+}
+
+/* ============================================
+   FORM ELEMENTS - Clean & Accessible
+   ============================================ */
+
+.input-base {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  font-size: 1rem;
+  background: var(--surface-primary);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.input-base:focus {
+  outline: none;
+  border-color: var(--cjc-blue);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.input-base::placeholder {
+  color: #a3a3a3;
+}
+
+.input-base:disabled {
+  background: var(--surface-tertiary);
+  cursor: not-allowed;
+}
+
+/* ============================================
+   SIDEBAR STYLES - Clean Hierarchy
+   ============================================ */
+
+.sidebar {
+  background: var(--surface-dark);
+  color: white;
+}
+
+.sidebar-section-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: rgba(255, 255, 255, 0.4);
+  padding: 0 0.75rem;
+  margin-bottom: 0.5rem;
+}
+
+.sidebar-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 0.75rem;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  color: rgba(255, 255, 255, 0.7);
+  transition: all 150ms ease;
+}
+
+.sidebar-nav-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: white;
+}
+
+.sidebar-nav-item.active {
+  background: rgba(255, 255, 255, 0.12);
+  color: white;
+}
+
+.sidebar-nav-item.active .nav-icon {
+  color: var(--cjc-gold);
+}
+
+/* ============================================
+   BENTO GRID - Modern Layout System
+   ============================================ */
+
+.bento-grid {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .bento-grid {
+    grid-template-columns: repeat(4, 1fr);
+    grid-template-rows: auto;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+.bento-card {
+  background: var(--surface-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-xl);
+  padding: 1.5rem;
+}
+
+.bento-card-featured {
+  background: var(--cjc-navy);
+  color: white;
+  border: none;
+}
+
+.bento-span-2 {
+  grid-column: span 2;
+}
+
+.bento-span-2-row {
+  grid-row: span 2;
+}
+
+/* ============================================
+   MODAL STYLES
+   ============================================ */
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  z-index: 50;
+}
+
+.modal-content {
+  background: var(--surface-primary);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  max-width: 28rem;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* ============================================
+   ANIMATIONS - Minimal & Purposeful
+   ============================================ */
+
+/* Only for modal/dropdown entry */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-slide-in {
+  animation: slideIn 200ms ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 150ms ease-out;
+}
+
+/* Spinner for loading states */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* ============================================
+   UTILITY CLASSES
+   ============================================ */
+
+/* Transitions */
+.transition-base {
+  transition: all 150ms ease;
+}
+
+/* Focus ring */
+.focus-ring:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--surface-primary), 0 0 0 4px var(--cjc-blue);
+}
+
+/* Text colors */
+.text-muted {
+  color: #737373;
+}
+
+.text-subtle {
+  color: #a3a3a3;
+}
+
+/* Divider */
+.divider {
+  height: 1px;
+  background: var(--border-light);
+}
+
+/* ============================================
+   SCROLLBAR - Minimal
+   ============================================ */
+
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d4d4d4;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a3a3a3;
+}
+
+/* ============================================
+   SELECTION
+   ============================================ */
+
+::selection {
+  background: rgba(37, 99, 235, 0.2);
+  color: var(--cjc-navy);
+}
+
+/* ============================================
+   PROGRESS BAR
+   ============================================ */
+
+.progress-bar {
+  height: 6px;
+  background: var(--surface-tertiary);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: var(--cjc-gold);
+  border-radius: 3px;
+  transition: width 300ms ease;
+}
+
+/* ============================================
+   TAB STYLES - For Auth Modal
+   ============================================ */
+
+.tab-list {
+  display: flex;
+  gap: 1.5rem;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.tab-trigger {
+  padding: 0.75rem 0;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--cjc-navy);
+  opacity: 0.5;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: all 150ms ease;
+  background: none;
+  cursor: pointer;
+}
+
+.tab-trigger:hover {
+  opacity: 0.8;
+}
+
+.tab-trigger.active {
+  opacity: 1;
+  border-bottom-color: var(--cjc-navy);
 }
