@@ -10,15 +10,16 @@ import {
   LogIn,
   UserPlus,
   GraduationCap,
-  UserCheck,
   Building2,
   Shield,
   Crown,
   ChevronDown,
+  BookOpen,
+  Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type UserRole = "student" | "department" | "organization" | "dean" | "admin";
+type UserRole = "student" | "office" | "academic-club" | "non-academic-club" | "admin";
 type AuthMode = "login" | "register";
 
 interface AuthModalProps {
@@ -35,17 +36,20 @@ interface RoleOption {
 
 const roleOptions: RoleOption[] = [
   { id: "student", label: "Student", icon: <GraduationCap className="w-4 h-4" /> },
-  { id: "department", label: "Department", icon: <Building2 className="w-4 h-4" /> },
-  { id: "organization", label: "Organization", icon: <UserCheck className="w-4 h-4" /> },
-  { id: "dean", label: "Dean", icon: <Crown className="w-4 h-4" /> },
+  { id: "office", label: "Office", icon: <Building2 className="w-4 h-4" /> },
+  { id: "academic-club", label: "Academic Club", icon: <BookOpen className="w-4 h-4" /> },
+  { id: "non-academic-club", label: "Non-Academic Club", icon: <Users className="w-4 h-4" /> },
   { id: "admin", label: "Admin", icon: <Shield className="w-4 h-4" /> },
+];
+
+const departments = [
+  { value: "ccis", label: "College of Computing and Information Sciences (CCIS)" },
 ];
 
 const courses = [
   "Bachelor of Science in Information Technology",
   "Bachelor of Science in Computer Science",
   "Bachelor of Science in Information Systems",
-  "Bachelor of Science in Data Science",
 ];
 
 const yearLevels = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
@@ -260,6 +264,7 @@ function RegisterForm({
     lastName: "",
     middleName: "",
     email: "",
+    department: "",
     course: "",
     yearLevel: "",
     password: "",
@@ -290,6 +295,7 @@ function RegisterForm({
     formData.studentId && formData.firstName && formData.lastName && formData.email;
 
   const isStep2Valid =
+    formData.department &&
     formData.course &&
     formData.yearLevel &&
     formData.password &&
@@ -428,6 +434,30 @@ function RegisterForm({
 
         {step === 2 && (
           <>
+            {/* Department */}
+            <div>
+              <label htmlFor="department" className="block text-sm font-medium text-cjc-navy mb-1.5">
+                Department
+              </label>
+              <div className="relative">
+                <select
+                  id="department"
+                  name="department"
+                  value={formData.department}
+                  onChange={handleInputChange}
+                  className="input-base appearance-none pr-10"
+                >
+                  <option value="">Select your department</option>
+                  {departments.map((dept) => (
+                    <option key={dept.value} value={dept.value}>
+                      {dept.label}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+              </div>
+            </div>
+
             {/* Course */}
             <div>
               <label htmlFor="course" className="block text-sm font-medium text-cjc-navy mb-1.5">

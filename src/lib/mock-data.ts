@@ -1,7 +1,9 @@
 import {
   User,
   Department,
-  Organization,
+  Office,
+  AcademicOrganization,
+  NonAcademicOrganization,
   ClearanceRequest,
   Announcement,
   Notification,
@@ -21,32 +23,32 @@ export const mockUsers: Record<string, User> = {
     course: "Bachelor of Science in Information Technology",
     yearLevel: "4th Year",
   },
-  department: {
+  office: {
     id: "usr_002",
     email: "maria.santos@cjc.edu.ph",
     firstName: "Maria",
     lastName: "Santos",
-    role: "department",
+    role: "office",
     department: "Library",
     position: "Library Staff",
   },
-  organization: {
+  "academic-club": {
     id: "usr_003",
     email: "jose.reyes@cjc.edu.ph",
     firstName: "Jose",
     lastName: "Reyes",
-    role: "organization",
-    department: "CCIS Student Council",
+    role: "academic-club",
+    department: "IT Society",
     position: "President",
   },
-  dean: {
-    id: "usr_004",
-    email: "ana.garcia@cjc.edu.ph",
-    firstName: "Ana",
-    lastName: "Garcia",
-    role: "dean",
-    department: "CCIS",
-    position: "Dean",
+  "non-academic-club": {
+    id: "usr_006",
+    email: "anna.cruz@cjc.edu.ph",
+    firstName: "Anna",
+    lastName: "Cruz",
+    role: "non-academic-club",
+    department: "Supreme Student Council",
+    position: "Secretary",
   },
   admin: {
     id: "usr_005",
@@ -58,57 +60,121 @@ export const mockUsers: Record<string, User> = {
   },
 };
 
+// Departments (Colleges) - Admin manages these
 export const departments: Department[] = [
   {
     id: "dept_001",
-    name: "Library",
-    code: "LIB",
-    description: "Book returns and library card clearance",
-    head: "Mrs. Santos",
-  },
-  {
-    id: "dept_002",
-    name: "Finance Office",
-    code: "FIN",
-    description: "Tuition and other fees payment verification",
-    head: "Mr. Reyes",
-  },
-  {
-    id: "dept_003",
-    name: "Registrar",
-    code: "REG",
-    description: "Academic records and enrollment verification",
-    head: "Ms. Garcia",
-  },
-  {
-    id: "dept_004",
-    name: "Student Affairs",
-    code: "SAO",
-    description: "Student discipline and organization clearance",
-    head: "Mr. Cruz",
-  },
-  {
-    id: "dept_005",
-    name: "CCIS Department",
+    name: "College of Computing and Information Sciences",
     code: "CCIS",
-    description: "Department-specific requirements and equipment",
-    head: "Dr. Lopez",
-  },
-  {
-    id: "dept_006",
-    name: "Guidance Office",
-    code: "GUID",
-    description: "Exit interview and counseling clearance",
-    head: "Mrs. Mendoza",
+    description: "Information Technology, Computer Science, and Information Systems programs",
+    head: "Dr. Roberto Lopez",
   },
 ];
 
-export const organizations: Organization[] = [
-  { id: "org_001", name: "Supreme Student Council", code: "SSC", type: "student_org" },
-  { id: "org_002", name: "CCIS Student Council", code: "CCIS-SC", type: "student_org" },
-  { id: "org_003", name: "IT Society", code: "ITS", type: "student_org" },
-  { id: "org_004", name: "Computer Science Society", code: "CSS", type: "student_org" },
-  { id: "org_005", name: "NSTP Office", code: "NSTP", type: "office" },
+// Offices - These handle clearance approvals
+export const offices: Office[] = [
+  {
+    id: "office_001",
+    name: "Library",
+    code: "LIB",
+    description: "Book returns and library card clearance",
+    head: "Mrs. Maria Santos",
+  },
+  {
+    id: "office_002",
+    name: "Finance Office",
+    code: "FIN",
+    description: "Tuition and other fees payment verification",
+    head: "Mr. Pedro Reyes",
+  },
+  {
+    id: "office_003",
+    name: "Registrar",
+    code: "REG",
+    description: "Academic records and enrollment verification",
+    head: "Ms. Ana Garcia",
+  },
+  {
+    id: "office_004",
+    name: "Student Affairs Office",
+    code: "SAO",
+    description: "Student discipline and organization clearance",
+    head: "Mr. Jose Cruz",
+  },
+  {
+    id: "office_005",
+    name: "Guidance Office",
+    code: "GUID",
+    description: "Exit interview and counseling clearance",
+    head: "Mrs. Elena Mendoza",
+  },
+  {
+    id: "office_006",
+    name: "Clinic",
+    code: "CLIN",
+    description: "Medical clearance and health records",
+    head: "Dr. Carmen Rivera",
+  },
+];
+
+// Academic Organizations - Course-related clubs (require clearance)
+export const academicOrganizations: AcademicOrganization[] = [
+  {
+    id: "acad_org_001",
+    name: "IT Society",
+    code: "ITS",
+    description: "Organization for BS Information Technology students",
+    adviser: "Mr. Juan Reyes",
+    department: "CCIS",
+  },
+  {
+    id: "acad_org_002",
+    name: "Computer Science Society",
+    code: "CSS",
+    description: "Organization for BS Computer Science students",
+    adviser: "Ms. Maria Lopez",
+    department: "CCIS",
+  },
+  {
+    id: "acad_org_003",
+    name: "Information Systems Guild",
+    code: "ISG",
+    description: "Organization for BS Information Systems students",
+    adviser: "Mr. Pedro Santos",
+    department: "CCIS",
+  },
+];
+
+// Non-Academic Organizations - General clubs (require clearance)
+export const nonAcademicOrganizations: NonAcademicOrganization[] = [
+  {
+    id: "non_acad_001",
+    name: "Supreme Student Council",
+    code: "SSC",
+    description: "Main student government body of the institution",
+    adviser: "Dr. Ana Garcia",
+  },
+  {
+    id: "non_acad_002",
+    name: "CCIS Student Council",
+    code: "CCIS-SC",
+    description: "Student council for CCIS department",
+    adviser: "Mr. Jose Cruz",
+  },
+  {
+    id: "non_acad_003",
+    name: "Red Cross Youth",
+    code: "RCY",
+    description: "Humanitarian volunteer organization",
+    adviser: "Mrs. Carmen Rivera",
+  },
+  {
+    id: "non_acad_004",
+    name: "Peer Facilitators",
+    code: "PF",
+    description: "Student mentoring and guidance organization",
+    adviser: "Mrs. Elena Mendoza",
+  },
 ];
 
 export const mockStudents: User[] = [
@@ -429,7 +495,7 @@ export const activityLog: ActivityLog[] = [
     id: "act_001",
     userId: "usr_002",
     userName: "Mrs. Santos",
-    userRole: "department",
+    userRole: "office",
     action: "approved",
     details: "Approved library clearance for Juan Dela Cruz (2021-00001)",
     targetType: "clearance",
@@ -440,7 +506,7 @@ export const activityLog: ActivityLog[] = [
     id: "act_002",
     userId: "usr_003",
     userName: "Mr. Reyes",
-    userRole: "organization",
+    userRole: "office",
     action: "approved",
     details: "Approved finance clearance for Juan Dela Cruz (2021-00001)",
     targetType: "clearance",
@@ -461,10 +527,10 @@ export const activityLog: ActivityLog[] = [
   {
     id: "act_004",
     userId: "usr_004",
-    userName: "Dr. Lopez",
-    userRole: "dean",
+    userName: "Jose Reyes",
+    userRole: "academic-club",
     action: "approved",
-    details: "Approved CCIS department clearance for Maria Santos (2021-00002)",
+    details: "Approved IT Society clearance for Maria Santos (2021-00002)",
     targetType: "clearance",
     targetId: "clr_002",
     createdAt: "2024-01-19T14:30:00Z",
@@ -473,7 +539,7 @@ export const activityLog: ActivityLog[] = [
     id: "act_005",
     userId: "usr_002",
     userName: "Mrs. Santos",
-    userRole: "department",
+    userRole: "office",
     action: "put_on_hold",
     details: "Put on hold: Finance clearance for Maria Santos - Pending payment verification",
     targetType: "clearance",

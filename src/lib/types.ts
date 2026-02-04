@@ -1,4 +1,4 @@
-export type UserRole = "student" | "department" | "organization" | "dean" | "admin";
+export type UserRole = "student" | "office" | "academic-club" | "non-academic-club" | "admin";
 
 export type ClearanceStatus =
   | "pending"
@@ -32,11 +32,30 @@ export interface Department {
   icon?: string;
 }
 
-export interface Organization {
+export interface Office {
   id: string;
   name: string;
   code: string;
-  type: "academic" | "student_org" | "office";
+  description: string;
+  head?: string;
+  icon?: string;
+}
+
+export interface AcademicOrganization {
+  id: string;
+  name: string;
+  code: string;
+  description: string;
+  adviser?: string;
+  department?: string; // Which department it belongs to (e.g., CCIS)
+}
+
+export interface NonAcademicOrganization {
+  id: string;
+  name: string;
+  code: string;
+  description: string;
+  adviser?: string;
 }
 
 export interface ClearanceItem {
