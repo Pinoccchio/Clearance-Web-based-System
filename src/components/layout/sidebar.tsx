@@ -52,35 +52,35 @@ const navSectionsByRole: Record<UserRole, NavSection[]> = {
       ],
     },
   ],
-  approver: [
+  department: [
     {
       title: "Main",
       items: [
-        { label: "Dashboard", href: "/approver", icon: <LayoutDashboard className="w-5 h-5" /> },
-        { label: "Pending Reviews", href: "/approver/pending", icon: <ClipboardList className="w-5 h-5" /> },
-        { label: "Approved", href: "/approver/approved", icon: <CheckSquare className="w-5 h-5" /> },
+        { label: "Dashboard", href: "/department", icon: <LayoutDashboard className="w-5 h-5" /> },
+        { label: "Pending Reviews", href: "/department/pending", icon: <ClipboardList className="w-5 h-5" /> },
+        { label: "Approved", href: "/department/approved", icon: <CheckSquare className="w-5 h-5" /> },
       ],
     },
     {
       title: "More",
       items: [
-        { label: "History", href: "/approver/history", icon: <History className="w-5 h-5" /> },
+        { label: "History", href: "/department/history", icon: <History className="w-5 h-5" /> },
       ],
     },
   ],
-  officer: [
+  organization: [
     {
       title: "Main",
       items: [
-        { label: "Dashboard", href: "/officer", icon: <LayoutDashboard className="w-5 h-5" /> },
-        { label: "Clearances", href: "/officer/clearances", icon: <FileText className="w-5 h-5" /> },
-        { label: "Students", href: "/officer/students", icon: <GraduationCap className="w-5 h-5" /> },
+        { label: "Dashboard", href: "/organization", icon: <LayoutDashboard className="w-5 h-5" /> },
+        { label: "Clearances", href: "/organization/clearances", icon: <FileText className="w-5 h-5" /> },
+        { label: "Members", href: "/organization/members", icon: <GraduationCap className="w-5 h-5" /> },
       ],
     },
     {
       title: "Reports",
       items: [
-        { label: "Reports", href: "/officer/reports", icon: <BarChart3 className="w-5 h-5" /> },
+        { label: "Reports", href: "/organization/reports", icon: <BarChart3 className="w-5 h-5" /> },
       ],
     },
   ],
@@ -133,7 +133,7 @@ export default function Sidebar({ role, userName, userEmail }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen bg-slate-900 transition-all duration-200 flex flex-col",
+        "fixed left-0 top-0 z-40 h-screen bg-cjc-navy transition-all duration-200 flex flex-col",
         isCollapsed ? "w-[72px]" : "w-64"
       )}
     >

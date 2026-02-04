@@ -248,7 +248,7 @@ export default function StudentRequirementsPage() {
           <div className="mt-4">
             <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-cjc-gold to-cjc-gold-light rounded-full transition-all duration-500"
+                className="h-full bg-cjc-gold rounded-full transition-all duration-500"
                 style={{
                   width: `${(completedRequirements / totalRequirements) * 100}%`,
                 }}

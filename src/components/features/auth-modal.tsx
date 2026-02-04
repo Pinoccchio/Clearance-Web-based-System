@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-type UserRole = "student" | "approver" | "officer" | "dean" | "admin";
+type UserRole = "student" | "department" | "organization" | "dean" | "admin";
 type AuthMode = "login" | "register";
 
 interface AuthModalProps {
@@ -35,8 +35,8 @@ interface RoleOption {
 
 const roleOptions: RoleOption[] = [
   { id: "student", label: "Student", icon: <GraduationCap className="w-4 h-4" /> },
-  { id: "approver", label: "Approver", icon: <UserCheck className="w-4 h-4" /> },
-  { id: "officer", label: "Officer", icon: <Building2 className="w-4 h-4" /> },
+  { id: "department", label: "Department", icon: <Building2 className="w-4 h-4" /> },
+  { id: "organization", label: "Organization", icon: <UserCheck className="w-4 h-4" /> },
   { id: "dean", label: "Dean", icon: <Crown className="w-4 h-4" /> },
   { id: "admin", label: "Admin", icon: <Shield className="w-4 h-4" /> },
 ];
@@ -163,7 +163,6 @@ function LoginForm({ onClose }: { onClose: () => void }) {
             onChange={handleInputChange}
             className="input-base"
             placeholder="your.email@cjc.edu.ph"
-            required
           />
         </div>
 
@@ -181,7 +180,6 @@ function LoginForm({ onClose }: { onClose: () => void }) {
               onChange={handleInputChange}
               className="input-base pr-10"
               placeholder="Enter your password"
-              required
             />
             <button
               type="button"
@@ -205,7 +203,7 @@ function LoginForm({ onClose }: { onClose: () => void }) {
             />
             <span className="text-sm text-gray-600">Remember me</span>
           </label>
-          <Link href="#" className="text-sm text-cjc-blue hover:underline">
+          <Link href="#" className="text-sm text-cjc-crimson hover:underline">
             Forgot password?
           </Link>
         </div>
@@ -214,7 +212,7 @@ function LoginForm({ onClose }: { onClose: () => void }) {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full py-3 bg-cjc-blue text-white rounded-lg font-medium hover:bg-cjc-blue-soft transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+          className="w-full py-3 bg-cjc-crimson text-white rounded-lg font-medium hover:bg-cjc-crimson-light transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
         >
           {isLoading ? (
             <>
@@ -307,7 +305,7 @@ function RegisterForm({
           <div
             className={cn(
               "w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold",
-              step >= 1 ? "bg-cjc-blue text-white" : "bg-gray-200 text-gray-500"
+              step >= 1 ? "bg-cjc-navy text-white" : "bg-gray-200 text-gray-500"
             )}
           >
             {step > 1 ? "✓" : "1"}
@@ -317,13 +315,13 @@ function RegisterForm({
           </span>
         </div>
         <div className="flex-1 h-px bg-gray-200">
-          <div className={cn("h-full bg-cjc-blue transition-all", step > 1 ? "w-full" : "w-0")} />
+          <div className={cn("h-full bg-cjc-navy transition-all", step > 1 ? "w-full" : "w-0")} />
         </div>
         <div className="flex items-center gap-2">
           <div
             className={cn(
               "w-7 h-7 rounded-full flex items-center justify-center text-xs font-semibold",
-              step >= 2 ? "bg-cjc-blue text-white" : "bg-gray-200 text-gray-500"
+              step >= 2 ? "bg-cjc-navy text-white" : "bg-gray-200 text-gray-500"
             )}
           >
             2
@@ -350,7 +348,6 @@ function RegisterForm({
                 onChange={handleInputChange}
                 className="input-base font-mono"
                 placeholder="e.g., 2021-00001"
-                required
               />
             </div>
 
@@ -368,7 +365,6 @@ function RegisterForm({
                   onChange={handleInputChange}
                   className="input-base"
                   placeholder="Juan"
-                  required
                 />
               </div>
               <div>
@@ -383,7 +379,6 @@ function RegisterForm({
                   onChange={handleInputChange}
                   className="input-base"
                   placeholder="Dela Cruz"
-                  required
                 />
               </div>
             </div>
@@ -417,7 +412,6 @@ function RegisterForm({
                 onChange={handleInputChange}
                 className="input-base"
                 placeholder="your.email@cjc.edu.ph"
-                required
               />
             </div>
 
@@ -425,8 +419,7 @@ function RegisterForm({
             <button
               type="button"
               onClick={() => setStep(2)}
-              disabled={!isStep1Valid}
-              className="w-full py-3 bg-cjc-blue text-white rounded-lg font-medium hover:bg-cjc-blue-soft transition-colors disabled:opacity-50"
+              className="w-full py-3 bg-cjc-crimson text-white rounded-lg font-medium hover:bg-cjc-crimson-light transition-colors"
             >
               Continue
             </button>
@@ -447,7 +440,6 @@ function RegisterForm({
                   value={formData.course}
                   onChange={handleInputChange}
                   className="input-base appearance-none pr-10"
-                  required
                 >
                   <option value="">Select your course</option>
                   {courses.map((course) => (
@@ -474,7 +466,7 @@ function RegisterForm({
                     className={cn(
                       "py-2 px-3 rounded-md text-sm font-medium transition-colors",
                       formData.yearLevel === year
-                        ? "bg-cjc-blue text-white"
+                        ? "bg-cjc-navy text-white"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                     )}
                   >
@@ -498,7 +490,6 @@ function RegisterForm({
                   onChange={handleInputChange}
                   className="input-base pr-10"
                   placeholder="Create a strong password"
-                  required
                 />
                 <button
                   type="button"
@@ -522,14 +513,8 @@ function RegisterForm({
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
-                  className={cn(
-                    "input-base pr-10",
-                    formData.confirmPassword &&
-                      formData.password !== formData.confirmPassword &&
-                      "border-red-500 focus:border-red-500"
-                  )}
+                  className="input-base pr-10"
                   placeholder="Confirm your password"
-                  required
                 />
                 <button
                   type="button"
@@ -539,9 +524,6 @@ function RegisterForm({
                   {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              {formData.confirmPassword && formData.password !== formData.confirmPassword && (
-                <p className="text-red-500 text-xs mt-1">Passwords do not match</p>
-              )}
             </div>
 
             {/* Terms */}
@@ -555,11 +537,11 @@ function RegisterForm({
               />
               <span className="text-sm text-gray-600">
                 I agree to the{" "}
-                <Link href="#" className="text-cjc-blue hover:underline">
+                <Link href="#" className="text-cjc-crimson hover:underline">
                   Terms of Service
                 </Link>{" "}
                 and{" "}
-                <Link href="#" className="text-cjc-blue hover:underline">
+                <Link href="#" className="text-cjc-crimson hover:underline">
                   Privacy Policy
                 </Link>
               </span>
@@ -576,8 +558,8 @@ function RegisterForm({
               </button>
               <button
                 type="submit"
-                disabled={!isStep2Valid || isLoading}
-                className="flex-1 py-3 bg-cjc-blue text-white rounded-lg font-medium hover:bg-cjc-blue-soft transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                disabled={isLoading}
+                className="flex-1 py-3 bg-cjc-crimson text-white rounded-lg font-medium hover:bg-cjc-crimson-light transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isLoading ? (
                   <>

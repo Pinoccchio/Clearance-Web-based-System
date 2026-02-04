@@ -1,4 +1,4 @@
-export type UserRole = "student" | "approver" | "officer" | "dean" | "admin";
+export type UserRole = "student" | "department" | "organization" | "dean" | "admin";
 
 export type ClearanceStatus =
   | "pending"

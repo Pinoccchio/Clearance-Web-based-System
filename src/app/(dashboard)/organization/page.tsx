@@ -16,14 +16,14 @@ import {
 } from "lucide-react";
 import { mockUsers, mockStudents, mockClearanceRequests, dashboardStats } from "@/lib/mock-data";
 
-export default function OfficerDashboard() {
-  const user = mockUsers.officer;
+export default function OrganizationDashboard() {
+  const user = mockUsers.organization;
 
   return (
     <div>
       <Header
-        title="Officer Dashboard"
-        subtitle={`${user.department} Department`}
+        title="Organization Dashboard"
+        subtitle={`${user.department} - ${user.position}`}
       />
 
       <div className="p-6 space-y-6">
@@ -40,9 +40,9 @@ export default function OfficerDashboard() {
               </span>
             </div>
             <p className="text-3xl font-display font-bold text-cjc-navy">
-              {dashboardStats.totalStudents.toLocaleString()}
+              156
             </p>
-            <p className="text-sm text-cjc-navy/60">Total Students</p>
+            <p className="text-sm text-cjc-navy/60">Total Members</p>
           </div>
 
           <div className="card-glass p-5">
@@ -56,9 +56,9 @@ export default function OfficerDashboard() {
               </span>
             </div>
             <p className="text-3xl font-display font-bold text-cjc-navy">
-              {dashboardStats.pendingRequests}
+              24
             </p>
-            <p className="text-sm text-cjc-navy/60">Pending Requests</p>
+            <p className="text-sm text-cjc-navy/60">Pending Clearances</p>
           </div>
 
           <div className="card-glass p-5">
@@ -68,9 +68,9 @@ export default function OfficerDashboard() {
               </div>
             </div>
             <p className="text-3xl font-display font-bold text-cjc-navy">
-              {dashboardStats.approvedToday}
+              132
             </p>
-            <p className="text-sm text-cjc-navy/60">Approved Today</p>
+            <p className="text-sm text-cjc-navy/60">Cleared Members</p>
           </div>
 
           <div className="card-glass p-5">
@@ -80,9 +80,9 @@ export default function OfficerDashboard() {
               </div>
             </div>
             <p className="text-3xl font-display font-bold text-cjc-navy">
-              {dashboardStats.completionRate}%
+              84.6%
             </p>
-            <p className="text-sm text-cjc-navy/60">Completion Rate</p>
+            <p className="text-sm text-cjc-navy/60">Clearance Rate</p>
           </div>
         </div>
 
@@ -91,10 +91,10 @@ export default function OfficerDashboard() {
           <div className="lg:col-span-2 card-glass p-6 animate-fade-in-up delay-100">
             <div className="flex items-center justify-between mb-6">
               <h3 className="font-semibold text-lg text-cjc-navy">
-                Recent Clearances
+                Recent Clearance Requests
               </h3>
               <Link
-                href="/officer/clearances"
+                href="/organization/clearances"
                 className="text-sm text-cjc-blue font-medium hover:text-cjc-blue-soft flex items-center gap-1"
               >
                 View All
@@ -107,7 +107,7 @@ export default function OfficerDashboard() {
                 <thead>
                   <tr className="border-b border-gray-100">
                     <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy/60">
-                      Student
+                      Member
                     </th>
                     <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy/60">
                       Course
@@ -161,7 +161,7 @@ export default function OfficerDashboard() {
                         <div className="flex items-center gap-2">
                           <div className="w-24 h-2 bg-gray-200 rounded-full overflow-hidden">
                             <div
-                              className="h-full bg-gradient-to-r from-cjc-gold to-cjc-gold-light rounded-full"
+                              className="h-full bg-cjc-gold rounded-full"
                               style={{ width: `${clearance.progress}%` }}
                             />
                           </div>
@@ -197,7 +197,7 @@ export default function OfficerDashboard() {
               <h3 className="font-semibold text-cjc-navy mb-4">Quick Actions</h3>
               <div className="space-y-3">
                 <Link
-                  href="/officer/clearances"
+                  href="/organization/clearances"
                   className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors"
                 >
                   <FileText className="w-5 h-5 text-cjc-blue" />
@@ -207,17 +207,17 @@ export default function OfficerDashboard() {
                   <ChevronRight className="w-4 h-4 text-cjc-navy/40 ml-auto" />
                 </Link>
                 <Link
-                  href="/officer/students"
+                  href="/organization/members"
                   className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors"
                 >
                   <Users className="w-5 h-5 text-cjc-gold" />
                   <span className="text-sm font-medium text-cjc-navy">
-                    View Students
+                    View Members
                   </span>
                   <ChevronRight className="w-4 h-4 text-cjc-navy/40 ml-auto" />
                 </Link>
                 <Link
-                  href="/officer/reports"
+                  href="/organization/reports"
                   className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors"
                 >
                   <BarChart3 className="w-5 h-5 text-success" />
@@ -229,37 +229,28 @@ export default function OfficerDashboard() {
               </div>
             </div>
 
-            {/* Recent Students */}
+            {/* Organization Info */}
             <div className="card-accent p-5 animate-fade-in-up delay-300">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold text-cjc-navy">Recent Students</h3>
-                <Link
-                  href="/officer/students"
-                  className="text-xs text-cjc-blue font-medium hover:text-cjc-blue-soft"
-                >
-                  View All
-                </Link>
+                <h3 className="font-semibold text-cjc-navy">Organization Info</h3>
               </div>
               <div className="space-y-3">
-                {mockStudents.slice(0, 4).map((student) => (
-                  <div
-                    key={student.id}
-                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="w-8 h-8 rounded-full bg-cjc-navy/10 flex items-center justify-center text-xs font-semibold text-cjc-navy">
-                      {student.firstName[0]}
-                      {student.lastName[0]}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-cjc-navy truncate">
-                        {student.firstName} {student.lastName}
-                      </p>
-                      <p className="text-xs text-cjc-navy/60">
-                        {student.course} • {student.yearLevel}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-cjc-navy/60">Organization</span>
+                  <span className="text-sm font-medium text-cjc-navy">
+                    {user.department}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-cjc-navy/60">Position</span>
+                  <span className="text-sm font-medium text-cjc-navy">
+                    {user.position}
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-cjc-navy/60">Status</span>
+                  <span className="badge badge-approved">Active</span>
+                </div>
               </div>
             </div>
 
@@ -278,9 +269,9 @@ export default function OfficerDashboard() {
                 </div>
                 <div className="p-3 rounded-lg bg-cjc-blue/5 border border-cjc-blue/10">
                   <p className="text-sm font-medium text-cjc-navy">
-                    Graduation Ceremony
+                    General Assembly
                   </p>
-                  <p className="text-xs text-cjc-navy/60">March 15, 2025</p>
+                  <p className="text-xs text-cjc-navy/60">March 5, 2025</p>
                 </div>
               </div>
             </div>

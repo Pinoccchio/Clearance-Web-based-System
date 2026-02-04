@@ -19,8 +19,8 @@ import {
 import { mockUsers, mockClearanceRequests, mockStudents } from "@/lib/mock-data";
 import { ClearanceRequest } from "@/lib/types";
 
-export default function ApproverPendingPage() {
-  const user = mockUsers.approver;
+export default function DepartmentPendingPage() {
+  const user = mockUsers.department;
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRequest, setSelectedRequest] = useState<ClearanceRequest | null>(null);
   const [showModal, setShowModal] = useState(false);
@@ -143,7 +143,7 @@ export default function ApproverPendingPage() {
               <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 {/* Student Info */}
                 <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-full bg-gradient-to-br from-cjc-navy to-cjc-navy-light flex items-center justify-center text-white text-lg font-semibold">
+                  <div className="w-14 h-14 rounded-full bg-cjc-navy flex items-center justify-center text-white text-lg font-semibold">
                     {request.studentName
                       .split(" ")
                       .map((n) => n[0])

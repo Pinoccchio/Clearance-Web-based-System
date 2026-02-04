@@ -5,6 +5,8 @@ import Image from "next/image";
 import {
   CheckCircle2,
   ArrowRight,
+  Facebook,
+  Music2,
 } from "lucide-react";
 import { AuthModal } from "@/components/features/auth-modal";
 
@@ -97,7 +99,7 @@ export default function LandingPage() {
                     Cor Jesu College
                   </p>
                   <p className="text-xs text-warm-muted">
-                    College of Computing and Information Sciences
+                    <span className="ccis-braces">{"{"}</span> College of Computing and Information Sciences <span className="ccis-braces">{"}"}</span>
                   </p>
                 </div>
               </div>
@@ -131,7 +133,7 @@ export default function LandingPage() {
               <div className={`lg:col-span-3 animate-fade-up ${heroInView ? 'in-view' : ''}`}>
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-surface-cream border border-border-warm text-sm text-warm-muted mb-8">
                   <span className="w-2 h-2 rounded-full bg-cjc-crimson"></span>
-                  Academic Year 2024-2025
+                  Academic Year 2025-2026
                 </div>
 
                 {/* Stacked Editorial Headline */}
@@ -146,8 +148,7 @@ export default function LandingPage() {
                 </div>
 
                 <p className="text-lg text-warm-muted mb-10 max-w-lg font-body leading-relaxed">
-                  Track your clearance status across all departments in real-time.
-                  One portal for every requirement, every approval, every semester.
+                  Check your clearance status from anywhere. See which departments have approved you and what requirements you still need to settle at each office.
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4 mb-12">
@@ -253,24 +254,22 @@ export default function LandingPage() {
           <div className="max-w-6xl mx-auto px-6">
             <div className={`mb-16 animate-fade-up ${featuresInView ? 'in-view' : ''}`}>
               <p className="text-sm font-semibold text-cjc-crimson uppercase tracking-wider mb-3">
-                The CCIS Advantage
+                Why Use This?
               </p>
               <h2 className="font-display text-3xl sm:text-4xl font-bold text-cjc-navy">
-                Clearance Without the Chaos
+                Make Clearance Easier
               </h2>
             </div>
 
             {/* Block A - Full Width Navy (CCIS Blue) */}
-            <div ref={navyBlockRef} className={`navy-gradient text-white rounded-none sm:rounded p-8 lg:p-12 mb-6 animate-fade-up ${navyBlockInView ? 'in-view' : ''}`}>
+            <div ref={navyBlockRef} className={`bg-cjc-navy text-white rounded-none sm:rounded p-8 lg:p-12 mb-6 animate-fade-up ${navyBlockInView ? 'in-view' : ''}`}>
               <div className="grid lg:grid-cols-2 gap-8 items-center">
                 <div>
                   <h3 className="text-2xl lg:text-3xl font-display font-bold mb-4">
                     One portal. Every department.
                   </h3>
                   <p className="text-white/70 text-lg leading-relaxed">
-                    No more running between offices. Track your clearance status
-                    across Library, Registrar, Finance, and all other departments
-                    from a single, unified dashboard.
+                    Check your status across Library, Registrar, Finance, and other departments in one place. Know exactly what you need to settle before visiting each office.
                   </p>
                 </div>
                 <div className={`grid grid-cols-2 gap-3 animate-stagger ${navyBlockInView ? 'in-view' : ''}`}>
@@ -297,7 +296,7 @@ export default function LandingPage() {
                   Role-Based Access
                 </h3>
                 <p className="text-warm-muted text-sm leading-relaxed mb-4">
-                  Tailored dashboards for students, approvers, officers, deans, and admins.
+                  Students, department staff, organization officers, deans, and admins each get their own dashboard designed for their needs.
                 </p>
                 <div className="flex flex-wrap gap-3 text-sm text-cjc-navy">
                   <span className="flex items-center gap-1.5">
@@ -317,7 +316,7 @@ export default function LandingPage() {
                   Digital Documents
                 </h3>
                 <p className="text-warm-muted text-sm leading-relaxed mb-4">
-                  No more lost paperwork or missing requirements.
+                  Upload required documents online. Your files are saved securely so you won't lose them.
                 </p>
                 <div className="flex flex-wrap gap-3 text-sm text-cjc-navy">
                   <span className="flex items-center gap-1.5">
@@ -339,7 +338,7 @@ export default function LandingPage() {
           <div className="max-w-4xl mx-auto px-6">
             <div className={`text-center mb-16 animate-fade-up ${timelineInView ? 'in-view' : ''}`}>
               <h2 className="font-display text-3xl sm:text-4xl font-bold text-cjc-navy">
-                Four Steps to Freedom
+                How It Works
               </h2>
             </div>
 
@@ -348,22 +347,22 @@ export default function LandingPage() {
                 {
                   step: "01",
                   title: "Create Your Account",
-                  desc: "Register with your student credentials. Verify your email and set up your profile to get started.",
+                  desc: "Register using your student ID and school email. Set up your profile and select the organizations you belong to.",
                 },
                 {
                   step: "02",
                   title: "Submit Clearance Request",
-                  desc: "Initiate your clearance application for the current semester. Select your program and year level.",
+                  desc: "Start a clearance request for graduation, semester end, or transfer. The system will show all departments and organizations you need to clear.",
                 },
                 {
                   step: "03",
-                  title: "Track Your Progress",
-                  desc: "Monitor real-time approvals from each department. Upload any required documents as needed.",
+                  title: "Check Status and Settle Requirements",
+                  desc: "See which departments have approved you and which ones need action. Visit offices to settle any pending requirements like unpaid fees or unreturned books.",
                 },
                 {
                   step: "04",
-                  title: "Get Cleared",
-                  desc: "Once all departments approve, receive your official clearance. Download or print your certificate.",
+                  title: "Get Your Clearance",
+                  desc: "Once all departments and organizations have approved you, download or print your official clearance certificate.",
                 },
               ].map((item, index) => (
                 <div
@@ -398,7 +397,7 @@ export default function LandingPage() {
               </span>
             </h2>
             <p className="text-white/80 text-lg mb-10 max-w-xl mx-auto mt-8">
-              Stop chasing signatures. Your clearance journey starts with one click.
+              No more guessing which offices you still need to visit. Track your clearance progress and know exactly what to settle.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
@@ -422,7 +421,7 @@ export default function LandingPage() {
         <footer className="bg-cjc-navy text-white/70">
           <div className="h-1 bg-cjc-crimson"></div>
           <div className="max-w-6xl mx-auto px-6 py-16">
-            <div className="grid md:grid-cols-4 gap-10">
+            <div className="grid md:grid-cols-5 gap-10">
               <div className="md:col-span-2">
                 <div className="flex items-center gap-4 mb-6">
                   <div className="flex items-center gap-2">
@@ -460,38 +459,48 @@ export default function LandingPage() {
               </div>
 
               <div>
-                <h4 className="text-white font-semibold mb-5">Quick Links</h4>
+                <h4 className="text-white font-semibold mb-5">Programs</h4>
                 <ul className="space-y-3 text-sm">
-                  <li>
-                    <button
-                      onClick={() => setAuthModal("login")}
-                      className="hover:text-white transition-colors"
-                    >
-                      Student Portal
-                    </button>
-                  </li>
-                  <li>
-                    <button
-                      onClick={() => setAuthModal("login")}
-                      className="hover:text-white transition-colors"
-                    >
-                      Staff Login
-                    </button>
-                  </li>
-                  <li>
-                    <a href="#" className="hover:text-white transition-colors">
-                      Help Center
-                    </a>
-                  </li>
+                  <li>BS Computer Science</li>
+                  <li>BS Information Technology</li>
+                  <li>BS Library & Information Science</li>
                 </ul>
               </div>
 
               <div>
-                <h4 className="text-white font-semibold mb-5">Contact</h4>
+                <h4 className="text-white font-semibold mb-5">Contact CCIS</h4>
                 <ul className="space-y-3 text-sm">
-                  <li>registrar@cjc.edu.ph</li>
-                  <li>(082) 553-2433</li>
+                  <li>computerstudies@g.cjc.edu.ph</li>
+                  <li>09082191651</li>
                   <li>Mon - Fri: 8:00 AM - 5:00 PM</li>
+                </ul>
+              </div>
+
+              <div>
+                <h4 className="text-white font-semibold mb-5">Follow CCIS</h4>
+                <ul className="space-y-3 text-sm">
+                  <li>
+                    <a
+                      href="https://facebook.com/cjccomputerstudies"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 hover:text-white transition-colors"
+                    >
+                      <Facebook className="w-4 h-4" />
+                      @cjccomputerstudies
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="https://tiktok.com/@cjc.ccis"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 hover:text-white transition-colors"
+                    >
+                      <Music2 className="w-4 h-4" />
+                      @cjc.ccis
+                    </a>
+                  </li>
                 </ul>
               </div>
             </div>

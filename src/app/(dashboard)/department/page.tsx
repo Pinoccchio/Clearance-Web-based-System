@@ -15,10 +15,10 @@ import {
 } from "lucide-react";
 import { mockUsers, mockClearanceRequests } from "@/lib/mock-data";
 
-export default function ApproverDashboard() {
-  const user = mockUsers.approver;
+export default function DepartmentDashboard() {
+  const user = mockUsers.department;
 
-  // Mock stats for the approver
+  // Mock stats for the department
   const stats = {
     pendingReviews: 12,
     approvedToday: 8,
@@ -34,7 +34,7 @@ export default function ApproverDashboard() {
   return (
     <div>
       <Header
-        title="Approver Dashboard"
+        title="Department Dashboard"
         subtitle={`${user.department} - ${user.position}`}
       />
 
@@ -105,7 +105,7 @@ export default function ApproverDashboard() {
                 Pending Reviews
               </h3>
               <Link
-                href="/approver/pending"
+                href="/department/pending"
                 className="text-sm text-cjc-blue font-medium hover:text-cjc-blue-soft flex items-center gap-1"
               >
                 View All
@@ -171,7 +171,7 @@ export default function ApproverDashboard() {
               <h3 className="font-semibold text-cjc-navy mb-4">Quick Actions</h3>
               <div className="space-y-3">
                 <Link
-                  href="/approver/pending"
+                  href="/department/pending"
                   className="flex items-center gap-3 p-3 rounded-xl bg-pending/5 border border-pending/10 hover:bg-pending/10 transition-colors"
                 >
                   <Clock className="w-5 h-5 text-pending" />
@@ -187,7 +187,7 @@ export default function ApproverDashboard() {
                 </Link>
 
                 <Link
-                  href="/approver/approved"
+                  href="/department/approved"
                   className="flex items-center gap-3 p-3 rounded-xl bg-success/5 border border-success/10 hover:bg-success/10 transition-colors"
                 >
                   <CheckCircle2 className="w-5 h-5 text-success" />
@@ -203,7 +203,7 @@ export default function ApproverDashboard() {
                 </Link>
 
                 <Link
-                  href="/approver/history"
+                  href="/department/history"
                   className="flex items-center gap-3 p-3 rounded-xl hover:bg-gray-50 transition-colors"
                 >
                   <FileText className="w-5 h-5 text-cjc-navy/60" />

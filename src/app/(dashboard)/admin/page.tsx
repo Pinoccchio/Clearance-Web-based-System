@@ -41,9 +41,8 @@ export default function AdminDashboard() {
 
       <div className="p-6 space-y-6">
         {/* System Status Banner */}
-        <div className="card-glass p-6 relative overflow-hidden animate-fade-in-up">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-success/20 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-          <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div className="card-glass p-6 animate-fade-in-up">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-2xl bg-success/10 flex items-center justify-center">
                 <Shield className="w-7 h-7 text-success" />
@@ -179,8 +178,10 @@ export default function AdminDashboard() {
                         ? "bg-cjc-crimson/10 text-cjc-crimson"
                         : activity.userRole === "dean"
                         ? "bg-pending/10 text-pending"
-                        : activity.userRole === "approver"
+                        : activity.userRole === "department"
                         ? "bg-success/10 text-success"
+                        : activity.userRole === "organization"
+                        ? "bg-cjc-gold/10 text-cjc-gold"
                         : "bg-cjc-blue/10 text-cjc-blue"
                     }`}
                   >

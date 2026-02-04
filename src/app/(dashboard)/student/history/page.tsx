@@ -194,7 +194,7 @@ export default function StudentHistoryPage() {
                           className={`h-full rounded-full ${
                             history.progress === 100
                               ? "bg-success"
-                              : "bg-gradient-to-r from-cjc-gold to-cjc-gold-light"
+                              : "bg-cjc-gold"
                           }`}
                           style={{ width: `${history.progress}%` }}
                         />

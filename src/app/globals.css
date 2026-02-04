@@ -793,9 +793,64 @@ body {
   }
 }
 
-/* Navy block gradient overlay */
+/* Navy block solid background - CCIS blue */
 .navy-gradient {
-  background: linear-gradient(135deg, var(--cjc-navy) 0%, var(--cjc-navy-light) 100%);
+  background: #1e3a5f;
+}
+
+/* CCIS gradient for programs section */
+.ccis-gradient {
+  background: #0f2744;
+}
+
+/* Decorative braces for CCIS branding */
+.ccis-braces {
+  color: var(--cjc-blue-soft);
+  font-weight: 300;
+  opacity: 0.7;
+}
+
+/* Program card styling */
+.program-card {
+  background: white;
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  text-align: center;
+  border: 1px solid var(--border-light);
+  transition: all 0.3s ease;
+}
+
+.program-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  border-color: var(--cjc-blue-soft);
+}
+
+.program-card .program-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--cjc-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  color: white;
+}
+
+.program-card h3 {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 700;
+  font-size: 1.125rem;
+  color: var(--cjc-navy);
+  margin-bottom: 0.5rem;
+}
+
+.program-card .text-code {
+  font-family: var(--font-mono), monospace;
+  font-size: 0.875rem;
+  color: var(--cjc-blue);
+  font-weight: 500;
 }
 
 /* Subtle dot pattern for hero */

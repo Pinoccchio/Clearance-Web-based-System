@@ -14,7 +14,7 @@ export default function DashboardLayout({
 
   // Determine role from pathname
   const roleFromPath = pathname.split("/")[1] as UserRole;
-  const validRoles: UserRole[] = ["student", "approver", "officer", "dean", "admin"];
+  const validRoles: UserRole[] = ["student", "department", "organization", "dean", "admin"];
   const role = validRoles.includes(roleFromPath) ? roleFromPath : "student";
 
   const user = mockUsers[role];

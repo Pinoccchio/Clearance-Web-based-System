@@ -38,9 +38,8 @@ export default function DeanDashboard() {
 
       <div className="p-6 space-y-6">
         {/* Welcome Banner */}
-        <div className="card-glass p-6 relative overflow-hidden animate-fade-in-up">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-cjc-gold/20 to-transparent rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-          <div className="relative z-10">
+        <div className="card-glass p-6 animate-fade-in-up">
+          <div>
             <div className="flex items-center gap-3 mb-4">
               <Award className="w-8 h-8 text-cjc-gold" />
               <div>

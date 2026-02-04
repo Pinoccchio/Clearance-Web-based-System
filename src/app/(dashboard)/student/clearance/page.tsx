@@ -107,7 +107,7 @@ export default function StudentClearancePage() {
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
             {/* Student Info */}
             <div className="flex items-start gap-4">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-cjc-navy to-cjc-navy-light flex items-center justify-center text-white text-2xl font-display font-bold">
+              <div className="w-20 h-20 rounded-2xl bg-cjc-navy flex items-center justify-center text-white text-2xl font-display font-bold">
                 {user.firstName[0]}
                 {user.lastName[0]}
               </div>
@@ -153,7 +153,7 @@ export default function StudentClearancePage() {
             </div>
             <div className="h-3 bg-gray-200 rounded-full overflow-hidden">
               <div
-                className="h-full bg-gradient-to-r from-cjc-gold to-cjc-gold-light rounded-full transition-all duration-1000"
+                className="h-full bg-cjc-gold rounded-full transition-all duration-1000"
                 style={{ width: `${progressPercent}%` }}
               />
             </div>
