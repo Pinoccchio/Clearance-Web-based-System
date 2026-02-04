@@ -14,7 +14,14 @@
   --cjc-gold: #d4a418;
   --cjc-gold-light: #fbbf24;
   --cjc-crimson: #a91e2c;
-  --cjc-crimson-dark: #7f1d1d;
+  --cjc-crimson-light: #c4293a;
+  --cjc-crimson-dark: #8a1822;
+
+  /* Warm Surfaces (Heritage feel) */
+  --surface-warm: #faf9f7;
+  --surface-cream: #f5f1eb;
+  --border-warm: #e8e4de;
+  --text-warm-muted: #64605a;
 
   /* Semantic Colors */
   --success: #059669;
@@ -34,10 +41,11 @@
   --border-light: #e5e5e5;
   --border-medium: #d4d4d4;
 
-  /* Typography Scale */
-  --text-hero: 3.5rem;
-  --text-h1: 2.25rem;
-  --text-h2: 1.5rem;
+  /* Typography Scale - Editorial Drama */
+  --text-display: 6rem;
+  --text-hero: 4.5rem;
+  --text-h1: 2.5rem;
+  --text-h2: 1.75rem;
   --text-h3: 1.25rem;
   --text-body: 1rem;
   --text-small: 0.875rem;
@@ -75,13 +83,17 @@
   --color-cjc-gold: var(--cjc-gold);
   --color-cjc-gold-light: var(--cjc-gold-light);
   --color-cjc-crimson: var(--cjc-crimson);
+  --color-cjc-crimson-light: var(--cjc-crimson-light);
   --color-cjc-crimson-dark: var(--cjc-crimson-dark);
+  --color-surface-warm: var(--surface-warm);
+  --color-surface-cream: var(--surface-cream);
+  --color-border-warm: var(--border-warm);
   --color-success: var(--success);
   --color-warning: var(--warning);
   --color-danger: var(--danger);
   --color-pending: var(--pending);
-  --font-display: var(--font-playfair);
-  --font-body: var(--font-dm-sans);
+  --font-display: var(--font-fraunces);
+  --font-body: var(--font-source-sans);
   --font-mono: var(--font-jetbrains);
 }
 
@@ -209,6 +221,28 @@ body {
 
 .btn-ghost:hover {
   background: var(--surface-tertiary);
+}
+
+.btn-crimson {
+  background: var(--cjc-crimson);
+  color: white;
+  border: none;
+  font-weight: 600;
+}
+
+.btn-crimson:hover {
+  background: var(--cjc-crimson-light);
+}
+
+.btn-outline-white {
+  background: transparent;
+  color: white;
+  border: 2px solid rgba(255, 255, 255, 0.4);
+}
+
+.btn-outline-white:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.6);
 }
 
 /* ============================================
@@ -455,10 +489,134 @@ body {
   color: #a3a3a3;
 }
 
+.text-warm-muted {
+  color: var(--text-warm-muted);
+}
+
 /* Divider */
 .divider {
   height: 1px;
   background: var(--border-light);
+}
+
+/* ============================================
+   EDITORIAL TYPOGRAPHY - Landing Page
+   ============================================ */
+
+.headline-underline {
+  position: relative;
+  display: inline-block;
+}
+
+.headline-underline::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: var(--cjc-crimson);
+}
+
+.headline-editorial {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 900;
+  line-height: 0.95;
+  letter-spacing: -0.02em;
+}
+
+/* Crimson accent bar */
+.accent-bar-crimson {
+  height: 4px;
+  background: var(--cjc-crimson);
+}
+
+/* Border accent utilities */
+.border-accent-crimson {
+  border-left: 4px solid var(--cjc-crimson);
+}
+
+.border-accent-gold {
+  border-bottom: 2px solid var(--cjc-gold);
+}
+
+/* Vertical timeline */
+.timeline-vertical {
+  position: relative;
+}
+
+.timeline-vertical::before {
+  content: '';
+  position: absolute;
+  left: 27px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--cjc-crimson);
+  border-radius: 2px;
+}
+
+@media (min-width: 768px) {
+  .timeline-vertical::before {
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
+.timeline-step {
+  position: relative;
+  padding-left: 72px;
+  padding-bottom: 3rem;
+}
+
+.timeline-step:last-child {
+  padding-bottom: 0;
+}
+
+@media (min-width: 768px) {
+  .timeline-step {
+    padding-left: 0;
+    width: 50%;
+  }
+
+  .timeline-step:nth-child(odd) {
+    margin-left: auto;
+    padding-left: 3rem;
+  }
+
+  .timeline-step:nth-child(even) {
+    padding-right: 3rem;
+    text-align: right;
+  }
+}
+
+.timeline-number {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: var(--cjc-gold);
+  color: var(--cjc-navy);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1.25rem;
+  z-index: 1;
+  box-shadow: 0 0 0 6px var(--surface-warm);
+}
+
+@media (min-width: 768px) {
+  .timeline-step:nth-child(odd) .timeline-number {
+    left: -28px;
+  }
+
+  .timeline-step:nth-child(even) .timeline-number {
+    right: -28px;
+    left: auto;
+  }
 }
 
 /* ============================================
@@ -540,4 +698,35 @@ body {
 .tab-trigger.active {
   opacity: 1;
   border-bottom-color: var(--cjc-navy);
+}
+
+/* ============================================
+   TEXTURE OVERLAY - Depth & Atmosphere
+   ============================================ */
+
+.texture-grain {
+  position: relative;
+}
+
+.texture-grain::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.04;
+  pointer-events: none;
+  mix-blend-mode: overlay;
+}
+
+/* ============================================
+   HOVER STATES - Subtle Interactions
+   ============================================ */
+
+.hover-lift {
+  transition: transform 200ms ease, box-shadow 200ms ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
 }
