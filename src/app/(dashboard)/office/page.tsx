@@ -42,8 +42,8 @@ export default function OfficeDashboard() {
         </div>
 
         <div className="card p-8 text-center">
-          <div className="w-16 h-16 rounded-full bg-cjc-gold/10 flex items-center justify-center mx-auto mb-4">
-            <Building2 className="w-8 h-8 text-cjc-gold" />
+          <div className="w-16 h-16 rounded-full bg-ccis-blue-primary/10 flex items-center justify-center mx-auto mb-4">
+            <Building2 className="w-8 h-8 text-ccis-blue-primary" />
           </div>
           <h2 className="text-xl font-display font-bold text-cjc-navy mb-2">Office Dashboard</h2>
           <p className="text-warm-muted max-w-md mx-auto mb-4">

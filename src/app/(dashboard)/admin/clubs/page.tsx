@@ -160,7 +160,7 @@ export default function AdminClubsPage() {
             <p className="text-sm text-warm-muted">Non-Academic</p>
           </div>
           <div className="card p-4 text-center">
-            <p className="text-2xl font-bold text-cjc-gold">{stats.linked}</p>
+            <p className="text-2xl font-bold text-ccis-blue-primary">{stats.linked}</p>
             <p className="text-sm text-warm-muted">Linked Advisers</p>
           </div>
         </div>
@@ -199,7 +199,7 @@ export default function AdminClubsPage() {
                 className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
               />
             </button>
-            <button onClick={handleAddClub} className="btn btn-gold">
+            <button onClick={handleAddClub} className="btn btn-ccis-blue">
               <Plus className="w-4 h-4" />
               Add Club
             </button>
@@ -379,7 +379,7 @@ export default function AdminClubsPage() {
                 : "No clubs yet. Add your first club to get started."}
             </p>
             {!searchQuery && typeFilter === "all" && (
-              <button onClick={handleAddClub} className="btn btn-gold mt-4">
+              <button onClick={handleAddClub} className="btn btn-ccis-blue mt-4">
                 <Plus className="w-4 h-4" />
                 Add Club
               </button>

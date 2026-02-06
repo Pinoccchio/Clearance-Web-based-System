@@ -15,7 +15,7 @@ const buttonVariants = cva(
         danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
         ghost: "bg-transparent text-cjc-navy hover:bg-gray-100 focus:ring-gray-300",
         outline: "bg-transparent text-cjc-navy border border-cjc-navy hover:bg-cjc-navy hover:text-white focus:ring-cjc-navy",
-        gold: "bg-cjc-gold text-cjc-navy font-semibold hover:bg-cjc-gold-light focus:ring-cjc-gold",
+        gold: "bg-ccis-blue-primary text-white font-semibold hover:bg-ccis-blue focus:ring-ccis-blue-primary",
         success: "bg-green-600 text-white hover:bg-green-700 focus:ring-green-500",
         link: "bg-transparent text-cjc-blue hover:text-cjc-blue-soft underline-offset-4 hover:underline focus:ring-0",
       },

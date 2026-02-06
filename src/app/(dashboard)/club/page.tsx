@@ -35,7 +35,7 @@ export default function ClubDashboard() {
             <p className="text-sm text-warm-muted">Cleared</p>
           </div>
           <div className="card p-4 text-center">
-            <TrendingUp className="w-8 h-8 text-cjc-gold mx-auto mb-2" />
+            <TrendingUp className="w-8 h-8 text-ccis-blue-primary mx-auto mb-2" />
             <p className="text-2xl font-bold text-cjc-navy">86.5%</p>
             <p className="text-sm text-warm-muted">Clearance Rate</p>
           </div>

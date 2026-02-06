@@ -35,15 +35,15 @@ export default function DepartmentDashboard() {
             <p className="text-sm text-warm-muted">Cleared</p>
           </div>
           <div className="card p-4 text-center">
-            <TrendingUp className="w-8 h-8 text-cjc-gold mx-auto mb-2" />
+            <TrendingUp className="w-8 h-8 text-ccis-blue-primary mx-auto mb-2" />
             <p className="text-2xl font-bold text-cjc-navy">91.8%</p>
             <p className="text-sm text-warm-muted">Clearance Rate</p>
           </div>
         </div>
 
         <div className="card p-8 text-center">
-          <div className="w-16 h-16 rounded-full bg-cjc-gold/10 flex items-center justify-center mx-auto mb-4">
-            <GraduationCap className="w-8 h-8 text-cjc-gold" />
+          <div className="w-16 h-16 rounded-full bg-ccis-blue-primary/10 flex items-center justify-center mx-auto mb-4">
+            <GraduationCap className="w-8 h-8 text-ccis-blue-primary" />
           </div>
           <h2 className="text-xl font-display font-bold text-cjc-navy mb-2">Department Dashboard</h2>
           <p className="text-warm-muted max-w-md mx-auto mb-4">

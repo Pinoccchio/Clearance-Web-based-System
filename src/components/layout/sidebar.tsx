@@ -131,8 +131,8 @@ export default function Sidebar({ role, userName, userEmail, isCollapsed, onTogg
       {/* Role Badge */}
       {!isCollapsed && (
         <div className="px-4 py-3">
-          <div className="px-3 py-1.5 bg-cjc-gold/10 border border-cjc-gold/20 rounded-lg">
-            <p className="text-cjc-gold text-xs font-medium text-center">
+          <div className="px-3 py-1.5 bg-ccis-blue-primary/10 border border-ccis-blue-primary/20 rounded-lg">
+            <p className="text-ccis-blue-light text-xs font-medium text-center">
               {roleLabels[role]}
             </p>
           </div>
@@ -164,21 +164,21 @@ export default function Sidebar({ role, userName, userEmail, isCollapsed, onTogg
                     )}
                     title={isCollapsed ? item.label : undefined}
                   >
-                    <span className={cn("flex-shrink-0", isActive && "text-cjc-gold")}>
+                    <span className={cn("flex-shrink-0", isActive && "text-white")}>
                       {item.icon}
                     </span>
                     {!isCollapsed && (
                       <>
                         <span className="flex-1">{item.label}</span>
                         {item.badge && item.badge > 0 && (
-                          <span className="min-w-[20px] h-5 px-1.5 bg-cjc-gold text-cjc-navy text-xs font-bold rounded-full flex items-center justify-center">
+                          <span className="min-w-[20px] h-5 px-1.5 bg-ccis-blue-light text-white text-xs font-bold rounded-full flex items-center justify-center">
                             {item.badge}
                           </span>
                         )}
                       </>
                     )}
                     {isCollapsed && item.badge && item.badge > 0 && (
-                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-cjc-gold text-cjc-navy text-[10px] font-bold rounded-full flex items-center justify-center">
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-ccis-blue-light text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                         {item.badge > 9 ? "9+" : item.badge}
                       </span>
                     )}
@@ -206,7 +206,7 @@ export default function Sidebar({ role, userName, userEmail, isCollapsed, onTogg
           "flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/5",
           isCollapsed && "justify-center"
         )}>
-          <div className="w-9 h-9 rounded-xl bg-cjc-gold/20 flex items-center justify-center text-cjc-gold text-sm font-semibold flex-shrink-0">
+          <div className="w-9 h-9 rounded-xl bg-ccis-blue-primary/20 flex items-center justify-center text-ccis-blue-light text-sm font-semibold flex-shrink-0">
             {userName
               .split(" ")
               .map((n) => n[0])

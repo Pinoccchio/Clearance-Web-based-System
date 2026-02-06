@@ -308,7 +308,7 @@ export default function AdminUsersPage() {
               onChange={(e) => setRoleFilter(e.target.value)}
             />
           </div>
-          <Button variant="gold" onClick={handleAddUser}>
+          <Button variant="primary" onClick={handleAddUser}>
             <Plus className="w-4 h-4" />
             Add User
           </Button>
