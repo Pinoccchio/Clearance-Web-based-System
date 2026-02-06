@@ -1,10 +1,10 @@
 "use client";
 
-import { CheckCircle2, Clock, Users, TrendingUp, BookOpen } from "lucide-react";
+import { CheckCircle2, Clock, Users, TrendingUp } from "lucide-react";
 import { mockUsers } from "@/lib/mock-data";
 
-export default function AcademicClubDashboard() {
-  const user = mockUsers["academic-club"];
+export default function ClubDashboard() {
+  const user = mockUsers.club;
 
   return (
     <div className="min-h-screen bg-surface-warm">
@@ -12,7 +12,7 @@ export default function AcademicClubDashboard() {
         <div className="px-6 py-5">
           <p className="text-sm text-warm-muted">{user.department}</p>
           <h1 className="text-2xl font-display font-bold text-cjc-navy">
-            Academic Club Dashboard
+            Club Dashboard
           </h1>
         </div>
       </header>
@@ -42,10 +42,10 @@ export default function AcademicClubDashboard() {
         </div>
 
         <div className="card p-8 text-center">
-          <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mx-auto mb-4">
-            <BookOpen className="w-8 h-8 text-success" />
+          <div className="w-16 h-16 rounded-full bg-cjc-blue/10 flex items-center justify-center mx-auto mb-4">
+            <Users className="w-8 h-8 text-cjc-blue" />
           </div>
-          <h2 className="text-xl font-display font-bold text-cjc-navy mb-2">Academic Club Dashboard</h2>
+          <h2 className="text-xl font-display font-bold text-cjc-navy mb-2">Club Dashboard</h2>
           <p className="text-warm-muted max-w-md mx-auto mb-4">
             Manage member clearances and view club statistics.
             This is a placeholder - full functionality coming soon.

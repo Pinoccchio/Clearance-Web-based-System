@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef, RefObject } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
 import {
   CheckCircle2,
@@ -9,6 +10,7 @@ import {
   Music2,
 } from "lucide-react";
 import { AuthModal } from "@/components/features/auth-modal";
+import { useAuth } from "@/contexts/auth-context";
 
 // Hook to detect when element enters viewport
 function useInView(ref: RefObject<HTMLElement | null>, threshold = 0.1) {
@@ -45,7 +47,16 @@ function AnimatedCounter({ value, inView }: { value: number; inView: boolean }) 
 }
 
 export default function LandingPage() {
-  const [authModal, setAuthModal] = useState<"login" | "register" | null>(null);
+  const router = useRouter();
+  const { isAuthenticated, profile, isLoading } = useAuth();
+  const [authModal, setAuthModal] = useState<"login" | "register" | "register-admin" | null>(null);
+
+  // Auto-redirect authenticated users to their dashboard
+  useEffect(() => {
+    if (!isLoading && isAuthenticated && profile) {
+      router.push(`/${profile.role}`);
+    }
+  }, [isLoading, isAuthenticated, profile, router]);
 
   // Refs for scroll animations
   const heroRef = useRef<HTMLElement>(null);

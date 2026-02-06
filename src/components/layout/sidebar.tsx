@@ -11,7 +11,6 @@ import {
   LogOut,
   ChevronLeft,
   ChevronRight,
-  HelpCircle,
   GraduationCap,
   CheckSquare,
   BarChart3,
@@ -49,15 +48,14 @@ const adminNavSections: NavSection[] = [
     items: [
       { label: "Dashboard", href: "/admin", icon: <LayoutDashboard className="w-5 h-5" /> },
       { label: "Users", href: "/admin/users", icon: <Users className="w-5 h-5" /> },
-      { label: "Departments", href: "/admin/departments", icon: <GraduationCap className="w-5 h-5" /> },
     ],
   },
   {
     title: "Clearance Sources",
     items: [
+      { label: "Departments", href: "/admin/departments", icon: <GraduationCap className="w-5 h-5" /> },
       { label: "Offices", href: "/admin/offices", icon: <Building2 className="w-5 h-5" /> },
-      { label: "Academic Clubs", href: "/admin/academic-orgs", icon: <ClipboardList className="w-5 h-5" /> },
-      { label: "Non-Academic Clubs", href: "/admin/non-academic-orgs", icon: <UserCheck className="w-5 h-5" /> },
+      { label: "Clubs", href: "/admin/clubs", icon: <Users className="w-5 h-5" /> },
     ],
   },
   {
@@ -82,8 +80,8 @@ const getDashboardOnlyNav = (role: UserRole): NavSection[] => [
 const roleLabels: Record<UserRole, string> = {
   student: "Student",
   office: "Office Staff",
-  "academic-club": "Academic Club",
-  "non-academic-club": "Non-Academic Club",
+  department: "Department",
+  club: "Club Officer",
   admin: "Administrator",
 };
 
@@ -93,9 +91,10 @@ interface SidebarProps {
   userEmail: string;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
+  onLogout?: () => void;
 }
 
-export default function Sidebar({ role, userName, userEmail, isCollapsed, onToggleCollapse }: SidebarProps) {
+export default function Sidebar({ role, userName, userEmail, isCollapsed, onToggleCollapse, onLogout }: SidebarProps) {
   const pathname = usePathname();
 
   // Only admin gets full navigation, other roles get dashboard only
@@ -202,16 +201,6 @@ export default function Sidebar({ role, userName, userEmail, isCollapsed, onTogg
 
       {/* Bottom Section */}
       <div className="p-3 border-t border-white/10 space-y-2">
-        {/* Help */}
-        <Link
-          href="#"
-          className="sidebar-nav-item"
-          title={isCollapsed ? "Help Center" : undefined}
-        >
-          <HelpCircle className="w-5 h-5 flex-shrink-0" />
-          {!isCollapsed && <span>Help Center</span>}
-        </Link>
-
         {/* User Profile */}
         <div className={cn(
           "flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/5",
@@ -233,14 +222,14 @@ export default function Sidebar({ role, userName, userEmail, isCollapsed, onTogg
         </div>
 
         {/* Logout */}
-        <Link
-          href="/"
-          className="sidebar-nav-item hover:bg-red-500/10 hover:text-red-400"
+        <button
+          onClick={onLogout}
+          className="sidebar-nav-item hover:bg-red-500/10 hover:text-red-400 w-full"
           title={isCollapsed ? "Sign Out" : undefined}
         >
           <LogOut className="w-5 h-5 flex-shrink-0" />
           {!isCollapsed && <span>Sign Out</span>}
-        </Link>
+        </button>
       </div>
 
       {/* Collapse Toggle */}

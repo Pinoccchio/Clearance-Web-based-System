@@ -14,33 +14,19 @@ import {
   Shield,
   Crown,
   ChevronDown,
-  BookOpen,
   Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { registerAdmin, registerStudent } from "@/lib/supabase";
+import { useAuth } from "@/contexts/auth-context";
 
-type UserRole = "student" | "office" | "academic-club" | "non-academic-club" | "admin";
-type AuthMode = "login" | "register";
+type AuthMode = "login" | "register" | "register-admin";
 
 interface AuthModalProps {
   isOpen: boolean;
   onClose: () => void;
   initialMode?: AuthMode;
 }
-
-interface RoleOption {
-  id: UserRole;
-  label: string;
-  icon: React.ReactNode;
-}
-
-const roleOptions: RoleOption[] = [
-  { id: "student", label: "Student", icon: <GraduationCap className="w-4 h-4" /> },
-  { id: "office", label: "Office", icon: <Building2 className="w-4 h-4" /> },
-  { id: "academic-club", label: "Academic Club", icon: <BookOpen className="w-4 h-4" /> },
-  { id: "non-academic-club", label: "Non-Academic Club", icon: <Users className="w-4 h-4" /> },
-  { id: "admin", label: "Admin", icon: <Shield className="w-4 h-4" /> },
-];
 
 const departments = [
   { value: "ccis", label: "College of Computing and Information Sciences (CCIS)" },
@@ -55,7 +41,6 @@ const courses = [
 const yearLevels = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
 
 export function AuthModal({ isOpen, onClose, initialMode = "login" }: AuthModalProps) {
-  const router = useRouter();
   const [mode, setMode] = useState<AuthMode>(initialMode);
 
   // Sync mode with initialMode when modal opens or initialMode changes
@@ -82,13 +67,21 @@ export function AuthModal({ isOpen, onClose, initialMode = "login" }: AuthModalP
           >
             Register
           </button>
+          <button
+            className={cn("tab-trigger", mode === "register-admin" && "active")}
+            onClick={() => setMode("register-admin")}
+          >
+            Admin
+          </button>
         </div>
 
         {/* Content */}
         {mode === "login" ? (
           <LoginForm onClose={onClose} />
-        ) : (
+        ) : mode === "register" ? (
           <RegisterForm onClose={onClose} onSwitchToLogin={() => setMode("login")} />
+        ) : (
+          <AdminRegisterForm onClose={onClose} onSwitchToLogin={() => setMode("login")} />
         )}
       </div>
     </Modal>
@@ -101,9 +94,10 @@ export function AuthModal({ isOpen, onClose, initialMode = "login" }: AuthModalP
 
 function LoginForm({ onClose }: { onClose: () => void }) {
   const router = useRouter();
+  const { login } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [selectedRole, setSelectedRole] = useState<UserRole>("student");
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -113,9 +107,28 @@ function LoginForm({ onClose }: { onClose: () => void }) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 800));
-    onClose();
-    router.push(`/${selectedRole}`);
+    setError(null);
+
+    // Validate required fields
+    if (!formData.email.trim() || !formData.password.trim()) {
+      setError("Please enter both email and password");
+      setIsLoading(false);
+      return;
+    }
+
+    console.log("[LoginForm] Submitting login...");
+    const result = await login(formData.email, formData.password);
+    console.log("[LoginForm] Login result:", result);
+
+    if (result.success && result.role) {
+      console.log("[LoginForm] Login successful, redirecting to:", `/${result.role}`);
+      onClose();
+      router.push(`/${result.role}`);
+    } else {
+      console.log("[LoginForm] Login failed:", result.error);
+      setError(result.error || "Invalid credentials. Please try again.");
+      setIsLoading(false);
+    }
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -128,30 +141,11 @@ function LoginForm({ onClose }: { onClose: () => void }) {
 
   return (
     <div>
-      {/* Role Selector */}
-      <div className="mb-5">
-        <label className="block text-sm font-medium text-cjc-navy mb-2">
-          Select Role <span className="text-gray-400 font-normal">(Demo)</span>
-        </label>
-        <div className="flex flex-wrap gap-2">
-          {roleOptions.map((role) => (
-            <button
-              key={role.id}
-              type="button"
-              onClick={() => setSelectedRole(role.id)}
-              className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-colors",
-                selectedRole === role.id
-                  ? "bg-cjc-navy text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              )}
-            >
-              {role.icon}
-              {role.label}
-            </button>
-          ))}
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          {error}
         </div>
-      </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {/* Email */}
@@ -167,6 +161,7 @@ function LoginForm({ onClose }: { onClose: () => void }) {
             onChange={handleInputChange}
             className="input-base"
             placeholder="your.email@cjc.edu.ph"
+            required
           />
         </div>
 
@@ -184,6 +179,7 @@ function LoginForm({ onClose }: { onClose: () => void }) {
               onChange={handleInputChange}
               className="input-base pr-10"
               placeholder="Enter your password"
+              required
             />
             <button
               type="button"
@@ -231,19 +227,12 @@ function LoginForm({ onClose }: { onClose: () => void }) {
           )}
         </button>
       </form>
-
-      {/* Demo notice */}
-      <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-        <p className="text-xs text-amber-800 text-center">
-          <strong>Demo Mode:</strong> Select any role and click Sign In to explore.
-        </p>
-      </div>
     </div>
   );
 }
 
 // ============================================
-// REGISTER FORM
+// REGISTER FORM (Student)
 // ============================================
 
 function RegisterForm({
@@ -258,6 +247,7 @@ function RegisterForm({
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     studentId: "",
     firstName: "",
@@ -286,22 +276,44 @@ function RegisterForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    setIsLoading(false);
-    onSwitchToLogin();
+    setError(null);
+
+    // Validate password match
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      setIsLoading(false);
+      return;
+    }
+
+    // Validate password length
+    if (formData.password.length < 8) {
+      setError("Password must be at least 8 characters");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      await registerStudent({
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        middleName: formData.middleName || undefined,
+        studentId: formData.studentId,
+        course: formData.course,
+        yearLevel: formData.yearLevel,
+        department: formData.department,
+      });
+
+      // Success - switch to login
+      onSwitchToLogin();
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Registration failed. Please try again.";
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
   };
-
-  const isStep1Valid =
-    formData.studentId && formData.firstName && formData.lastName && formData.email;
-
-  const isStep2Valid =
-    formData.department &&
-    formData.course &&
-    formData.yearLevel &&
-    formData.password &&
-    formData.confirmPassword &&
-    formData.password === formData.confirmPassword &&
-    formData.agreeToTerms;
 
   return (
     <div>
@@ -337,6 +349,12 @@ function RegisterForm({
           </span>
         </div>
       </div>
+
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          {error}
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         {step === 1 && (
@@ -607,6 +625,314 @@ function RegisterForm({
           </>
         )}
       </form>
+    </div>
+  );
+}
+
+// ============================================
+// ADMIN REGISTER FORM
+// ============================================
+
+function AdminRegisterForm({
+  onClose,
+  onSwitchToLogin,
+}: {
+  onClose: () => void;
+  onSwitchToLogin: () => void;
+}) {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    middleName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    agreeToTerms: false,
+  });
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => ({
+      ...prev,
+      [name]: type === "checkbox" ? checked : value,
+    }));
+  };
+
+  const validateEmail = (email: string): boolean => {
+    return email.endsWith("@g.cjc.edu.ph");
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError(null);
+
+    // Validate required fields
+    if (!formData.firstName.trim() || !formData.lastName.trim()) {
+      setError("First name and last name are required");
+      setIsLoading(false);
+      return;
+    }
+
+    // Validate email domain
+    if (!validateEmail(formData.email)) {
+      setError("Email must be a @g.cjc.edu.ph address");
+      setIsLoading(false);
+      return;
+    }
+
+    // Validate password length
+    if (formData.password.length < 8) {
+      setError("Password must be at least 8 characters");
+      setIsLoading(false);
+      return;
+    }
+
+    // Validate password match
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      setIsLoading(false);
+      return;
+    }
+
+    // Validate terms agreement
+    if (!formData.agreeToTerms) {
+      setError("You must agree to the terms and conditions");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      await registerAdmin({
+        email: formData.email,
+        password: formData.password,
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        middleName: formData.middleName || undefined,
+      });
+
+      // Show success message and switch to login after a delay
+      setSuccessMessage("Admin account created successfully! Please sign in with your credentials.");
+      setTimeout(() => {
+        onSwitchToLogin();
+      }, 2000);
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : "Registration failed. Please try again.";
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-2">
+          <Shield className="w-5 h-5 text-cjc-navy" />
+          <h3 className="font-semibold text-cjc-navy">Admin Registration</h3>
+        </div>
+        <p className="text-sm text-gray-500">
+          Create an administrator account to manage the clearance system.
+        </p>
+      </div>
+
+      {successMessage && (
+        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div className="flex items-center gap-2 text-green-800">
+            <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <span className="text-sm font-medium">{successMessage}</span>
+          </div>
+          <p className="mt-2 text-xs text-green-600">Redirecting to Sign In...</p>
+        </div>
+      )}
+
+      {error && (
+        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
+          {error}
+        </div>
+      )}
+
+      {!successMessage && (
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {/* First Name and Middle Name */}
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="adminFirstName" className="block text-sm font-medium text-cjc-navy mb-1.5">
+              First Name
+            </label>
+            <input
+              type="text"
+              id="adminFirstName"
+              name="firstName"
+              value={formData.firstName}
+              onChange={handleInputChange}
+              className="input-base"
+              placeholder="Juan"
+              required
+            />
+          </div>
+          <div>
+            <label htmlFor="adminMiddleName" className="block text-sm font-medium text-cjc-navy mb-1.5">
+              Middle Name <span className="text-gray-400 font-normal">(Optional)</span>
+            </label>
+            <input
+              type="text"
+              id="adminMiddleName"
+              name="middleName"
+              value={formData.middleName}
+              onChange={handleInputChange}
+              className="input-base"
+              placeholder="Santos"
+            />
+          </div>
+        </div>
+
+        {/* Last Name */}
+        <div>
+          <label htmlFor="adminLastName" className="block text-sm font-medium text-cjc-navy mb-1.5">
+            Last Name
+          </label>
+          <input
+            type="text"
+            id="adminLastName"
+            name="lastName"
+            value={formData.lastName}
+            onChange={handleInputChange}
+            className="input-base"
+            placeholder="Dela Cruz"
+            required
+          />
+        </div>
+
+        {/* Email */}
+        <div>
+          <label htmlFor="adminEmail" className="block text-sm font-medium text-cjc-navy mb-1.5">
+            Email Address
+          </label>
+          <input
+            type="email"
+            id="adminEmail"
+            name="email"
+            value={formData.email}
+            onChange={handleInputChange}
+            className="input-base"
+            placeholder="admin@g.cjc.edu.ph"
+            required
+          />
+          <p className="mt-1 text-xs text-gray-500">Must be a @g.cjc.edu.ph email address</p>
+        </div>
+
+        {/* Password */}
+        <div>
+          <label htmlFor="adminPassword" className="block text-sm font-medium text-cjc-navy mb-1.5">
+            Password
+          </label>
+          <div className="relative">
+            <input
+              type={showPassword ? "text" : "password"}
+              id="adminPassword"
+              name="password"
+              value={formData.password}
+              onChange={handleInputChange}
+              className="input-base pr-10"
+              placeholder="Min. 8 characters"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Confirm Password */}
+        <div>
+          <label htmlFor="adminConfirmPassword" className="block text-sm font-medium text-cjc-navy mb-1.5">
+            Confirm Password
+          </label>
+          <div className="relative">
+            <input
+              type={showConfirmPassword ? "text" : "password"}
+              id="adminConfirmPassword"
+              name="confirmPassword"
+              value={formData.confirmPassword}
+              onChange={handleInputChange}
+              className="input-base pr-10"
+              placeholder="Confirm your password"
+              required
+            />
+            <button
+              type="button"
+              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+            </button>
+          </div>
+        </div>
+
+        {/* Terms */}
+        <label className="flex items-start gap-2 cursor-pointer">
+          <input
+            type="checkbox"
+            name="agreeToTerms"
+            checked={formData.agreeToTerms}
+            onChange={handleInputChange}
+            className="w-4 h-4 mt-0.5 rounded border-gray-300 text-cjc-blue focus:ring-cjc-blue"
+            required
+          />
+          <span className="text-sm text-gray-600">
+            I agree to the{" "}
+            <Link href="#" className="text-cjc-crimson hover:underline">
+              Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link href="#" className="text-cjc-crimson hover:underline">
+              Privacy Policy
+            </Link>
+          </span>
+        </label>
+
+        {/* Submit Button */}
+        <button
+          type="submit"
+          disabled={isLoading}
+          className="w-full py-3 bg-cjc-navy text-white rounded-lg font-medium hover:bg-cjc-navy/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+        >
+          {isLoading ? (
+            <>
+              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <span>Creating Admin Account...</span>
+            </>
+          ) : (
+            <>
+              <Shield className="w-4 h-4" />
+              <span>Create Admin Account</span>
+            </>
+          )}
+        </button>
+      </form>
+      )}
+
+      {/* Info notice */}
+      {!successMessage && (
+        <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-xs text-blue-800 text-center">
+            Admin accounts have full system access. Registration is open for authorized personnel.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
