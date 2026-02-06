@@ -546,93 +546,164 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Announcements Section - Editorial Bulletin Style */}
+        {/* Announcements Section - Newspaper Grid Editorial Style */}
         {announcements.length > 0 && (
           <section ref={announcementsRef} className="py-20 lg:py-28 bg-white">
             <div className="max-w-6xl mx-auto px-6">
-              {/* Section Header - Editorial Style */}
+              {/* Section Header - Editorial Style with decorative elements */}
               <div className={`mb-12 animate-fade-up ${announcementsInView ? 'in-view' : ''}`}>
-                <p className="text-sm font-semibold text-ccis-blue-primary uppercase tracking-wider mb-3">
-                  Announcements
-                </p>
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="h-px flex-1 bg-border-warm max-w-[60px]" />
+                  <p className="text-sm font-semibold text-ccis-blue-primary uppercase tracking-wider">
+                    Announcements
+                  </p>
+                </div>
                 <h2 className="font-display text-3xl sm:text-4xl font-bold text-cjc-navy">
                   Latest Updates
                 </h2>
               </div>
 
-              {/* Announcements Grid - Bulletin Board Style */}
-              <div className={`space-y-4 animate-stagger ${announcementsInView ? 'in-view' : ''}`}>
-                {announcements.map((announcement, index) => (
+              {/* Newspaper Grid Layout */}
+              <div className={`announcement-grid ${announcementsInView ? 'in-view' : ''}`}>
+                {/* Featured Announcement - First item gets hero treatment */}
+                {announcements.length > 0 && (
+                  <button
+                    onClick={() => setSelectedAnnouncement(announcements[0])}
+                    className={`announcement-featured text-left cursor-pointer announcement-reveal ${announcementsInView ? '' : 'opacity-0'}`}
+                    style={{ animationDelay: '0.1s' }}
+                  >
+                    {/* Decorative dot pattern */}
+                    <div className="dot-pattern top-4 right-4" />
+
+                    <div className="relative p-6 sm:p-8 h-full flex flex-col">
+                      {/* Priority Badge */}
+                      <div className="mb-4">
+                        <span className={`priority-badge ${
+                          announcements[0].priority === 'urgent' ? 'priority-badge-urgent' :
+                          announcements[0].priority === 'high' ? 'priority-badge-high' :
+                          announcements[0].priority === 'normal' ? 'priority-badge-normal' :
+                          'priority-badge-low'
+                        }`}>
+                          {announcements[0].priority === 'urgent' && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                          )}
+                          {announcements[0].priority === 'urgent' ? 'Urgent' :
+                           announcements[0].priority === 'high' ? 'High Priority' :
+                           announcements[0].priority === 'normal' ? 'Announcement' : 'Notice'}
+                        </span>
+                      </div>
+
+                      {/* Title - Large editorial style */}
+                      <h3 className="announcement-featured-title text-white mb-4">
+                        {announcements[0].title}
+                      </h3>
+
+                      {/* Content Preview with fade mask */}
+                      <div className="content-fade-mask flex-1 mb-4">
+                        <p className="text-white/70 text-sm leading-relaxed line-clamp-4">
+                          {announcements[0].content}
+                        </p>
+                      </div>
+
+                      {/* Event Details - If Present */}
+                      {(announcements[0].event_date || announcements[0].event_location) && (
+                        <div className="flex flex-wrap items-center gap-3 mb-4">
+                          {announcements[0].event_date && (
+                            <span className="flex items-center gap-2 text-sm text-white/90 bg-white/10 px-3 py-1.5 rounded-full">
+                              <Calendar className="w-4 h-4 text-cjc-gold" />
+                              {formatAnnouncementDate(announcements[0].event_date)}
+                            </span>
+                          )}
+                          {announcements[0].event_location && (
+                            <span className="flex items-center gap-2 text-sm text-white/90 bg-white/10 px-3 py-1.5 rounded-full">
+                              <MapPin className="w-4 h-4 text-cjc-gold" />
+                              {announcements[0].event_location}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Footer */}
+                      <div className="flex items-center justify-between pt-4 border-t border-white/10">
+                        <span className="text-xs text-white/50">
+                          {formatRelativeTime(announcements[0].created_at)}
+                        </span>
+                        <span className="text-sm text-cjc-gold font-medium flex items-center gap-1 group-hover:gap-2 transition-all">
+                          Read More
+                          <ArrowRight className="w-4 h-4" />
+                        </span>
+                      </div>
+                    </div>
+                  </button>
+                )}
+
+                {/* Secondary Announcements - Stacked on right */}
+                {announcements.slice(1).map((announcement, index) => (
                   <button
                     key={announcement.id}
                     onClick={() => setSelectedAnnouncement(announcement)}
-                    className="group relative w-full text-left bg-white rounded border border-border-warm shadow-sm overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
-                    style={{ transitionDelay: `${index * 100}ms` }}
+                    className={`announcement-card announcement-card-${announcement.priority} text-left cursor-pointer announcement-reveal ${announcementsInView ? '' : 'opacity-0'}`}
+                    style={{ animationDelay: `${(index + 2) * 0.1}s` }}
                   >
-                    {/* Priority Accent Bar - Top */}
-                    <div className={`h-1 ${
-                      announcement.priority === 'urgent' ? 'bg-cjc-crimson' :
-                      announcement.priority === 'high' ? 'bg-cjc-gold' :
-                      'bg-cjc-navy/20'
-                    }`} />
-
-                    <div className="p-6 flex gap-5">
-                      {/* Numbered Circle - Editorial Style */}
-                      <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-display font-bold text-lg ${
-                        announcement.priority === 'urgent'
-                          ? 'bg-cjc-crimson text-white'
-                          : announcement.priority === 'high'
-                            ? 'bg-cjc-gold text-cjc-navy'
-                            : 'bg-surface-cream text-cjc-navy'
-                      }`}>
-                        {String(index + 1).padStart(2, '0')}
+                    <div className="p-5">
+                      {/* Header Row */}
+                      <div className="flex items-start justify-between gap-3 mb-3">
+                        {/* Priority Badge */}
+                        <span className={`priority-badge ${
+                          announcement.priority === 'urgent' ? 'priority-badge-urgent' :
+                          announcement.priority === 'high' ? 'priority-badge-high' :
+                          announcement.priority === 'normal' ? 'priority-badge-normal' :
+                          'priority-badge-low'
+                        }`}>
+                          {announcement.priority === 'urgent' && (
+                            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                          )}
+                          {announcement.priority === 'urgent' ? 'Urgent' :
+                           announcement.priority === 'high' ? 'High' :
+                           announcement.priority === 'normal' ? 'New' : 'Notice'}
+                        </span>
+                        <span className="text-xs text-warm-muted whitespace-nowrap">
+                          {formatRelativeTime(announcement.created_at)}
+                        </span>
                       </div>
 
-                      {/* Content */}
-                      <div className="flex-1 min-w-0">
-                        {/* Title Row */}
-                        <div className="flex items-start justify-between gap-4 mb-2">
-                          <h3 className="font-display font-bold text-lg text-cjc-navy group-hover:text-ccis-blue-primary transition-colors">
-                            {announcement.title}
-                          </h3>
-                          <span className="text-xs text-warm-muted whitespace-nowrap">
-                            {formatRelativeTime(announcement.created_at)}
-                          </span>
+                      {/* Title */}
+                      <h3 className="announcement-card-title font-display font-bold text-base text-cjc-navy mb-2 line-clamp-2 transition-colors">
+                        {announcement.title}
+                      </h3>
+
+                      {/* Content Preview */}
+                      <p className="text-sm text-warm-muted line-clamp-2 mb-3">
+                        {announcement.content}
+                      </p>
+
+                      {/* Event Details - Compact */}
+                      {(announcement.event_date || announcement.event_location) && (
+                        <div className="flex flex-wrap items-center gap-3 text-xs">
+                          {announcement.event_date && (
+                            <span className="flex items-center gap-1.5 text-cjc-navy">
+                              <Calendar className="w-3.5 h-3.5 text-cjc-gold" />
+                              {new Date(announcement.event_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                            </span>
+                          )}
+                          {announcement.event_location && (
+                            <span className="flex items-center gap-1.5 text-cjc-navy">
+                              <MapPin className="w-3.5 h-3.5 text-cjc-gold" />
+                              {announcement.event_location}
+                            </span>
+                          )}
                         </div>
-
-                        {/* Content Preview */}
-                        <p className="text-sm text-warm-muted line-clamp-2 mb-3">
-                          {announcement.content}
-                        </p>
-
-                        {/* Event Details - If Present */}
-                        {(announcement.event_date || announcement.event_location) && (
-                          <div className="flex flex-wrap items-center gap-4 text-sm">
-                            {announcement.event_date && (
-                              <span className="flex items-center gap-1.5 text-cjc-navy">
-                                <Calendar className="w-4 h-4 text-cjc-gold" />
-                                {formatAnnouncementDate(announcement.event_date)}
-                              </span>
-                            )}
-                            {announcement.event_location && (
-                              <span className="flex items-center gap-1.5 text-cjc-navy">
-                                <MapPin className="w-4 h-4 text-cjc-gold" />
-                                {announcement.event_location}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                      </div>
+                      )}
                     </div>
                   </button>
                 ))}
               </div>
 
               {/* View All CTA */}
-              <div className={`mt-10 text-center animate-fade-up ${announcementsInView ? 'in-view' : ''}`} style={{ transitionDelay: '300ms' }}>
+              <div className={`mt-12 text-center animate-fade-up ${announcementsInView ? 'in-view' : ''}`} style={{ transitionDelay: '400ms' }}>
                 <button
                   onClick={() => setAuthModal("login")}
-                  className="inline-flex items-center gap-2 text-sm font-medium text-ccis-blue-primary hover:text-ccis-blue transition-colors"
+                  className="inline-flex items-center gap-2 text-sm font-medium text-white bg-cjc-navy hover:bg-cjc-navy-light px-6 py-3 rounded-lg transition-all hover:-translate-y-0.5 hover:shadow-lg"
                 >
                   Sign in to view all announcements
                   <ArrowRight className="w-4 h-4" />

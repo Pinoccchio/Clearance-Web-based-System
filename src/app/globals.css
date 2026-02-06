@@ -1067,3 +1067,320 @@ body {
 .bg-ccis-cta {
   background: linear-gradient(135deg, var(--ccis-blue-primary) 0%, var(--ccis-blue-dark) 100%);
 }
+
+/* ============================================
+   ANNOUNCEMENTS - Newspaper Grid System
+   ============================================ */
+
+/* Newspaper-style grid layout */
+.announcement-grid {
+  display: grid;
+  gap: 1.5rem;
+}
+
+@media (min-width: 768px) {
+  .announcement-grid {
+    grid-template-columns: 1.5fr 1fr;
+    grid-template-rows: auto auto;
+  }
+}
+
+/* Featured announcement - Hero treatment */
+.announcement-featured {
+  background: var(--cjc-navy);
+  color: white;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  position: relative;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+@media (min-width: 768px) {
+  .announcement-featured {
+    grid-row: span 2;
+  }
+}
+
+.announcement-featured:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px rgba(15, 39, 68, 0.3);
+}
+
+/* Diagonal stripes pattern for featured card */
+.announcement-featured::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 150px;
+  height: 150px;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 10px,
+    rgba(212, 164, 24, 0.1) 10px,
+    rgba(212, 164, 24, 0.1) 20px
+  );
+  pointer-events: none;
+}
+
+/* Secondary announcement cards */
+.announcement-card {
+  background: var(--surface-primary);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  position: relative;
+}
+
+.announcement-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--ccis-blue-light);
+}
+
+.announcement-card:hover .announcement-card-title {
+  color: var(--ccis-blue-primary);
+}
+
+/* Left border accent based on priority */
+.announcement-card-urgent {
+  border-left: 4px solid var(--cjc-crimson);
+}
+
+.announcement-card-high {
+  border-left: 4px solid var(--cjc-gold);
+}
+
+.announcement-card-normal {
+  border-left: 4px solid var(--ccis-blue);
+}
+
+.announcement-card-low {
+  border-left: 4px solid var(--border-medium);
+}
+
+/* ============================================
+   PRIORITY BADGES - Editorial Style
+   ============================================ */
+
+.priority-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.priority-badge-urgent {
+  background: var(--cjc-crimson);
+  color: white;
+  animation: urgentPulse 2s ease-in-out infinite;
+}
+
+.priority-badge-high {
+  background: var(--cjc-gold);
+  color: var(--cjc-navy);
+}
+
+.priority-badge-normal {
+  background: var(--ccis-blue-primary);
+  color: white;
+}
+
+.priority-badge-low {
+  background: var(--surface-tertiary);
+  color: var(--text-warm-muted);
+}
+
+/* Pulsing animation for urgent badges */
+@keyframes urgentPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(169, 30, 44, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(169, 30, 44, 0);
+  }
+}
+
+/* ============================================
+   MODAL - Announcement Detail Redesign
+   ============================================ */
+
+/* Priority header bands with gradients */
+.modal-header-urgent {
+  background: linear-gradient(135deg, var(--cjc-crimson) 0%, var(--cjc-crimson-dark) 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.modal-header-urgent::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.1) 50%, transparent 100%);
+  animation: headerShine 3s ease-in-out infinite;
+}
+
+.modal-header-high {
+  background: linear-gradient(135deg, var(--cjc-gold) 0%, #b8941a 100%);
+}
+
+.modal-header-normal {
+  background: linear-gradient(135deg, var(--ccis-blue-primary) 0%, var(--ccis-blue-dark) 100%);
+}
+
+.modal-header-low {
+  background: linear-gradient(135deg, #64748b 0%, #475569 100%);
+}
+
+@keyframes headerShine {
+  0% { transform: translateX(-100%); }
+  50%, 100% { transform: translateX(100%); }
+}
+
+/* Event detail pills */
+.event-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--surface-primary);
+  border: 1px solid var(--border-light);
+  border-radius: 9999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--cjc-navy);
+  transition: all 0.2s ease;
+}
+
+.event-pill:hover {
+  border-color: var(--ccis-blue-light);
+  box-shadow: var(--shadow-sm);
+}
+
+.event-pill-icon {
+  width: 1.25rem;
+  height: 1.25rem;
+  color: var(--cjc-gold);
+}
+
+/* Decorative quotation marks */
+.decorative-quote {
+  position: absolute;
+  font-family: Georgia, serif;
+  font-size: 8rem;
+  line-height: 1;
+  color: var(--cjc-navy);
+  opacity: 0.03;
+  pointer-events: none;
+  user-select: none;
+}
+
+.decorative-quote-left {
+  top: -1rem;
+  left: -0.5rem;
+}
+
+.decorative-quote-right {
+  bottom: -3rem;
+  right: 0;
+  transform: rotate(180deg);
+}
+
+/* Glass morphism modal backdrop enhancement */
+.modal-glass-backdrop {
+  backdrop-filter: blur(8px);
+  background: rgba(15, 39, 68, 0.6);
+}
+
+/* Enhanced close button */
+.modal-close-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: var(--cjc-navy);
+  color: white;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.modal-close-btn:hover {
+  background: var(--cjc-navy-light);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(15, 39, 68, 0.3);
+}
+
+/* Staggered reveal for announcements grid */
+@keyframes announcementReveal {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.announcement-reveal {
+  opacity: 0;
+  animation: announcementReveal 0.5s ease forwards;
+}
+
+.announcement-reveal-delay-1 { animation-delay: 0.1s; }
+.announcement-reveal-delay-2 { animation-delay: 0.2s; }
+.announcement-reveal-delay-3 { animation-delay: 0.3s; }
+
+/* Dot pattern decorative element */
+.dot-pattern {
+  position: absolute;
+  width: 80px;
+  height: 80px;
+  background-image: radial-gradient(circle, var(--cjc-gold) 2px, transparent 2px);
+  background-size: 12px 12px;
+  opacity: 0.3;
+  pointer-events: none;
+}
+
+/* Featured announcement typography */
+.announcement-featured-title {
+  font-family: var(--font-display), Georgia, serif;
+  font-weight: 800;
+  font-size: 1.5rem;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+@media (min-width: 768px) {
+  .announcement-featured-title {
+    font-size: 1.75rem;
+  }
+}
+
+/* Content fade mask for long content */
+.content-fade-mask {
+  position: relative;
+}
+
+.content-fade-mask::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3rem;
+  background: linear-gradient(transparent, var(--cjc-navy));
+  pointer-events: none;
+}
