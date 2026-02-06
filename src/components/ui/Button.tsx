@@ -10,6 +10,7 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary: "bg-cjc-blue text-white hover:bg-cjc-blue-soft focus:ring-cjc-blue",
+        ccisPrimary: "bg-ccis-blue-primary text-white hover:bg-ccis-blue focus:ring-ccis-blue-primary font-semibold",
         secondary: "bg-white text-cjc-navy border border-gray-200 hover:bg-gray-50 focus:ring-gray-300",
         danger: "bg-red-600 text-white hover:bg-red-700 focus:ring-red-500",
         ghost: "bg-transparent text-cjc-navy hover:bg-gray-100 focus:ring-gray-300",

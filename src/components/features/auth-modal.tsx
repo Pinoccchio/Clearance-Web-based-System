@@ -20,7 +20,7 @@ import { cn } from "@/lib/utils";
 import { registerAdmin, registerStudent } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth-context";
 
-type AuthMode = "login" | "register" | "register-admin";
+type AuthMode = "login" | "register";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -67,21 +67,13 @@ export function AuthModal({ isOpen, onClose, initialMode = "login" }: AuthModalP
           >
             Register
           </button>
-          <button
-            className={cn("tab-trigger", mode === "register-admin" && "active")}
-            onClick={() => setMode("register-admin")}
-          >
-            Admin
-          </button>
         </div>
 
         {/* Content */}
         {mode === "login" ? (
           <LoginForm onClose={onClose} />
-        ) : mode === "register" ? (
-          <RegisterForm onClose={onClose} onSwitchToLogin={() => setMode("login")} />
         ) : (
-          <AdminRegisterForm onClose={onClose} onSwitchToLogin={() => setMode("login")} />
+          <RegisterForm onClose={onClose} onSwitchToLogin={() => setMode("login")} />
         )}
       </div>
     </Modal>
@@ -203,7 +195,7 @@ function LoginForm({ onClose }: { onClose: () => void }) {
             />
             <span className="text-sm text-gray-600">Remember me</span>
           </label>
-          <Link href="#" className="text-sm text-cjc-crimson hover:underline">
+          <Link href="#" className="text-sm text-ccis-blue-primary hover:underline">
             Forgot password?
           </Link>
         </div>
@@ -212,7 +204,7 @@ function LoginForm({ onClose }: { onClose: () => void }) {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full py-3 bg-cjc-crimson text-white rounded-lg font-medium hover:bg-cjc-crimson-light transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+          className="w-full py-3 bg-ccis-blue-primary text-white rounded-lg font-medium hover:bg-ccis-blue transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
         >
           {isLoading ? (
             <>
@@ -443,7 +435,7 @@ function RegisterForm({
             <button
               type="button"
               onClick={() => setStep(2)}
-              className="w-full py-3 bg-cjc-crimson text-white rounded-lg font-medium hover:bg-cjc-crimson-light transition-colors"
+              className="w-full py-3 bg-ccis-blue-primary text-white rounded-lg font-medium hover:bg-ccis-blue transition-colors"
             >
               Continue
             </button>
@@ -585,11 +577,11 @@ function RegisterForm({
               />
               <span className="text-sm text-gray-600">
                 I agree to the{" "}
-                <Link href="#" className="text-cjc-crimson hover:underline">
+                <Link href="#" className="text-ccis-blue-primary hover:underline">
                   Terms of Service
                 </Link>{" "}
                 and{" "}
-                <Link href="#" className="text-cjc-crimson hover:underline">
+                <Link href="#" className="text-ccis-blue-primary hover:underline">
                   Privacy Policy
                 </Link>
               </span>
@@ -607,7 +599,7 @@ function RegisterForm({
               <button
                 type="submit"
                 disabled={isLoading}
-                className="flex-1 py-3 bg-cjc-crimson text-white rounded-lg font-medium hover:bg-cjc-crimson-light transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                className="flex-1 py-3 bg-ccis-blue-primary text-white rounded-lg font-medium hover:bg-ccis-blue transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
                 {isLoading ? (
                   <>
@@ -894,11 +886,11 @@ function AdminRegisterForm({
           />
           <span className="text-sm text-gray-600">
             I agree to the{" "}
-            <Link href="#" className="text-cjc-crimson hover:underline">
+            <Link href="#" className="text-ccis-blue-primary hover:underline">
               Terms of Service
             </Link>{" "}
             and{" "}
-            <Link href="#" className="text-cjc-crimson hover:underline">
+            <Link href="#" className="text-ccis-blue-primary hover:underline">
               Privacy Policy
             </Link>
           </span>
@@ -908,7 +900,7 @@ function AdminRegisterForm({
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full py-3 bg-cjc-navy text-white rounded-lg font-medium hover:bg-cjc-navy/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+          className="w-full py-3 bg-ccis-blue-primary text-white rounded-lg font-medium hover:bg-ccis-blue transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
         >
           {isLoading ? (
             <>

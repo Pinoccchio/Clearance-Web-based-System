@@ -256,15 +256,15 @@ export default function LandingPage() {
                 </button>
                 <button
                   onClick={() => setAuthModal("register")}
-                  className="btn btn-crimson text-sm"
+                  className="btn btn-ccis-blue text-sm"
                 >
                   Get Started
                 </button>
               </div>
             </div>
           </nav>
-          {/* Crimson Accent Bar - The visual signature */}
-          <div className="accent-bar-crimson" />
+          {/* CCIS Blue Accent Bar - The visual signature */}
+          <div className="accent-bar-ccis-blue" />
         </header>
 
         {/* Hero Section - Editorial Typography */}
@@ -274,7 +274,7 @@ export default function LandingPage() {
               {/* Text Content - 60% */}
               <div className={`lg:col-span-3 animate-fade-up ${heroInView ? 'in-view' : ''}`}>
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-surface-cream border border-border-warm text-sm text-warm-muted mb-8">
-                  <span className="w-2 h-2 rounded-full bg-cjc-crimson"></span>
+                  <span className="w-2 h-2 rounded-full bg-ccis-blue-primary"></span>
                   Academic Year 2025-2026
                 </div>
 
@@ -296,7 +296,7 @@ export default function LandingPage() {
                 <div className="flex flex-col sm:flex-row gap-4 mb-12">
                   <button
                     onClick={() => setAuthModal("login")}
-                    className="btn btn-crimson text-base px-8 py-3.5"
+                    className="btn btn-ccis-blue text-base px-8 py-3.5"
                   >
                     Access Portal
                     <ArrowRight className="w-4 h-4" />
@@ -383,7 +383,7 @@ export default function LandingPage() {
                                 className={`text-xs px-2.5 py-1 rounded-full font-medium flex-shrink-0 ml-2 ${
                                   isCleared
                                     ? "bg-cjc-gold/20 text-cjc-gold"
-                                    : "bg-cjc-crimson/10 text-cjc-crimson"
+                                    : "bg-ccis-blue-primary/10 text-ccis-blue-primary"
                                 }`}
                               >
                                 {isCleared ? "Cleared" : "Pending"}
@@ -439,7 +439,7 @@ export default function LandingPage() {
         <section ref={featuresRef} className="py-20 lg:py-28">
           <div className="max-w-6xl mx-auto px-6">
             <div className={`mb-16 animate-fade-up ${featuresInView ? 'in-view' : ''}`}>
-              <p className="text-sm font-semibold text-cjc-crimson uppercase tracking-wider mb-3">
+              <p className="text-sm font-semibold text-ccis-blue-primary uppercase tracking-wider mb-3">
                 Why Use This?
               </p>
               <h2 className="font-display text-3xl sm:text-4xl font-bold text-cjc-navy">
@@ -513,11 +513,11 @@ export default function LandingPage() {
                 </p>
                 <div className="flex flex-wrap gap-3 text-sm text-cjc-navy">
                   <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-cjc-crimson" />
+                    <CheckCircle2 className="w-4 h-4 text-ccis-blue" />
                     5 user roles
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-cjc-crimson" />
+                    <CheckCircle2 className="w-4 h-4 text-ccis-blue" />
                     Custom views
                   </span>
                 </div>
@@ -533,11 +533,11 @@ export default function LandingPage() {
                 </p>
                 <div className="flex flex-wrap gap-3 text-sm text-cjc-navy">
                   <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-cjc-crimson" />
+                    <CheckCircle2 className="w-4 h-4 text-ccis-blue" />
                     Secure uploads
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <CheckCircle2 className="w-4 h-4 text-cjc-crimson" />
+                    <CheckCircle2 className="w-4 h-4 text-ccis-blue" />
                     Easy tracking
                   </span>
                 </div>
@@ -552,7 +552,7 @@ export default function LandingPage() {
             <div className="max-w-6xl mx-auto px-6">
               {/* Section Header - Editorial Style */}
               <div className={`mb-12 animate-fade-up ${announcementsInView ? 'in-view' : ''}`}>
-                <p className="text-sm font-semibold text-cjc-crimson uppercase tracking-wider mb-3">
+                <p className="text-sm font-semibold text-ccis-blue-primary uppercase tracking-wider mb-3">
                   Announcements
                 </p>
                 <h2 className="font-display text-3xl sm:text-4xl font-bold text-cjc-navy">
@@ -592,7 +592,7 @@ export default function LandingPage() {
                       <div className="flex-1 min-w-0">
                         {/* Title Row */}
                         <div className="flex items-start justify-between gap-4 mb-2">
-                          <h3 className="font-display font-bold text-lg text-cjc-navy group-hover:text-cjc-crimson transition-colors">
+                          <h3 className="font-display font-bold text-lg text-cjc-navy group-hover:text-ccis-blue-primary transition-colors">
                             {announcement.title}
                           </h3>
                           <span className="text-xs text-warm-muted whitespace-nowrap">
@@ -632,7 +632,7 @@ export default function LandingPage() {
               <div className={`mt-10 text-center animate-fade-up ${announcementsInView ? 'in-view' : ''}`} style={{ transitionDelay: '300ms' }}>
                 <button
                   onClick={() => setAuthModal("login")}
-                  className="inline-flex items-center gap-2 text-sm font-medium text-cjc-crimson hover:text-cjc-crimson/80 transition-colors"
+                  className="inline-flex items-center gap-2 text-sm font-medium text-ccis-blue-primary hover:text-ccis-blue transition-colors"
                 >
                   Sign in to view all announcements
                   <ArrowRight className="w-4 h-4" />
@@ -692,8 +692,8 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* CTA Section - BOLD Crimson Background */}
-        <section ref={ctaRef} className="bg-cjc-crimson py-20 lg:py-28 texture-grain">
+        {/* CTA Section - BOLD CCIS Blue Background */}
+        <section ref={ctaRef} className="bg-ccis-cta py-20 lg:py-28 texture-grain">
           <div className={`max-w-4xl mx-auto px-6 text-center animate-fade-up ${ctaInView ? 'in-view' : ''}`}>
             <h2 className="headline-editorial text-white mb-4">
               <span className="block text-4xl sm:text-5xl lg:text-6xl">START YOUR</span>
@@ -726,9 +726,9 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* Footer - Navy with Gold CCIS Accent */}
+        {/* Footer - Navy with CCIS Blue Accent */}
         <footer className="bg-cjc-navy text-white/70">
-          <div className="h-1 bg-cjc-crimson"></div>
+          <div className="h-1 bg-ccis-blue-primary"></div>
           <div className="max-w-6xl mx-auto px-6 py-16">
             <div className="grid md:grid-cols-5 gap-10">
               <div className="md:col-span-2">

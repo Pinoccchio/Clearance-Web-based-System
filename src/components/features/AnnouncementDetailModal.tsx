@@ -103,7 +103,7 @@ export function AnnouncementDetailModal({
         {/* Event Details Card - If Present */}
         {(announcement.event_date || announcement.event_location) && (
           <div className="bg-surface-cream border border-border-warm rounded-lg p-4 mb-6 modal-fade-up modal-fade-up-delay-2">
-            <p className="text-xs font-semibold text-cjc-crimson uppercase tracking-wider mb-3">
+            <p className="text-xs font-semibold text-ccis-blue-primary uppercase tracking-wider mb-3">
               Event Details
             </p>
             <div className="space-y-2">
@@ -129,7 +129,7 @@ export function AnnouncementDetailModal({
 
         {/* Content - Staggered animation */}
         <div className="mb-6 modal-fade-up modal-fade-up-delay-3">
-          <p className="text-xs font-semibold text-cjc-crimson uppercase tracking-wider mb-3">
+          <p className="text-xs font-semibold text-ccis-blue-primary uppercase tracking-wider mb-3">
             Announcement
           </p>
           <div className="prose prose-sm max-w-none">
@@ -148,7 +148,7 @@ export function AnnouncementDetailModal({
             </div>
             {announcement.expires_at && (
               <div className="flex items-center gap-1.5">
-                <span className="text-cjc-crimson">
+                <span className="text-warning">
                   Expires {formatDate(announcement.expires_at)}
                 </span>
               </div>
