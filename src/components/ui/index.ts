@@ -9,3 +9,6 @@ export * from "./EmptyState";
 export * from "./Avatar";
 export * from "./Tabs";
 export * from "./ProgressBar";
+export * from "./ConfirmDialog";
+export * from "./modal";
+export * from "./Toast";

@@ -112,8 +112,8 @@ export default function Sidebar({ role, userName, userEmail, isCollapsed, onTogg
         <Link href={`/${role}`} className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 bg-white/10 p-0.5">
             <Image
-              src="/images/logos/cjc-logo.jpg"
-              alt="CJC Logo"
+              src="/images/logos/ccis-logo.jpg"
+              alt="CCIS Logo"
               width={40}
               height={40}
               className="w-full h-full object-cover rounded-lg"

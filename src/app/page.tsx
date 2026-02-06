@@ -88,7 +88,7 @@ export default function LandingPage() {
                 <div className="flex items-center gap-2">
                   <div className="w-10 h-10 rounded-full overflow-hidden border border-border-warm">
                     <Image
-                      src="/images/logos/cjc-logo.jpg"
+                      src="/images/logos/cjc-logo.jpeg"
                       alt="CJC Logo"
                       width={40}
                       height={40}
@@ -97,7 +97,7 @@ export default function LandingPage() {
                   </div>
                   <div className="w-10 h-10 rounded-full overflow-hidden border border-border-warm">
                     <Image
-                      src="/images/logos/ccis-logo.jpeg"
+                      src="/images/logos/ccis-logo.jpg"
                       alt="CCIS Logo"
                       width={40}
                       height={40}
@@ -438,7 +438,7 @@ export default function LandingPage() {
                   <div className="flex items-center gap-2">
                     <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20">
                       <Image
-                        src="/images/logos/cjc-logo.jpg"
+                        src="/images/logos/cjc-logo.jpeg"
                         alt="CJC Logo"
                         width={48}
                         height={48}
@@ -447,7 +447,7 @@ export default function LandingPage() {
                     </div>
                     <div className="w-12 h-12 rounded-full overflow-hidden border-2 border-white/20">
                       <Image
-                        src="/images/logos/ccis-logo.jpeg"
+                        src="/images/logos/ccis-logo.jpg"
                         alt="CCIS Logo"
                         width={48}
                         height={48}
