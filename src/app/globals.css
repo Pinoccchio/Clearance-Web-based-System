@@ -469,6 +469,75 @@ body {
   animation: scaleIn 200ms ease-out;
 }
 
+/* Modal content staggered animations */
+@keyframes modalFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes modalScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.75);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes barScaleX {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.modal-bar-animate {
+  transform-origin: left;
+  animation: barScaleX 0.4s ease-out forwards;
+}
+
+.modal-fade-up {
+  opacity: 0;
+  transform: translateY(16px);
+  animation: modalFadeUp 0.5s ease-out forwards;
+}
+
+.modal-fade-up-delay-1 {
+  animation-delay: 0.1s;
+}
+
+.modal-fade-up-delay-2 {
+  animation-delay: 0.2s;
+}
+
+.modal-fade-up-delay-3 {
+  animation-delay: 0.3s;
+}
+
+.modal-fade-up-delay-4 {
+  animation-delay: 0.4s;
+}
+
+.modal-fade-up-delay-5 {
+  animation-delay: 0.5s;
+}
+
+.modal-scale-in {
+  opacity: 0;
+  transform: scale(0.75);
+  animation: modalScaleIn 0.4s ease-out 0.2s forwards;
+}
+
 /* Spinner for loading states */
 @keyframes spin {
   to {
@@ -803,6 +872,12 @@ body {
 .animate-stagger.in-view > *:nth-child(4) { opacity: 1; transform: translateY(0); transition-delay: 300ms; }
 .animate-stagger.in-view > *:nth-child(5) { opacity: 1; transform: translateY(0); transition-delay: 400ms; }
 .animate-stagger.in-view > *:nth-child(6) { opacity: 1; transform: translateY(0); transition-delay: 500ms; }
+.animate-stagger.in-view > *:nth-child(7) { opacity: 1; transform: translateY(0); transition-delay: 600ms; }
+.animate-stagger.in-view > *:nth-child(8) { opacity: 1; transform: translateY(0); transition-delay: 700ms; }
+.animate-stagger.in-view > *:nth-child(9) { opacity: 1; transform: translateY(0); transition-delay: 800ms; }
+.animate-stagger.in-view > *:nth-child(10) { opacity: 1; transform: translateY(0); transition-delay: 900ms; }
+.animate-stagger.in-view > *:nth-child(11) { opacity: 1; transform: translateY(0); transition-delay: 1000ms; }
+.animate-stagger.in-view > *:nth-child(12) { opacity: 1; transform: translateY(0); transition-delay: 1100ms; }
 
 /* Enhanced card hover lift - more dramatic */
 .card-hover-lift {

@@ -959,3 +959,218 @@ export async function getClubRoleUsers(): Promise<Profile[]> {
 
   return data || [];
 }
+
+// ==========================================
+// Announcement Management Types and Functions
+// ==========================================
+
+export type AnnouncementPriority = "low" | "normal" | "high" | "urgent";
+export type AnnouncementScope = "system" | "department" | "office" | "club";
+
+export interface Announcement {
+  id: string;
+  title: string;
+  content: string;
+  posted_by_id: string;
+  department_id?: string | null;
+  office_id?: string | null;
+  club_id?: string | null;
+  is_system_wide: boolean;
+  priority: AnnouncementPriority;
+  event_date?: string | null;
+  event_location?: string | null;
+  expires_at?: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface AnnouncementWithRelations extends Announcement {
+  posted_by?: Profile | null;
+  department?: Department | null;
+  office?: Office | null;
+  club?: Club | null;
+}
+
+export interface CreateAnnouncementData {
+  title: string;
+  content: string;
+  posted_by_id: string;
+  department_id?: string | null;
+  office_id?: string | null;
+  club_id?: string | null;
+  is_system_wide?: boolean;
+  priority?: AnnouncementPriority;
+  event_date?: string | null;
+  event_location?: string | null;
+  expires_at?: string | null;
+  is_active?: boolean;
+}
+
+export interface UpdateAnnouncementData {
+  title?: string;
+  content?: string;
+  department_id?: string | null;
+  office_id?: string | null;
+  club_id?: string | null;
+  is_system_wide?: boolean;
+  priority?: AnnouncementPriority;
+  event_date?: string | null;
+  event_location?: string | null;
+  expires_at?: string | null;
+  is_active?: boolean;
+}
+
+/**
+ * Get all announcements with relations (for admin view)
+ */
+export async function getAllAnnouncements(): Promise<AnnouncementWithRelations[]> {
+  const { data, error } = await supabase
+    .from("announcements")
+    .select(`
+      *,
+      posted_by:profiles!announcements_posted_by_id_fkey(*),
+      department:departments!announcements_department_id_fkey(*),
+      office:offices!announcements_office_id_fkey(*),
+      club:clubs!announcements_club_id_fkey(*)
+    `)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw error;
+  }
+
+  return data || [];
+}
+
+/**
+ * Get active, non-expired announcements (for student view)
+ */
+export async function getActiveAnnouncements(): Promise<AnnouncementWithRelations[]> {
+  const { data, error } = await supabase
+    .from("announcements")
+    .select(`
+      *,
+      posted_by:profiles!announcements_posted_by_id_fkey(*),
+      department:departments!announcements_department_id_fkey(*),
+      office:offices!announcements_office_id_fkey(*),
+      club:clubs!announcements_club_id_fkey(*)
+    `)
+    .eq("is_active", true)
+    .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    throw error;
+  }
+
+  return data || [];
+}
+
+/**
+ * Get an announcement by ID with relations
+ */
+export async function getAnnouncementById(
+  id: string
+): Promise<AnnouncementWithRelations | null> {
+  const { data, error } = await supabase
+    .from("announcements")
+    .select(`
+      *,
+      posted_by:profiles!announcements_posted_by_id_fkey(*),
+      department:departments!announcements_department_id_fkey(*),
+      office:offices!announcements_office_id_fkey(*),
+      club:clubs!announcements_club_id_fkey(*)
+    `)
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    if (error.code === "PGRST116") {
+      return null;
+    }
+    throw error;
+  }
+
+  return data;
+}
+
+/**
+ * Create a new announcement
+ */
+export async function createAnnouncement(
+  data: CreateAnnouncementData
+): Promise<Announcement> {
+  const { data: announcement, error } = await supabase
+    .from("announcements")
+    .insert({
+      title: data.title,
+      content: data.content,
+      posted_by_id: data.posted_by_id,
+      department_id: data.department_id || null,
+      office_id: data.office_id || null,
+      club_id: data.club_id || null,
+      is_system_wide: data.is_system_wide || false,
+      priority: data.priority || "normal",
+      event_date: data.event_date || null,
+      event_location: data.event_location || null,
+      expires_at: data.expires_at || null,
+      is_active: data.is_active !== undefined ? data.is_active : true,
+    })
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return announcement;
+}
+
+/**
+ * Update an announcement
+ */
+export async function updateAnnouncement(
+  id: string,
+  data: UpdateAnnouncementData
+): Promise<Announcement> {
+  const updates: Record<string, unknown> = {
+    updated_at: new Date().toISOString(),
+  };
+
+  if (data.title !== undefined) updates.title = data.title;
+  if (data.content !== undefined) updates.content = data.content;
+  if (data.department_id !== undefined) updates.department_id = data.department_id;
+  if (data.office_id !== undefined) updates.office_id = data.office_id;
+  if (data.club_id !== undefined) updates.club_id = data.club_id;
+  if (data.is_system_wide !== undefined) updates.is_system_wide = data.is_system_wide;
+  if (data.priority !== undefined) updates.priority = data.priority;
+  if (data.event_date !== undefined) updates.event_date = data.event_date;
+  if (data.event_location !== undefined) updates.event_location = data.event_location;
+  if (data.expires_at !== undefined) updates.expires_at = data.expires_at;
+  if (data.is_active !== undefined) updates.is_active = data.is_active;
+
+  const { data: announcement, error } = await supabase
+    .from("announcements")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return announcement;
+}
+
+/**
+ * Delete an announcement
+ */
+export async function deleteAnnouncement(id: string): Promise<void> {
+  const { error } = await supabase.from("announcements").delete().eq("id", id);
+
+  if (error) {
+    throw error;
+  }
+}

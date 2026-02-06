@@ -8,13 +8,18 @@ import {
   ArrowRight,
   Facebook,
   Music2,
+  Calendar,
+  MapPin,
 } from "lucide-react";
 import { AuthModal } from "@/components/features/auth-modal";
+import { AnnouncementDetailModal } from "@/components/features/AnnouncementDetailModal";
 import { useAuth } from "@/contexts/auth-context";
+import { supabase, AnnouncementWithRelations } from "@/lib/supabase";
 
 // Hook to detect when element enters viewport
 function useInView(ref: RefObject<HTMLElement | null>, threshold = 0.1) {
   const [inView, setInView] = useState(false);
+
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -22,9 +27,34 @@ function useInView(ref: RefObject<HTMLElement | null>, threshold = 0.1) {
       },
       { threshold }
     );
-    if (ref.current) observer.observe(ref.current);
+
+    // Function to start observing when element exists
+    const observeElement = () => {
+      if (ref.current) {
+        observer.observe(ref.current);
+        return true;
+      }
+      return false;
+    };
+
+    // Try to observe immediately
+    if (!observeElement()) {
+      // If element doesn't exist yet, poll for it
+      const checkInterval = setInterval(() => {
+        if (observeElement()) {
+          clearInterval(checkInterval);
+        }
+      }, 100);
+
+      return () => {
+        clearInterval(checkInterval);
+        observer.disconnect();
+      };
+    }
+
     return () => observer.disconnect();
   }, [ref, threshold]);
+
   return inView;
 }
 
@@ -46,10 +76,27 @@ function AnimatedCounter({ value, inView }: { value: number; inView: boolean }) 
   return <span>{count}</span>;
 }
 
+// Type for clearance sources
+interface ClearanceSource {
+  name: string;
+  type: "department" | "office" | "club";
+  logo_url: string | null;
+}
+
 export default function LandingPage() {
   const router = useRouter();
   const { isAuthenticated, profile, isLoading } = useAuth();
   const [authModal, setAuthModal] = useState<"login" | "register" | "register-admin" | null>(null);
+
+  // State for dynamic stats from database
+  const [stats, setStats] = useState({
+    departments: 0,
+    offices: 0,
+    clubs: 0,
+  });
+  const [clearanceSources, setClearanceSources] = useState<ClearanceSource[]>([]);
+  const [announcements, setAnnouncements] = useState<AnnouncementWithRelations[]>([]);
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState<AnnouncementWithRelations | null>(null);
 
   // Auto-redirect authenticated users to their dashboard
   useEffect(() => {
@@ -58,6 +105,66 @@ export default function LandingPage() {
     }
   }, [isLoading, isAuthenticated, profile, router]);
 
+  // Fetch stats and clearance sources from database
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        // Fetch counts in parallel
+        const [deptResult, officeResult, clubResult] = await Promise.all([
+          supabase.from("departments").select("id", { count: "exact", head: true }).eq("status", "active"),
+          supabase.from("offices").select("id", { count: "exact", head: true }).eq("status", "active"),
+          supabase.from("clubs").select("id", { count: "exact", head: true }).eq("status", "active"),
+        ]);
+
+        setStats({
+          departments: deptResult.count || 0,
+          offices: officeResult.count || 0,
+          clubs: clubResult.count || 0,
+        });
+
+        // Fetch clearance source names and logos in parallel
+        const [depts, offices, clubs] = await Promise.all([
+          supabase.from("departments").select("name, logo_url").eq("status", "active").order("name"),
+          supabase.from("offices").select("name, logo_url").eq("status", "active").order("name"),
+          supabase.from("clubs").select("name, logo_url").eq("status", "active").order("name"),
+        ]);
+
+        const sources: ClearanceSource[] = [
+          ...(depts.data || []).map((d) => ({ name: d.name, type: "department" as const, logo_url: d.logo_url })),
+          ...(offices.data || []).map((o) => ({ name: o.name, type: "office" as const, logo_url: o.logo_url })),
+          ...(clubs.data || []).map((c) => ({ name: c.name, type: "club" as const, logo_url: c.logo_url })),
+        ];
+        setClearanceSources(sources);
+
+        // Fetch system-wide active announcements (limit 3, priority sorted)
+        // Note: We don't join with profiles here since anonymous users can't access that table
+        const announcementsResult = await supabase
+          .from("announcements")
+          .select("*")
+          .eq("is_system_wide", true)
+          .eq("is_active", true)
+          .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
+          .order("priority", { ascending: true })
+          .order("created_at", { ascending: false })
+          .limit(3);
+
+        if (announcementsResult.data) {
+          // Custom sort: urgent > high > normal > low
+          const priorityOrder: Record<string, number> = { urgent: 0, high: 1, normal: 2, low: 3 };
+          const sorted = announcementsResult.data.sort((a, b) => {
+            const pDiff = priorityOrder[a.priority] - priorityOrder[b.priority];
+            if (pDiff !== 0) return pDiff;
+            return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+          });
+          setAnnouncements(sorted as AnnouncementWithRelations[]);
+        }
+      } catch (error) {
+        console.error("Error fetching landing page stats:", error);
+      }
+    }
+    fetchStats();
+  }, []);
+
   // Refs for scroll animations
   const heroRef = useRef<HTMLElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
@@ -65,6 +172,7 @@ export default function LandingPage() {
   const navyBlockRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
   const timelineRef = useRef<HTMLElement>(null);
+  const announcementsRef = useRef<HTMLElement>(null);
   const ctaRef = useRef<HTMLElement>(null);
 
   // In-view states
@@ -74,7 +182,30 @@ export default function LandingPage() {
   const navyBlockInView = useInView(navyBlockRef, 0.2);
   const cardsInView = useInView(cardsRef, 0.2);
   const timelineInView = useInView(timelineRef, 0.1);
+  const announcementsInView = useInView(announcementsRef, 0.1);
   const ctaInView = useInView(ctaRef, 0.2);
+
+  // Helper functions for announcements
+  const formatAnnouncementDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+    });
+  };
+
+  const formatRelativeTime = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+    if (diffInSeconds < 60) return "Just now";
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
+    return formatAnnouncementDate(dateString);
+  };
 
   return (
     <>
@@ -182,15 +313,21 @@ export default function LandingPage() {
                 <div ref={statsRef} className={`flex flex-wrap gap-10 pt-8 border-t border-border-warm animate-stagger ${statsInView ? 'in-view' : ''}`}>
                   <div>
                     <p className="text-4xl font-bold text-cjc-gold font-display">
-                      <AnimatedCounter value={6} inView={statsInView} />
+                      <AnimatedCounter value={stats.departments} inView={statsInView} />
                     </p>
                     <p className="text-sm text-warm-muted mt-1">Departments</p>
                   </div>
                   <div>
                     <p className="text-4xl font-bold text-cjc-gold font-display">
-                      <AnimatedCounter value={1} inView={statsInView} />
+                      <AnimatedCounter value={stats.offices} inView={statsInView} />
                     </p>
-                    <p className="text-sm text-warm-muted mt-1">Portal</p>
+                    <p className="text-sm text-warm-muted mt-1">Offices</p>
+                  </div>
+                  <div>
+                    <p className="text-4xl font-bold text-cjc-gold font-display">
+                      <AnimatedCounter value={stats.clubs} inView={statsInView} />
+                    </p>
+                    <p className="text-sm text-warm-muted mt-1">Clubs</p>
                   </div>
                   <div>
                     <p className="text-4xl font-bold text-cjc-gold font-display">
@@ -219,38 +356,76 @@ export default function LandingPage() {
                     </div>
 
                     <div className="space-y-3">
-                      {[
-                        { dept: "Library", status: "cleared" },
-                        { dept: "Registrar", status: "cleared" },
-                        { dept: "Finance Office", status: "cleared" },
-                        { dept: "Student Affairs", status: "pending" },
-                        { dept: "Dean's Office", status: "pending" },
-                      ].map((item) => (
-                        <div
-                          key={item.dept}
-                          className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-surface-warm"
-                        >
-                          <span className="text-sm text-cjc-navy">{item.dept}</span>
-                          <span
-                            className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                              item.status === "cleared"
-                                ? "bg-cjc-gold/20 text-cjc-gold"
-                                : "bg-cjc-crimson/10 text-cjc-crimson"
-                            }`}
+                      {clearanceSources.length > 0 ? (
+                        clearanceSources.slice(0, 5).map((source, i) => {
+                          // Simulate some cleared and some pending for the preview
+                          const isCleared = i < Math.ceil(clearanceSources.slice(0, 5).length * 0.6);
+                          return (
+                            <div
+                              key={`preview-${source.type}-${source.name}`}
+                              className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-surface-warm"
+                            >
+                              <div className="flex items-center gap-2 min-w-0 flex-1">
+                                {source.logo_url ? (
+                                  <Image
+                                    src={source.logo_url}
+                                    alt={`${source.name} logo`}
+                                    width={20}
+                                    height={20}
+                                    className="w-5 h-5 rounded-full object-cover flex-shrink-0"
+                                  />
+                                ) : (
+                                  <div className="w-5 h-5 rounded-full bg-cjc-navy/10 flex-shrink-0" />
+                                )}
+                                <span className="text-sm text-cjc-navy truncate">{source.name}</span>
+                              </div>
+                              <span
+                                className={`text-xs px-2.5 py-1 rounded-full font-medium flex-shrink-0 ml-2 ${
+                                  isCleared
+                                    ? "bg-cjc-gold/20 text-cjc-gold"
+                                    : "bg-cjc-crimson/10 text-cjc-crimson"
+                                }`}
+                              >
+                                {isCleared ? "Cleared" : "Pending"}
+                              </span>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        // Loading skeleton
+                        Array.from({ length: 5 }).map((_, i) => (
+                          <div
+                            key={i}
+                            className="flex items-center justify-between py-2.5 px-3 rounded-lg bg-surface-warm animate-pulse"
                           >
-                            {item.status === "cleared" ? "Cleared" : "Pending"}
-                          </span>
-                        </div>
-                      ))}
+                            <div className="flex items-center gap-2">
+                              <div className="w-5 h-5 rounded-full bg-gray-200" />
+                              <div className="h-4 w-24 bg-gray-200 rounded" />
+                            </div>
+                            <div className="h-5 w-16 bg-gray-200 rounded-full" />
+                          </div>
+                        ))
+                      )}
                     </div>
 
                     <div className="mt-6 pt-4 border-t border-border-warm">
                       <div className="flex justify-between items-center mb-2">
                         <span className="text-sm text-warm-muted">Overall Progress</span>
-                        <span className="text-sm font-semibold text-cjc-navy">60%</span>
+                        <span className="text-sm font-semibold text-cjc-navy">
+                          {clearanceSources.length > 0
+                            ? `${Math.round((Math.ceil(Math.min(clearanceSources.length, 5) * 0.6) / Math.min(clearanceSources.length, 5)) * 100)}%`
+                            : "60%"}
+                        </span>
                       </div>
                       <div className="progress-bar">
-                        <div className="progress-bar-fill" style={{ width: "60%" }}></div>
+                        <div
+                          className="progress-bar-fill"
+                          style={{
+                            width: clearanceSources.length > 0
+                              ? `${Math.round((Math.ceil(Math.min(clearanceSources.length, 5) * 0.6) / Math.min(clearanceSources.length, 5)) * 100)}%`
+                              : "60%",
+                          }}
+                        ></div>
                       </div>
                     </div>
                   </div>
@@ -274,28 +449,55 @@ export default function LandingPage() {
 
             {/* Block A - Full Width Navy (CCIS Blue) */}
             <div ref={navyBlockRef} className={`bg-cjc-navy text-white rounded-none sm:rounded p-8 lg:p-12 mb-6 animate-fade-up ${navyBlockInView ? 'in-view' : ''}`}>
-              <div className="grid lg:grid-cols-2 gap-8 items-center">
-                <div>
-                  <h3 className="text-2xl lg:text-3xl font-display font-bold mb-4">
-                    One portal. Every department.
-                  </h3>
-                  <p className="text-white/70 text-lg leading-relaxed">
-                    Check your status across Library, Registrar, Finance, and other departments in one place. Know exactly what you need to settle before visiting each office.
-                  </p>
-                </div>
-                <div className={`grid grid-cols-2 gap-3 animate-stagger ${navyBlockInView ? 'in-view' : ''}`}>
-                  {["Library", "Registrar", "Finance", "Dean's Office", "Student Affairs", "Guidance"].map(
-                    (dept, i) => (
-                      <div
-                        key={dept}
-                        className="flex items-center gap-2 py-3 px-4 rounded-lg bg-white/10 card-hover-lift"
-                      >
-                        <CheckCircle2 className={`w-4 h-4 ${i < 3 ? "text-cjc-gold" : "text-cjc-crimson-light"}`} />
-                        <span className="text-sm text-white/90">{dept}</span>
-                      </div>
-                    )
-                  )}
-                </div>
+              <div className="mb-8">
+                <h3 className="text-2xl lg:text-3xl font-display font-bold mb-4">
+                  One portal. Every clearance source.
+                </h3>
+                <p className="text-white/70 text-lg leading-relaxed max-w-2xl">
+                  Check your status across all departments, offices, and clubs in one place. Know exactly what you need to settle before visiting each location.
+                </p>
+              </div>
+              <div className={`grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 animate-stagger ${navyBlockInView ? 'in-view' : ''}`}>
+                {clearanceSources.length > 0 ? (
+                  clearanceSources.map((source) => (
+                    <div
+                      key={`${source.type}-${source.name}`}
+                      className="flex items-center gap-3 py-3 px-4 rounded-lg bg-white/10 card-hover-lift"
+                    >
+                      {source.logo_url ? (
+                        <Image
+                          src={source.logo_url}
+                          alt={`${source.name} logo`}
+                          width={24}
+                          height={24}
+                          className="w-6 h-6 rounded-full object-cover flex-shrink-0"
+                        />
+                      ) : (
+                        <CheckCircle2
+                          className={`w-5 h-5 flex-shrink-0 ${
+                            source.type === "department"
+                              ? "text-cjc-gold"
+                              : source.type === "office"
+                                ? "text-cjc-crimson-light"
+                                : "text-green-400"
+                          }`}
+                        />
+                      )}
+                      <span className="text-sm text-white/90 truncate">{source.name}</span>
+                    </div>
+                  ))
+                ) : (
+                  // Placeholder while loading - show reasonable number of skeletons
+                  Array.from({ length: stats.departments + stats.offices + stats.clubs || 12 }).map((_, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-3 py-3 px-4 rounded-lg bg-white/10 animate-pulse"
+                    >
+                      <div className="w-6 h-6 rounded-full bg-white/20" />
+                      <div className="h-4 w-20 bg-white/20 rounded" />
+                    </div>
+                  ))
+                )}
               </div>
             </div>
 
@@ -343,6 +545,102 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+
+        {/* Announcements Section - Editorial Bulletin Style */}
+        {announcements.length > 0 && (
+          <section ref={announcementsRef} className="py-20 lg:py-28 bg-white">
+            <div className="max-w-6xl mx-auto px-6">
+              {/* Section Header - Editorial Style */}
+              <div className={`mb-12 animate-fade-up ${announcementsInView ? 'in-view' : ''}`}>
+                <p className="text-sm font-semibold text-cjc-crimson uppercase tracking-wider mb-3">
+                  Announcements
+                </p>
+                <h2 className="font-display text-3xl sm:text-4xl font-bold text-cjc-navy">
+                  Latest Updates
+                </h2>
+              </div>
+
+              {/* Announcements Grid - Bulletin Board Style */}
+              <div className={`space-y-4 animate-stagger ${announcementsInView ? 'in-view' : ''}`}>
+                {announcements.map((announcement, index) => (
+                  <button
+                    key={announcement.id}
+                    onClick={() => setSelectedAnnouncement(announcement)}
+                    className="group relative w-full text-left bg-white rounded border border-border-warm shadow-sm overflow-hidden hover:shadow-md transition-shadow cursor-pointer"
+                    style={{ transitionDelay: `${index * 100}ms` }}
+                  >
+                    {/* Priority Accent Bar - Top */}
+                    <div className={`h-1 ${
+                      announcement.priority === 'urgent' ? 'bg-cjc-crimson' :
+                      announcement.priority === 'high' ? 'bg-cjc-gold' :
+                      'bg-cjc-navy/20'
+                    }`} />
+
+                    <div className="p-6 flex gap-5">
+                      {/* Numbered Circle - Editorial Style */}
+                      <div className={`flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center font-display font-bold text-lg ${
+                        announcement.priority === 'urgent'
+                          ? 'bg-cjc-crimson text-white'
+                          : announcement.priority === 'high'
+                            ? 'bg-cjc-gold text-cjc-navy'
+                            : 'bg-surface-cream text-cjc-navy'
+                      }`}>
+                        {String(index + 1).padStart(2, '0')}
+                      </div>
+
+                      {/* Content */}
+                      <div className="flex-1 min-w-0">
+                        {/* Title Row */}
+                        <div className="flex items-start justify-between gap-4 mb-2">
+                          <h3 className="font-display font-bold text-lg text-cjc-navy group-hover:text-cjc-crimson transition-colors">
+                            {announcement.title}
+                          </h3>
+                          <span className="text-xs text-warm-muted whitespace-nowrap">
+                            {formatRelativeTime(announcement.created_at)}
+                          </span>
+                        </div>
+
+                        {/* Content Preview */}
+                        <p className="text-sm text-warm-muted line-clamp-2 mb-3">
+                          {announcement.content}
+                        </p>
+
+                        {/* Event Details - If Present */}
+                        {(announcement.event_date || announcement.event_location) && (
+                          <div className="flex flex-wrap items-center gap-4 text-sm">
+                            {announcement.event_date && (
+                              <span className="flex items-center gap-1.5 text-cjc-navy">
+                                <Calendar className="w-4 h-4 text-cjc-gold" />
+                                {formatAnnouncementDate(announcement.event_date)}
+                              </span>
+                            )}
+                            {announcement.event_location && (
+                              <span className="flex items-center gap-1.5 text-cjc-navy">
+                                <MapPin className="w-4 h-4 text-cjc-gold" />
+                                {announcement.event_location}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              {/* View All CTA */}
+              <div className={`mt-10 text-center animate-fade-up ${announcementsInView ? 'in-view' : ''}`} style={{ transitionDelay: '300ms' }}>
+                <button
+                  onClick={() => setAuthModal("login")}
+                  className="inline-flex items-center gap-2 text-sm font-medium text-cjc-crimson hover:text-cjc-crimson/80 transition-colors"
+                >
+                  Sign in to view all announcements
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          </section>
+        )}
 
         {/* How It Works - Vertical Timeline */}
         <section ref={timelineRef} className="bg-surface-warm py-20 lg:py-28">
@@ -536,6 +834,13 @@ export default function LandingPage() {
         isOpen={authModal !== null}
         onClose={() => setAuthModal(null)}
         initialMode={authModal || "login"}
+      />
+
+      {/* Announcement Detail Modal */}
+      <AnnouncementDetailModal
+        isOpen={selectedAnnouncement !== null}
+        onClose={() => setSelectedAnnouncement(null)}
+        announcement={selectedAnnouncement}
       />
     </>
   );
