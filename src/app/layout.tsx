@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Source_Sans_3, JetBrains_Mono, Playfair_Display } from "next/font/google";
 import "./globals.css";
+import { Analytics } from "@vercel/analytics/next";
 import { AuthProvider } from "@/contexts/auth-context";
 import { ToastProvider } from "@/components/ui/Toast";
 
@@ -51,6 +52,7 @@ export default function RootLayout({
         <AuthProvider>
           <ToastProvider>{children}</ToastProvider>
         </AuthProvider>
+        <Analytics />
       </body>
     </html>
   );
