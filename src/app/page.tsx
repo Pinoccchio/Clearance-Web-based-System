@@ -14,10 +14,16 @@ import {
   FileCheck,
   Users,
 } from "lucide-react";
+import dynamic from "next/dynamic";
 import { AuthModal } from "@/components/features/auth-modal";
 import { AnnouncementDetailModal } from "@/components/features/AnnouncementDetailModal";
 import { useAuth } from "@/contexts/auth-context";
 import { supabase, AnnouncementWithRelations } from "@/lib/supabase";
+
+const CampusMapSection = dynamic(
+  () => import("@/components/landing/CampusMapSection").then((mod) => ({ default: mod.CampusMapSection })),
+  { ssr: false }
+);
 
 // Hook to detect when element enters viewport
 function useInView(ref: RefObject<HTMLElement | null>, threshold = 0.1) {
@@ -318,7 +324,7 @@ export default function LandingPage() {
           <div className="relative max-w-6xl mx-auto px-6 py-24 lg:py-32">
             <div className="grid lg:grid-cols-5 gap-16 items-center">
               {/* Text Content - 60% */}
-              <div className={`lg:col-span-3 animate-fade-up ${heroInView ? 'in-view' : ''}`}>
+              <div className={`lg:col-span-3 text-center lg:text-left animate-fade-up ${heroInView ? 'in-view' : ''}`}>
                 {/* Badge */}
                 <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-surface-cream border border-border-warm text-sm text-warm-muted mb-8">
                   <span className="w-2 h-2 rounded-full bg-ccis-blue-primary"></span>
@@ -340,11 +346,11 @@ export default function LandingPage() {
                   </h1>
                 </div>
 
-                <p className="text-lg lg:text-xl text-warm-muted mb-12 max-w-lg font-body leading-relaxed opacity-0 animate-fade-up in-view" style={{ animationDelay: '0.4s' }}>
+                <p className="text-lg lg:text-xl text-warm-muted mb-12 max-w-lg mx-auto lg:mx-0 font-body leading-relaxed opacity-0 animate-fade-up in-view" style={{ animationDelay: '0.4s' }}>
                   Check your clearance status from anywhere. See which departments have approved you and what requirements you still need to settle at each office.
                 </p>
 
-                <div className="flex flex-col sm:flex-row gap-4 mb-12">
+                <div className="flex flex-col sm:flex-row sm:justify-center lg:justify-start gap-4 mb-12">
                   <button
                     onClick={() => setAuthModal("login")}
                     className="btn btn-ccis-blue text-base px-8 py-3.5"
@@ -363,7 +369,7 @@ export default function LandingPage() {
                 {/* Stats Bar */}
                 <div
                   ref={statsRef}
-                  className="flex flex-wrap gap-10 pt-8 border-t border-border-warm"
+                  className="grid grid-cols-4 gap-4 lg:gap-10 pt-8 border-t border-border-warm"
                 >
                   {[
                     { value: stats.departments, label: "Departments" },
@@ -371,11 +377,11 @@ export default function LandingPage() {
                     { value: stats.clubs, label: "Clubs" },
                     { value: 0, label: "Paper Forms" },
                   ].map((stat) => (
-                    <div key={stat.label}>
-                      <p className="text-4xl font-bold text-ccis-blue-primary font-display">
+                    <div key={stat.label} className="text-center lg:text-left">
+                      <p className="text-3xl sm:text-4xl font-bold text-ccis-blue-primary font-display">
                         <AnimatedCounter value={stat.value} inView={statsInView} />
                       </p>
-                      <p className="text-sm text-warm-muted mt-1">{stat.label}</p>
+                      <p className="text-xs sm:text-sm text-warm-muted mt-1">{stat.label}</p>
                     </div>
                   ))}
                 </div>
@@ -494,7 +500,7 @@ export default function LandingPage() {
         {/* Features Section - Bento Grid with Asymmetry */}
         <section ref={featuresRef} className="py-24 lg:py-32 bg-[#fefcf8]">
           <div className="max-w-6xl mx-auto px-6">
-            <div className={`mb-16 animate-fade-up ${featuresInView ? 'in-view' : ''}`}>
+            <div className={`mb-16 text-center lg:text-left animate-fade-up ${featuresInView ? 'in-view' : ''}`}>
               <p className="text-sm font-semibold text-ccis-blue-primary uppercase tracking-wider mb-3">
                 Why Use This?
               </p>
@@ -544,7 +550,7 @@ export default function LandingPage() {
                             }`}
                           />
                         )}
-                        <span className="text-sm text-white/90 truncate">{source.name}</span>
+                        <span className="text-sm text-white/90 break-words leading-tight">{source.name}</span>
                       </div>
                     ))
                   ) : (
@@ -564,8 +570,8 @@ export default function LandingPage() {
             {/* Two-Column Feature Cards */}
             <div ref={cardsRef} className={`grid md:grid-cols-2 gap-6 animate-stagger ${cardsInView ? 'in-view' : ''}`}>
               {/* Role-Based Access */}
-              <div className="bg-white rounded-lg p-6 shadow-sm border border-border-warm hover:shadow-md transition-shadow">
-                <div className="w-12 h-12 rounded-lg bg-cjc-navy flex items-center justify-center mb-5">
+              <div className="bg-white rounded-lg p-6 shadow-sm border border-border-warm hover:shadow-md transition-shadow text-center md:text-left">
+                <div className="w-12 h-12 rounded-lg bg-cjc-navy flex items-center justify-center mb-5 mx-auto md:mx-0">
                   <Users className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="text-lg font-display font-bold text-cjc-navy mb-2">
@@ -574,7 +580,7 @@ export default function LandingPage() {
                 <p className="text-warm-muted text-sm leading-relaxed mb-4">
                   Students, department staff, organization officers, deans, and admins each get their own dashboard designed for their needs.
                 </p>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap justify-center md:justify-start gap-2">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-warm text-sm text-cjc-navy">
                     <CheckCircle2 className="w-4 h-4 text-ccis-blue" />
                     5 user roles
@@ -587,8 +593,8 @@ export default function LandingPage() {
               </div>
 
               {/* Digital Documents */}
-              <div className="bg-white rounded-lg p-6 shadow-sm border border-border-warm hover:shadow-md transition-shadow">
-                <div className="w-12 h-12 rounded-lg bg-ccis-blue-primary flex items-center justify-center mb-5">
+              <div className="bg-white rounded-lg p-6 shadow-sm border border-border-warm hover:shadow-md transition-shadow text-center md:text-left">
+                <div className="w-12 h-12 rounded-lg bg-ccis-blue-primary flex items-center justify-center mb-5 mx-auto md:mx-0">
                   <FileCheck className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="text-lg font-display font-bold text-cjc-navy mb-2">
@@ -597,7 +603,7 @@ export default function LandingPage() {
                 <p className="text-warm-muted text-sm leading-relaxed mb-4">
                   Upload required documents online. Your files are saved securely so you won&apos;t lose them.
                 </p>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap justify-center md:justify-start gap-2">
                   <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-warm text-sm text-cjc-navy">
                     <CheckCircle2 className="w-4 h-4 text-ccis-blue" />
                     Secure uploads
@@ -617,7 +623,7 @@ export default function LandingPage() {
           <section ref={announcementsRef} className="py-24 lg:py-32 bg-white">
             <div className="max-w-6xl mx-auto px-6">
               {/* Section Header */}
-              <div className={`mb-12 animate-fade-up ${announcementsInView ? 'in-view' : ''}`}>
+              <div className={`mb-12 text-center lg:text-left animate-fade-up ${announcementsInView ? 'in-view' : ''}`}>
                 <p className="text-sm font-semibold text-ccis-blue-primary uppercase tracking-wider mb-3">
                   Announcements
                 </p>
@@ -864,6 +870,9 @@ export default function LandingPage() {
           </div>
         </section>
 
+        {/* Campus Map Section */}
+        <CampusMapSection />
+
         {/* CTA Section */}
         <section ref={ctaRef} className="bg-ccis-cta py-20 lg:py-28">
           <div className={`max-w-4xl mx-auto px-6 text-center animate-fade-up ${ctaInView ? 'in-view' : ''}`}>
@@ -897,9 +906,9 @@ export default function LandingPage() {
         <footer className="bg-[#0a1f36] text-white/70">
           <div className="h-1 bg-ccis-blue-primary"></div>
           <div className="max-w-6xl mx-auto px-6 py-16">
-            <div className="grid md:grid-cols-5 gap-10">
+            <div className="grid md:grid-cols-5 gap-10 text-center md:text-left">
               <div className="md:col-span-2">
-                <div className="flex items-center gap-4 mb-6">
+                <div className="flex flex-col items-center md:items-start gap-3 mb-6">
                   <div className="flex items-center gap-2">
                     <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white/20 shadow-lg">
                       <Image
@@ -927,7 +936,7 @@ export default function LandingPage() {
                     </p>
                   </div>
                 </div>
-                <p className="text-sm leading-relaxed max-w-md mb-6">
+                <p className="text-sm leading-relaxed max-w-md mx-auto md:mx-0 mb-6">
                   A software engineering project developed by Jan Miko A. Guevarra
                   and Jan Carlo Surig, students of the College of Special Programs (CSP)
                   and College of Computing and Information Sciences (CCIS).
@@ -954,7 +963,7 @@ export default function LandingPage() {
 
               <div>
                 <h4 className="text-white font-bold mb-5 text-lg">Follow CCIS</h4>
-                <div className="flex gap-3">
+                <div className="flex gap-3 justify-center md:justify-start">
                   <a
                     href="https://facebook.com/cjccomputerstudies"
                     target="_blank"

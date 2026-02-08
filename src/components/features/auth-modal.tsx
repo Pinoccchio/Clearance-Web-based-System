@@ -431,11 +431,18 @@ function RegisterForm({
               />
             </div>
 
-            {/* Continue Button */}
+            {/* Registration Unavailable Notice */}
+            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+              <p className="text-sm text-amber-800 text-center font-medium">
+                Registration is not yet available.
+              </p>
+            </div>
+
+            {/* Continue Button - Disabled */}
             <button
               type="button"
-              onClick={() => setStep(2)}
-              className="w-full py-3 bg-ccis-blue-primary text-white rounded-lg font-medium hover:bg-ccis-blue transition-colors"
+              disabled
+              className="w-full py-3 bg-gray-300 text-gray-500 rounded-lg font-medium cursor-not-allowed"
             >
               Continue
             </button>
