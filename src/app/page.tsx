@@ -337,7 +337,7 @@ export default function LandingPage() {
                     <span className="block text-5xl sm:text-6xl lg:text-7xl">
                       YOUR
                     </span>
-                    <span className="block text-5xl sm:text-6xl lg:text-7xl">
+                    <span className="block text-5xl sm:text-6xl lg:text-7xl pb-3">
                       <span className="headline-underline">CLEARANCE.</span>
                     </span>
                     <span className="block text-5xl sm:text-6xl lg:text-7xl text-ccis-blue-primary">

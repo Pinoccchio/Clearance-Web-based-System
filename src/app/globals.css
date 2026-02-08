@@ -636,11 +636,12 @@ body {
 .headline-underline::after {
   content: '';
   position: absolute;
-  bottom: -8px;
+  bottom: -4px;
   left: 0;
   width: 100%;
-  height: 4px;
+  height: 3px;
   background: var(--ccis-blue-primary);
+  border-radius: 2px;
 }
 
 .headline-editorial {
