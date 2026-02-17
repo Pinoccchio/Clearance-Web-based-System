@@ -29,21 +29,27 @@ import {
   Clock,
   PauseCircle,
   ExternalLink,
+  FileText,
+  X,
 } from "lucide-react";
 import {
   Department,
+  Requirement,
   ClearanceItemWithDetails,
   SubmissionWithRequirement,
   getDepartmentByHeadId,
   getClearanceItemsByDepartment,
   updateClearanceItem,
   getSubmissionsByItem,
+  getRequirementsBySource,
 } from "@/lib/supabase";
 import { formatDate } from "@/lib/utils";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import ClearanceItemHistoryTimeline from "@/components/shared/ClearanceItemHistoryTimeline";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All Status" },
-  { value: "pending", label: "Pending" },
+  { value: "submitted", label: "Submitted" },
   { value: "approved", label: "Approved" },
   { value: "rejected", label: "Rejected" },
   { value: "on_hold", label: "On Hold" },
@@ -70,6 +76,13 @@ function ItemStatusBadge({ status }: { status: ClearanceItemWithDetails["status"
         <Badge variant="neutral" size="sm">
           <PauseCircle className="w-3 h-3" />
           On Hold
+        </Badge>
+      );
+    case "submitted":
+      return (
+        <Badge variant="pending" size="sm">
+          <Clock className="w-3 h-3" />
+          Submitted
         </Badge>
       );
     default:
@@ -114,6 +127,7 @@ export default function DepartmentClearancePage() {
   // Detail modal state
   const [selectedItem, setSelectedItem] = useState<ClearanceItemWithDetails | null>(null);
   const [submissions, setSubmissions] = useState<SubmissionWithRequirement[]>([]);
+  const [itemRequirements, setItemRequirements] = useState<Requirement[]>([]);
   const [isLoadingSubmissions, setIsLoadingSubmissions] = useState(false);
 
   // Action state
@@ -124,6 +138,11 @@ export default function DepartmentClearancePage() {
   // Filters
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
+
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
+
+  // Lightbox state
+  const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     if (!profile?.id) return;
@@ -153,18 +172,25 @@ export default function DepartmentClearancePage() {
     loadData();
   }, [loadData]);
 
-  // Load submissions when a modal item is selected
+  // Load submissions and requirements when a modal item is selected
   useEffect(() => {
     if (!selectedItem) {
       setSubmissions([]);
+      setItemRequirements([]);
       setActionType(null);
       setRemarks("");
       return;
     }
 
     setIsLoadingSubmissions(true);
-    getSubmissionsByItem(selectedItem.id)
-      .then(setSubmissions)
+    Promise.all([
+      getSubmissionsByItem(selectedItem.id),
+      getRequirementsBySource(selectedItem.source_type, selectedItem.source_id),
+    ])
+      .then(([subs, reqs]) => {
+        setSubmissions(subs);
+        setItemRequirements(reqs);
+      })
       .catch((err) => {
         console.error("Error loading submissions:", err);
         showToast("error", "Load Failed", "Could not load requirement submissions.");
@@ -196,7 +222,7 @@ export default function DepartmentClearancePage() {
         status: actionType,
         remarks: remarks.trim() || undefined,
         reviewed_by: profile.id,
-      });
+      }, selectedItem.status);
 
       // Update local state
       setItems((prev) =>
@@ -215,6 +241,7 @@ export default function DepartmentClearancePage() {
           : "put on hold";
 
       showToast("success", "Action Recorded", `Clearance item has been ${actionLabel}.`);
+      setIsConfirmDialogOpen(false);
       setSelectedItem(null);
     } catch (err) {
       console.error("Error updating clearance item:", err);
@@ -306,12 +333,28 @@ export default function DepartmentClearancePage() {
                     <TableRow key={item.id}>
                       <TableCell>
                         <div className="flex items-center gap-3">
-                          <Avatar
-                            src={s?.avatar_url ?? undefined}
-                            name={fullName}
-                            size="sm"
-                            variant="primary"
-                          />
+                          {s?.avatar_url ? (
+                            <button
+                              type="button"
+                              onClick={() => setLightboxUrl(s.avatar_url!)}
+                              className="flex-shrink-0 rounded-full ring-2 ring-transparent hover:ring-cjc-navy/40 transition-all"
+                              title="View profile photo"
+                            >
+                              <Avatar
+                                src={s.avatar_url}
+                                name={fullName}
+                                size="sm"
+                                variant="primary"
+                              />
+                            </button>
+                          ) : (
+                            <Avatar
+                              src={undefined}
+                              name={fullName}
+                              size="sm"
+                              variant="primary"
+                            />
+                          )}
                           <div>
                             <p className="font-medium text-cjc-navy">{fullName}</p>
                             <p className="text-xs text-gray-500 font-mono">
@@ -368,22 +411,71 @@ export default function DepartmentClearancePage() {
         )}
       </div>
 
+      {/* Lightbox */}
+      {lightboxUrl && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 p-4"
+          onClick={() => setLightboxUrl(null)}
+        >
+          <button
+            type="button"
+            onClick={() => setLightboxUrl(null)}
+            className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <a
+            href={lightboxUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="absolute bottom-4 right-4 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-white text-xs transition-colors"
+          >
+            <ExternalLink className="w-3.5 h-3.5" />
+            Open original
+          </a>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={lightboxUrl}
+            alt="Submission preview"
+            className="max-w-full max-h-full rounded-lg shadow-2xl object-contain"
+            onClick={(e) => e.stopPropagation()}
+          />
+        </div>
+      )}
+
       {/* Review Modal */}
       <Modal
         isOpen={!!selectedItem}
-        onClose={() => setSelectedItem(null)}
+        onClose={() => { setSelectedItem(null); setIsConfirmDialogOpen(false); }}
         className="max-w-2xl"
       >
         {selectedItem && (
           <div className="p-6 space-y-6">
             {/* Student Info */}
             <div className="flex items-start gap-4 pr-8">
-              <Avatar
-                src={student?.avatar_url ?? undefined}
-                name={student ? `${student.first_name} ${student.last_name}` : "?"}
-                size="lg"
-                variant="primary"
-              />
+              {student?.avatar_url ? (
+                <button
+                  type="button"
+                  onClick={() => setLightboxUrl(student.avatar_url!)}
+                  className="flex-shrink-0 rounded-full ring-2 ring-transparent hover:ring-cjc-navy/30 transition-all"
+                  title="View profile photo"
+                >
+                  <Avatar
+                    src={student.avatar_url}
+                    name={`${student.first_name} ${student.last_name}`}
+                    size="lg"
+                    variant="primary"
+                  />
+                </button>
+              ) : (
+                <Avatar
+                  src={undefined}
+                  name={student ? `${student.first_name} ${student.last_name}` : "?"}
+                  size="lg"
+                  variant="primary"
+                />
+              )}
               <div className="flex-1 min-w-0">
                 <h2 className="text-xl font-display font-bold text-cjc-navy">
                   {student ? `${student.first_name} ${student.last_name}` : "Unknown"}
@@ -427,6 +519,12 @@ export default function DepartmentClearancePage() {
               )}
             </div>
 
+            {/* Status history timeline */}
+            <div>
+              <h3 className="text-sm font-semibold text-cjc-navy mb-3">Status History</h3>
+              <ClearanceItemHistoryTimeline clearanceItemId={selectedItem.id} />
+            </div>
+
             {/* Requirements / Submissions */}
             <div>
               <h3 className="text-sm font-semibold text-cjc-navy mb-3">Requirement Submissions</h3>
@@ -435,51 +533,88 @@ export default function DepartmentClearancePage() {
                   <Loader2 className="w-5 h-5 animate-spin text-gray-400" />
                   <span className="ml-2 text-sm text-gray-500">Loading submissions...</span>
                 </div>
-              ) : submissions.length === 0 ? (
+              ) : itemRequirements.length === 0 ? (
                 <p className="text-sm text-gray-400 text-center py-4">
-                  No requirement submissions yet.
+                  No requirements defined.
                 </p>
               ) : (
                 <div className="space-y-2">
-                  {submissions.map((sub) => (
-                    <div
-                      key={sub.id}
-                      className="flex items-start justify-between gap-3 p-3 bg-gray-50 rounded-lg"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap">
-                          <p className="text-sm font-medium text-gray-800">
-                            {sub.requirement?.name ?? "—"}
-                          </p>
-                          {sub.requirement?.is_required && (
-                            <Badge variant="danger" size="sm">Required</Badge>
+                  {itemRequirements.map((req) => {
+                    const sub = submissions.find((s) => s.requirement_id === req.id);
+                    return (
+                      <div
+                        key={req.id}
+                        className="flex items-start justify-between gap-3 p-3 bg-gray-50 rounded-lg"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <p className="text-sm font-medium text-gray-800">
+                              {req.name}
+                            </p>
+                            {req.is_required && (
+                              <Badge variant="danger" size="sm">Required</Badge>
+                            )}
+                          </div>
+                          {req.description && (
+                            <p className="text-xs text-gray-500 mt-0.5 truncate">
+                              {req.description}
+                            </p>
+                          )}
+                          {sub?.remarks && (
+                            <p className="text-xs text-amber-600 mt-0.5">{sub.remarks}</p>
                           )}
                         </div>
-                        {sub.requirement?.description && (
-                          <p className="text-xs text-gray-500 mt-0.5 truncate">
-                            {sub.requirement.description}
-                          </p>
-                        )}
-                        {sub.remarks && (
-                          <p className="text-xs text-amber-600 mt-0.5">{sub.remarks}</p>
-                        )}
+                        <div className="flex items-center gap-2 shrink-0">
+                          {req.requires_upload ? (
+                            sub?.file_url ? (
+                              <>
+                                <SubmissionStatusBadge status={sub.status} />
+                                {(() => {
+                                  const isPdf = sub.file_url.toLowerCase().includes('.pdf');
+                                  return isPdf ? (
+                                    <a
+                                      href={sub.file_url}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs transition-colors"
+                                      title="Open PDF"
+                                    >
+                                      <FileText className="w-3.5 h-3.5" />
+                                      PDF
+                                      <ExternalLink className="w-3 h-3 opacity-60" />
+                                    </a>
+                                  ) : (
+                                    <button
+                                      type="button"
+                                      onClick={() => setLightboxUrl(sub.file_url)}
+                                      className="relative w-12 h-12 rounded-lg overflow-hidden border border-gray-200 hover:border-blue-400 transition-colors flex-shrink-0 group"
+                                      title="View image"
+                                    >
+                                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                                      <img
+                                        src={sub.file_url}
+                                        alt="Submission file"
+                                        className="w-full h-full object-cover"
+                                      />
+                                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                        <ExternalLink className="w-3 h-3 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                                      </div>
+                                    </button>
+                                  );
+                                })()}
+                              </>
+                            ) : (
+                              <Badge variant="neutral" size="sm">No file</Badge>
+                            )
+                          ) : (
+                            <Badge variant={sub ? "info" : "neutral"} size="sm">
+                              {sub ? "Acknowledged" : "Pending"}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <SubmissionStatusBadge status={sub.status} />
-                        {sub.file_url && (
-                          <a
-                            href={sub.file_url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800"
-                            title="View file"
-                          >
-                            <ExternalLink className="w-4 h-4" />
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -542,7 +677,7 @@ export default function DepartmentClearancePage() {
                 {actionType && (
                   <Button
                     variant="primary"
-                    onClick={handleAction}
+                    onClick={() => setIsConfirmDialogOpen(true)}
                     disabled={isSubmitting}
                     className="w-full"
                   >
@@ -563,6 +698,35 @@ export default function DepartmentClearancePage() {
           </div>
         )}
       </Modal>
+
+      <ConfirmDialog
+        isOpen={isConfirmDialogOpen}
+        onClose={() => setIsConfirmDialogOpen(false)}
+        onConfirm={() => {
+          setIsConfirmDialogOpen(false);
+          handleAction();
+        }}
+        title={
+          actionType === "approved" ? "Approve Clearance?" :
+          actionType === "rejected" ? "Reject Clearance?" :
+          "Put On Hold?"
+        }
+        message={
+          actionType === "approved"
+            ? "This will mark the student's clearance as approved. You can change this decision later if needed."
+            : actionType === "rejected"
+            ? "This will reject the student's clearance request. Add remarks below to explain the reason."
+            : "This will put the clearance on hold. Add remarks to inform the student of next steps."
+        }
+        confirmText={
+          actionType === "approved" ? "Approve" :
+          actionType === "rejected" ? "Reject" :
+          "Put On Hold"
+        }
+        cancelText="Cancel"
+        variant={actionType === "approved" ? "info" : actionType === "rejected" ? "danger" : "warning"}
+        isLoading={isSubmitting}
+      />
     </div>
   );
 }

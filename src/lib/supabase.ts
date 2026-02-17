@@ -1453,6 +1453,7 @@ export interface Requirement {
   name: string;
   description?: string | null;
   is_required: boolean;
+  requires_upload: boolean;
   order: number;
   created_at: string;
   updated_at: string;
@@ -1482,6 +1483,7 @@ export async function createRequirement(data: {
   name: string;
   description?: string;
   is_required?: boolean;
+  requires_upload?: boolean;
   order?: number;
 }): Promise<Requirement> {
   const { data: created, error } = await supabase
@@ -1497,7 +1499,7 @@ export async function createRequirement(data: {
 /** Update a requirement */
 export async function updateRequirement(
   id: string,
-  data: Partial<Pick<Requirement, 'name' | 'description' | 'is_required' | 'order'>>
+  data: Partial<Pick<Requirement, 'name' | 'description' | 'is_required' | 'requires_upload' | 'order'>>
 ): Promise<Requirement> {
   const { data: updated, error } = await supabase
     .from('requirements')
@@ -1529,7 +1531,7 @@ export interface ClearanceItem {
   request_id: string;
   source_type: string;
   source_id: string;
-  status: 'pending' | 'approved' | 'rejected' | 'on_hold';
+  status: 'pending' | 'submitted' | 'approved' | 'rejected' | 'on_hold';
   reviewed_by: string | null;
   reviewed_at: string | null;
   remarks: string | null;
@@ -1573,16 +1575,19 @@ export async function getClearanceItemsByDepartment(
     `)
     .eq('source_type', 'department')
     .eq('source_id', deptId)
+    .neq('status', 'pending')
     .order('created_at', { ascending: false });
 
   if (error) throw error;
   return (data as ClearanceItemWithDetails[]) || [];
 }
 
-/** Update a clearance item's status and remarks */
+/** Update a clearance item's status and remarks.
+ *  Logs the transition to clearance_item_history. */
 export async function updateClearanceItem(
   itemId: string,
-  data: { status: 'approved' | 'rejected' | 'on_hold'; remarks?: string; reviewed_by: string }
+  data: { status: 'approved' | 'rejected' | 'on_hold'; remarks?: string; reviewed_by: string },
+  currentStatus: string
 ): Promise<ClearanceItem> {
   const { data: updated, error } = await supabase
     .from('clearance_items')
@@ -1597,6 +1602,17 @@ export async function updateClearanceItem(
     .single();
 
   if (error) throw error;
+
+  // Log history entry — fire-and-forget, don't block action on history error
+  supabase.from('clearance_item_history').insert({
+    clearance_item_id: itemId,
+    from_status: currentStatus,
+    to_status: data.status,
+    actor_id: data.reviewed_by,
+    actor_role: null,
+    remarks: data.remarks ?? null,
+  }).then();
+
   return updated;
 }
 
@@ -1721,4 +1737,194 @@ export async function upsertRequirementSubmission(data: {
 
   if (error) throw error;
   return upserted;
+}
+
+/** Acknowledge a single non-upload requirement (checkbox tick) */
+export async function acknowledgeRequirement(data: {
+  clearance_item_id: string;
+  requirement_id: string;
+  student_id: string;
+  acknowledged: boolean;
+}): Promise<void> {
+  const { error } = await supabase
+    .from('requirement_submissions')
+    .upsert(
+      {
+        clearance_item_id: data.clearance_item_id,
+        requirement_id: data.requirement_id,
+        student_id: data.student_id,
+        file_url: null,
+        status: data.acknowledged ? 'submitted' : 'pending',
+        submitted_at: data.acknowledged ? new Date().toISOString() : null,
+      },
+      { onConflict: 'clearance_item_id,requirement_id' }
+    )
+    .select();
+  if (error) throw error;
+}
+
+/** Set a clearance item's status to 'submitted' (visible to dept queue).
+ *  Also clears previous review data so the department sees a fresh submission.
+ *  Logs the transition to clearance_item_history. */
+export async function submitClearanceItem(
+  itemId: string,
+  studentId: string,
+  currentStatus: string
+): Promise<void> {
+  const { error } = await supabase
+    .from('clearance_items')
+    .update({ status: 'submitted', remarks: null, reviewed_at: null, reviewed_by: null })
+    .eq('id', itemId);
+  if (error) throw error;
+
+  // Log history entry — fire-and-forget, don't block submit on history error
+  supabase.from('clearance_item_history').insert({
+    clearance_item_id: itemId,
+    from_status: currentStatus,
+    to_status: 'submitted',
+    actor_id: studentId,
+    actor_role: 'student',
+    remarks: null,
+  }).then();
+}
+
+/** Create acknowledgement rows for non-upload requirements when student submits */
+export async function batchAcknowledgeRequirements(
+  clearanceItemId: string,
+  requirementIds: string[],
+  studentId: string
+): Promise<void> {
+  if (requirementIds.length === 0) return;
+  const rows = requirementIds.map((reqId) => ({
+    clearance_item_id: clearanceItemId,
+    requirement_id: reqId,
+    student_id: studentId,
+    file_url: null,
+    status: 'submitted' as const,
+    submitted_at: new Date().toISOString(),
+  }));
+  const { error } = await supabase
+    .from('requirement_submissions')
+    .upsert(rows, { onConflict: 'clearance_item_id,requirement_id' });
+  if (error) throw error;
+}
+
+/**
+ * Get all requirements for multiple (source_type, source_id) pairs in one query.
+ * Returns a map: `${source_type}:${source_id}` → Requirement[]
+ */
+export async function getRequirementsByMultipleSources(
+  sources: Array<{ source_type: string; source_id: string }>
+): Promise<Record<string, Requirement[]>> {
+  if (sources.length === 0) return {};
+
+  // Fetch all requirements for any of these source_ids
+  const sourceIds = [...new Set(sources.map((s) => s.source_id))];
+  const { data, error } = await supabase
+    .from('requirements')
+    .select('*')
+    .in('source_id', sourceIds)
+    .order('order', { ascending: true })
+    .order('created_at', { ascending: true });
+
+  if (error) throw error;
+
+  // Group by `${source_type}:${source_id}`
+  const map: Record<string, Requirement[]> = {};
+  for (const req of data ?? []) {
+    const key = `${req.source_type}:${req.source_id}`;
+    if (!map[key]) map[key] = [];
+    map[key].push(req);
+  }
+  return map;
+}
+
+// ==========================================
+// Clearance Item History / Audit Trail
+// ==========================================
+
+export interface ClearanceItemHistory {
+  id: string;
+  clearance_item_id: string;
+  from_status: string | null;
+  to_status: string;
+  actor_id: string | null;
+  actor_role: string | null;
+  remarks: string | null;
+  created_at: string;
+}
+
+export interface ClearanceItemHistoryWithActor extends ClearanceItemHistory {
+  actor: Pick<Profile, 'id' | 'first_name' | 'last_name' | 'role'> | null;
+}
+
+/** Fetch the full status history for a clearance item, oldest-first */
+export async function getClearanceItemHistory(
+  clearanceItemId: string
+): Promise<ClearanceItemHistoryWithActor[]> {
+  const { data, error } = await supabase
+    .from('clearance_item_history')
+    .select(`*, actor:profiles(id, first_name, last_name, role)`)
+    .eq('clearance_item_id', clearanceItemId)
+    .order('created_at', { ascending: true });
+  if (error) throw error;
+  return (data as ClearanceItemHistoryWithActor[]) || [];
+}
+
+/** Fetch all clearance items for a student's requests, with source name info */
+export async function getClearanceItemsForStudent(
+  studentId: string
+): Promise<(ClearanceItem & { request: ClearanceRequest })[]> {
+  const { data, error } = await supabase
+    .from('clearance_items')
+    .select(`*, request:clearance_requests!inner(*)`)
+    .eq('request.student_id', studentId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data as (ClearanceItem & { request: ClearanceRequest })[]) || [];
+}
+
+/** Fetch processed clearance items for an office with nested request + student profile */
+export async function getProcessedClearanceItemsByOffice(
+  officeId: string
+): Promise<ClearanceItemWithDetails[]> {
+  const { data, error } = await supabase
+    .from('clearance_items')
+    .select(`
+      *,
+      request:clearance_requests(
+        *,
+        student:profiles(*)
+      )
+    `)
+    .eq('source_type', 'office')
+    .eq('source_id', officeId)
+    .in('status', ['approved', 'rejected', 'on_hold'])
+    .order('reviewed_at', { ascending: false });
+
+  if (error) throw error;
+  return (data as ClearanceItemWithDetails[]) || [];
+}
+
+/** Fetch processed clearance items for a club with nested request + student profile */
+export async function getProcessedClearanceItemsByClub(
+  clubId: string
+): Promise<ClearanceItemWithDetails[]> {
+  const { data, error } = await supabase
+    .from('clearance_items')
+    .select(`
+      *,
+      request:clearance_requests(
+        *,
+        student:profiles(*)
+      )
+    `)
+    .eq('source_type', 'club')
+    .eq('source_id', clubId)
+    .in('status', ['approved', 'rejected', 'on_hold'])
+    .order('reviewed_at', { ascending: false });
+
+  if (error) throw error;
+  return (data as ClearanceItemWithDetails[]) || [];
 }

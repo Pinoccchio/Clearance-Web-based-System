@@ -20,9 +20,10 @@ interface RequirementFormData {
   name: string;
   description: string;
   is_required: boolean;
+  requires_upload: boolean;
 }
 
-const emptyForm: RequirementFormData = { name: "", description: "", is_required: true };
+const emptyForm: RequirementFormData = { name: "", description: "", is_required: true, requires_upload: false };
 
 export default function DepartmentRequirementsPage() {
   const { profile } = useAuth();
@@ -93,6 +94,7 @@ export default function DepartmentRequirementsPage() {
         name: addForm.name.trim(),
         description: addForm.description.trim() || undefined,
         is_required: addForm.is_required,
+        requires_upload: addForm.requires_upload,
         order: nextOrder,
       });
       setRequirements(prev => [...prev, created]);
@@ -109,7 +111,7 @@ export default function DepartmentRequirementsPage() {
 
   function startEdit(req: Requirement) {
     setEditingId(req.id);
-    setEditForm({ name: req.name, description: req.description ?? "", is_required: req.is_required });
+    setEditForm({ name: req.name, description: req.description ?? "", is_required: req.is_required, requires_upload: req.requires_upload });
     setEditNameError(null);
   }
 
@@ -131,6 +133,7 @@ export default function DepartmentRequirementsPage() {
         name: editForm.name.trim(),
         description: editForm.description.trim() || null,
         is_required: editForm.is_required,
+        requires_upload: editForm.requires_upload,
       });
       setRequirements(prev => prev.map(r => r.id === reqId ? updated : r));
       setEditingId(null);
@@ -265,6 +268,18 @@ export default function DepartmentRequirementsPage() {
                   Mark as required
                 </label>
               </div>
+              <div className="flex items-center gap-3">
+                <input
+                  id="add-requires-upload"
+                  type="checkbox"
+                  checked={addForm.requires_upload}
+                  onChange={e => setAddForm(prev => ({ ...prev, requires_upload: e.target.checked }))}
+                  className="w-4 h-4 rounded border-gray-300 text-ccis-blue-primary focus:ring-ccis-blue-primary"
+                />
+                <label htmlFor="add-requires-upload" className="text-sm font-medium text-cjc-navy">
+                  Requires file upload
+                </label>
+              </div>
             </div>
             <div className="flex gap-3 mt-4">
               <button
@@ -327,6 +342,9 @@ export default function DepartmentRequirementsPage() {
                     Type
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-warm-muted uppercase tracking-wider w-28">
+                    Upload
+                  </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-warm-muted uppercase tracking-wider w-28">
                     Added
                   </th>
                   <th className="px-4 py-3 text-right text-xs font-semibold text-warm-muted uppercase tracking-wider w-24">
@@ -370,6 +388,17 @@ export default function DepartmentRequirementsPage() {
                               className="w-4 h-4 rounded border-gray-300 text-ccis-blue-primary focus:ring-ccis-blue-primary"
                             />
                             <span className="text-xs text-cjc-navy">Required</span>
+                          </label>
+                        </td>
+                        <td className="px-4 py-3">
+                          <label className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              checked={editForm.requires_upload}
+                              onChange={e => setEditForm(prev => ({ ...prev, requires_upload: e.target.checked }))}
+                              className="w-4 h-4 rounded border-gray-300 text-ccis-blue-primary focus:ring-ccis-blue-primary"
+                            />
+                            <span className="text-xs text-cjc-navy">Upload</span>
                           </label>
                         </td>
                         <td className="px-4 py-3 text-warm-muted text-xs">
@@ -416,6 +445,17 @@ export default function DepartmentRequirementsPage() {
                           ) : (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
                               Optional
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-4">
+                          {req.requires_upload ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                              Required
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                              None
                             </span>
                           )}
                         </td>

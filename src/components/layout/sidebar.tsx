@@ -185,13 +185,27 @@ const studentNavSections: NavSection[] = [
     ],
   },
   {
-    title: "Clearance",
+    title: "Department",
     items: [
-      { label: "Clearance Status", href: "/student/clearance", icon: <ClipboardList className="w-5 h-5" /> },
-      { label: "Requirements", href: "/student/requirements", icon: <CheckSquare className="w-5 h-5" /> },
-      { label: "Submit Clearance", href: "/student/submit", icon: <Upload className="w-5 h-5" /> },
-      { label: "Documents", href: "/student/documents", icon: <FolderOpen className="w-5 h-5" /> },
-      { label: "History", href: "/student/history", icon: <History className="w-5 h-5" /> },
+      { label: "Clearance Status", href: "/student/department/clearance",   icon: <ClipboardList className="w-5 h-5" /> },
+      { label: "Requirements",     href: "/student/department/requirements", icon: <CheckSquare className="w-5 h-5" /> },
+      { label: "Submit Clearance", href: "/student/department/submit",       icon: <Upload className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Offices",
+    items: [
+      { label: "Clearance Status", href: "/student/offices/clearance",   icon: <ClipboardList className="w-5 h-5" /> },
+      { label: "Requirements",     href: "/student/offices/requirements", icon: <CheckSquare className="w-5 h-5" /> },
+      { label: "Submit Clearance", href: "/student/offices/submit",       icon: <Upload className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Clubs",
+    items: [
+      { label: "Clearance Status", href: "/student/clubs/clearance",   icon: <ClipboardList className="w-5 h-5" /> },
+      { label: "Requirements",     href: "/student/clubs/requirements", icon: <CheckSquare className="w-5 h-5" /> },
+      { label: "Submit Clearance", href: "/student/clubs/submit",       icon: <Upload className="w-5 h-5" /> },
     ],
   },
   {

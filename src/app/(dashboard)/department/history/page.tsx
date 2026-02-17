@@ -37,6 +37,7 @@ import {
   getProcessedClearanceItemsByDepartment,
   getSubmissionsByItem,
 } from "@/lib/supabase";
+import ClearanceItemHistoryTimeline from "@/components/shared/ClearanceItemHistoryTimeline";
 import { formatDate } from "@/lib/utils";
 
 const STATUS_OPTIONS = [
@@ -421,6 +422,12 @@ export default function DepartmentHistoryPage() {
                   <span className="text-xs text-gray-700">{selectedItem.remarks}</span>
                 </div>
               )}
+            </div>
+
+            {/* Status history timeline */}
+            <div>
+              <h3 className="text-sm font-semibold text-cjc-navy mb-3">Status History</h3>
+              <ClearanceItemHistoryTimeline clearanceItemId={selectedItem.id} />
             </div>
 
             {/* Requirement submissions */}
