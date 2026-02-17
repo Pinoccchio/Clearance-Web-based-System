@@ -72,6 +72,7 @@ export default function DashboardLayout({
         role={role}
         userName={userName}
         userEmail={profile.email}
+        userAvatar={profile.avatar_url ?? null}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         onLogout={handleLogout}

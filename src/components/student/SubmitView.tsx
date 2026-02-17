@@ -793,7 +793,9 @@ export default function SubmitView({
                       <div className="px-5 py-3 flex items-center gap-2 bg-green-50">
                         <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
                         <span className="text-sm font-medium text-green-700">
-                          {item.status === 'approved' ? 'Cleared by department' : 'Submitted for review'}
+                          {item.status === 'approved'
+                            ? `Cleared by ${sourceType}`
+                            : 'Submitted for review'}
                         </span>
                       </div>
                     ) : (

@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UserRole } from "@/lib/types";
+import { Avatar } from "@/components/ui/Avatar";
 
 interface NavItem {
   label: string;
@@ -234,6 +235,7 @@ interface SidebarProps {
   role: UserRole;
   userName: string;
   userEmail: string;
+  userAvatar?: string | null;
   isCollapsed: boolean;
   onToggleCollapse: () => void;
   onLogout?: () => void;
@@ -241,7 +243,7 @@ interface SidebarProps {
   orgName?: string | null;
 }
 
-export default function Sidebar({ role, userName, userEmail, isCollapsed, onToggleCollapse, onLogout, orgLogo, orgName }: SidebarProps) {
+export default function Sidebar({ role, userName, userEmail, userAvatar, isCollapsed, onToggleCollapse, onLogout, orgLogo, orgName }: SidebarProps) {
   const pathname = usePathname();
 
   const navSections =
@@ -359,13 +361,13 @@ export default function Sidebar({ role, userName, userEmail, isCollapsed, onTogg
           "flex items-center gap-3 px-3 py-2.5 rounded-xl bg-white/5",
           isCollapsed && "justify-center"
         )}>
-          <div className="w-9 h-9 rounded-xl bg-ccis-blue-primary/20 flex items-center justify-center text-ccis-blue-light text-sm font-semibold flex-shrink-0">
-            {userName
-              .split(" ")
-              .map((n) => n[0])
-              .join("")
-              .slice(0, 2)}
-          </div>
+          <Avatar
+            src={userAvatar ?? undefined}
+            name={userName}
+            size="sm"
+            variant="primary"
+            className="rounded-xl flex-shrink-0 w-9 h-9 text-sm"
+          />
           {!isCollapsed && (
             <div className="flex-1 min-w-0">
               <p className="text-white text-sm font-medium truncate">{userName}</p>

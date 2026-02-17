@@ -1661,15 +1661,22 @@ export async function updateClearanceItem(
 
   if (error) throw error;
 
-  // Log history entry — fire-and-forget, don't block action on history error
-  supabase.from('clearance_item_history').insert({
-    clearance_item_id: itemId,
-    from_status: currentStatus,
-    to_status: data.status,
-    actor_id: data.reviewed_by,
-    actor_role: null,
-    remarks: data.remarks ?? null,
-  }).then();
+  // Resolve reviewer role for history — fire-and-forget
+  supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', data.reviewed_by)
+    .single()
+    .then(({ data: profile }) => {
+      supabase.from('clearance_item_history').insert({
+        clearance_item_id: itemId,
+        from_status: currentStatus,
+        to_status: data.status,
+        actor_id: data.reviewed_by,
+        actor_role: profile?.role ?? null,
+        remarks: data.remarks ?? null,
+      }).then();
+    });
 
   return updated;
 }
