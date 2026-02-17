@@ -22,6 +22,8 @@ export interface Profile {
   year_level?: string | null;
   department?: string | null;
   avatar_url?: string | null;
+  enrolled_clubs?: string | null;
+  date_of_birth?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -41,10 +43,12 @@ export interface StudentRegistrationData {
   firstName: string;
   lastName: string;
   middleName?: string;
+  dateOfBirth?: string;
   studentId: string;
   course: string;
   yearLevel: string;
   department: string;
+  enrolledClubs?: string;
 }
 
 export interface SignInData {
@@ -97,6 +101,8 @@ export async function registerStudent(data: StudentRegistrationData) {
         course: data.course,
         year_level: data.yearLevel,
         department: data.department,
+        enrolled_clubs: data.enrolledClubs || null,
+        date_of_birth: data.dateOfBirth || null,
       },
     },
   });
@@ -286,6 +292,8 @@ export interface CreateUserData {
   studentId?: string;
   course?: string;
   yearLevel?: string;
+  enrolledClubs?: string;
+  dateOfBirth?: string;
 }
 
 /**
@@ -958,6 +966,124 @@ export async function getClubRoleUsers(): Promise<Profile[]> {
   }
 
   return data || [];
+}
+
+/** Get the office where the given user is head */
+export async function getOfficeByHeadId(userId: string): Promise<Office | null> {
+  const { data, error } = await supabase
+    .from("offices")
+    .select("*")
+    .eq("head_id", userId)
+    .single();
+  if (error) return null;
+  return data;
+}
+
+/** Get the department where the given user is head */
+export async function getDepartmentByHeadId(userId: string): Promise<Department | null> {
+  const { data, error } = await supabase
+    .from("departments")
+    .select("*")
+    .eq("head_id", userId)
+    .single();
+  if (error) return null;
+  return data;
+}
+
+/** Get the club where the given user is adviser */
+export async function getClubByAdviserId(userId: string): Promise<Club | null> {
+  const { data, error } = await supabase
+    .from("clubs")
+    .select("*")
+    .eq("adviser_id", userId)
+    .single();
+  if (error) return null;
+  return data;
+}
+
+// ==========================================
+// Course Management Types and Functions
+// ==========================================
+
+export interface Course {
+  id: string;
+  department_id: string;
+  name: string;
+  code: string;
+  status: "active" | "inactive";
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CreateCourseData {
+  department_id: string;
+  name: string;
+  code: string;
+  status?: "active" | "inactive";
+}
+
+export interface UpdateCourseData {
+  name?: string;
+  code?: string;
+  status?: "active" | "inactive";
+}
+
+/** Get all active courses for a given department */
+export async function getCoursesByDepartmentId(departmentId: string): Promise<Course[]> {
+  const { data, error } = await supabase
+    .from("courses")
+    .select("*")
+    .eq("department_id", departmentId)
+    .eq("status", "active")
+    .order("name", { ascending: true });
+  if (error) return [];
+  return data || [];
+}
+
+/** Get all courses for a department (admin/head view, includes inactive) */
+export async function getAllCoursesByDepartmentId(departmentId: string): Promise<Course[]> {
+  const { data, error } = await supabase
+    .from("courses")
+    .select("*")
+    .eq("department_id", departmentId)
+    .order("name", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function createCourse(data: CreateCourseData): Promise<Course> {
+  const { data: course, error } = await supabase
+    .from("courses")
+    .insert({
+      department_id: data.department_id,
+      name: data.name,
+      code: data.code.toUpperCase(),
+      status: data.status || "active",
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return course;
+}
+
+export async function updateCourse(id: string, data: UpdateCourseData): Promise<Course> {
+  const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (data.name !== undefined) updates.name = data.name;
+  if (data.code !== undefined) updates.code = data.code.toUpperCase();
+  if (data.status !== undefined) updates.status = data.status;
+  const { data: course, error } = await supabase
+    .from("courses")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) throw error;
+  return course;
+}
+
+export async function deleteCourse(id: string): Promise<void> {
+  const { error } = await supabase.from("courses").delete().eq("id", id);
+  if (error) throw error;
 }
 
 // ==========================================

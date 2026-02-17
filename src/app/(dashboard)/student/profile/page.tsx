@@ -10,21 +10,16 @@ import { Avatar } from "@/components/ui/Avatar";
 import {
   User,
   Mail,
-  Phone,
-  MapPin,
-  Calendar,
   GraduationCap,
   Building2,
   Edit2,
   Save,
-  Bell,
-  Shield,
   Camera,
 } from "lucide-react";
-import { mockUsers } from "@/lib/mock-data";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function StudentProfilePage() {
-  const user = mockUsers.student;
+  const { profile } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
 
   return (
@@ -41,7 +36,7 @@ export default function StudentProfilePage() {
             <Card padding="lg" className="text-center">
               <div className="relative inline-block mb-4">
                 <Avatar
-                  name={`${user.firstName} ${user.lastName}`}
+                  name={`${profile?.first_name ?? ""} ${profile?.last_name ?? ""}`}
                   size="xl"
                   variant="primary"
                   className="w-24 h-24 text-2xl"
@@ -51,23 +46,27 @@ export default function StudentProfilePage() {
                 </button>
               </div>
               <h2 className="text-xl font-semibold text-cjc-navy">
-                {user.firstName} {user.middleName?.[0]}. {user.lastName}
+                {profile?.first_name}
+                {profile?.middle_name ? ` ${profile.middle_name[0]}.` : ""}{" "}
+                {profile?.last_name}
               </h2>
-              <p className="text-gray-500 font-mono text-sm mt-1">{user.studentId}</p>
+              <p className="text-gray-500 font-mono text-sm mt-1">{profile?.student_id}</p>
               <Badge variant="info" className="mt-3">Student</Badge>
 
               <div className="mt-6 pt-6 border-t border-gray-100 space-y-3 text-left">
                 <div className="flex items-center gap-3">
                   <GraduationCap className="w-5 h-5 text-gray-400" />
-                  <span className="text-sm text-gray-600">{user.course}</span>
+                  <span className="text-sm text-gray-600">{profile?.course ?? "—"}</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Building2 className="w-5 h-5 text-gray-400" />
-                  <span className="text-sm text-gray-600">{user.yearLevel}</span>
+                  <span className="text-sm text-gray-600">
+                    {profile?.year_level ? `Year ${profile.year_level}` : "—"}
+                  </span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Mail className="w-5 h-5 text-gray-400" />
-                  <span className="text-sm text-gray-600">{user.email}</span>
+                  <span className="text-sm text-gray-600">{profile?.email ?? "—"}</span>
                 </div>
               </div>
             </Card>
@@ -104,35 +103,29 @@ export default function StudentProfilePage() {
               <div className="grid sm:grid-cols-2 gap-4">
                 <Input
                   label="First Name"
-                  defaultValue={user.firstName}
+                  defaultValue={profile?.first_name ?? ""}
                   disabled={!isEditing}
                 />
                 <Input
                   label="Middle Name"
-                  defaultValue={user.middleName || ""}
+                  defaultValue={profile?.middle_name ?? ""}
                   disabled={!isEditing}
                 />
                 <Input
                   label="Last Name"
-                  defaultValue={user.lastName}
+                  defaultValue={profile?.last_name ?? ""}
                   disabled={!isEditing}
                 />
                 <Input
                   label="Email Address"
                   type="email"
-                  defaultValue={user.email}
-                  disabled={!isEditing}
-                />
-                <Input
-                  label="Phone Number"
-                  type="tel"
-                  defaultValue="09123456789"
+                  defaultValue={profile?.email ?? ""}
                   disabled={!isEditing}
                 />
                 <Input
                   label="Date of Birth"
                   type="date"
-                  defaultValue="2002-05-15"
+                  defaultValue={profile?.date_of_birth ?? ""}
                   disabled={!isEditing}
                 />
               </div>
@@ -150,98 +143,25 @@ export default function StudentProfilePage() {
               <div className="grid sm:grid-cols-2 gap-4">
                 <div className="p-4 rounded-lg bg-gray-50">
                   <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Student ID</p>
-                  <p className="font-medium text-cjc-navy font-mono">{user.studentId}</p>
+                  <p className="font-medium text-cjc-navy font-mono">{profile?.student_id ?? "—"}</p>
                 </div>
                 <div className="p-4 rounded-lg bg-gray-50">
                   <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Course</p>
-                  <p className="font-medium text-cjc-navy">{user.course}</p>
+                  <p className="font-medium text-cjc-navy">{profile?.course ?? "—"}</p>
                 </div>
                 <div className="p-4 rounded-lg bg-gray-50">
                   <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Year Level</p>
-                  <p className="font-medium text-cjc-navy">{user.yearLevel}</p>
+                  <p className="font-medium text-cjc-navy">
+                    {profile?.year_level ? `Year ${profile.year_level}` : "—"}
+                  </p>
                 </div>
                 <div className="p-4 rounded-lg bg-gray-50">
-                  <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Section</p>
-                  <p className="font-medium text-cjc-navy">A</p>
+                  <p className="text-xs text-gray-500 uppercase tracking-wide mb-1">Department</p>
+                  <p className="font-medium text-cjc-navy">{profile?.department ?? "—"}</p>
                 </div>
               </div>
             </Card>
 
-            {/* Security */}
-            <Card padding="lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="w-5 h-5 text-cjc-gold" />
-                  Security
-                </CardTitle>
-              </CardHeader>
-
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 rounded-lg border border-gray-100">
-                  <div>
-                    <p className="font-medium text-cjc-navy">Password</p>
-                    <p className="text-sm text-gray-500">Last changed 30 days ago</p>
-                  </div>
-                  <Button variant="secondary" size="sm">Change Password</Button>
-                </div>
-
-                <div className="flex items-center justify-between p-4 rounded-lg border border-gray-100">
-                  <div>
-                    <p className="font-medium text-cjc-navy">Two-Factor Authentication</p>
-                    <p className="text-sm text-gray-500">Add an extra layer of security</p>
-                  </div>
-                  <Badge variant="neutral">Not Enabled</Badge>
-                </div>
-              </div>
-            </Card>
-
-            {/* Notifications */}
-            <Card padding="lg">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Bell className="w-5 h-5 text-cjc-gold" />
-                  Notification Preferences
-                </CardTitle>
-              </CardHeader>
-
-              <div className="space-y-4">
-                <label className="flex items-center justify-between p-4 rounded-lg border border-gray-100 cursor-pointer">
-                  <div>
-                    <p className="font-medium text-cjc-navy">Email Notifications</p>
-                    <p className="text-sm text-gray-500">Receive updates via email</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    defaultChecked
-                    className="w-5 h-5 rounded border-gray-300 text-cjc-blue focus:ring-cjc-blue"
-                  />
-                </label>
-
-                <label className="flex items-center justify-between p-4 rounded-lg border border-gray-100 cursor-pointer">
-                  <div>
-                    <p className="font-medium text-cjc-navy">Clearance Updates</p>
-                    <p className="text-sm text-gray-500">Get notified when clearance status changes</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    defaultChecked
-                    className="w-5 h-5 rounded border-gray-300 text-cjc-blue focus:ring-cjc-blue"
-                  />
-                </label>
-
-                <label className="flex items-center justify-between p-4 rounded-lg border border-gray-100 cursor-pointer">
-                  <div>
-                    <p className="font-medium text-cjc-navy">Announcement Alerts</p>
-                    <p className="text-sm text-gray-500">Receive important announcements</p>
-                  </div>
-                  <input
-                    type="checkbox"
-                    defaultChecked
-                    className="w-5 h-5 rounded border-gray-300 text-cjc-blue focus:ring-cjc-blue"
-                  />
-                </label>
-              </div>
-            </Card>
           </div>
         </div>
       </div>

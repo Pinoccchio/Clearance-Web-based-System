@@ -124,3 +124,31 @@ export interface DashboardStats {
   approvedToday: number;
   completionRate: number;
 }
+
+export type ClearanceSourceType = "department" | "office" | "club";
+
+export type RequirementSubmissionStatus = "pending" | "submitted" | "verified" | "rejected";
+
+export interface Requirement {
+  id: string;
+  sourceType: ClearanceSourceType;
+  sourceId: string;
+  name: string;
+  description?: string;
+  isRequired: boolean;
+  order: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface RequirementSubmission {
+  id: string;
+  clearanceItemId: string;
+  requirementId: string;
+  studentId: string;
+  fileUrl?: string;
+  status: RequirementSubmissionStatus;
+  remarks?: string;
+  submittedAt?: string;
+  reviewedAt?: string;
+}

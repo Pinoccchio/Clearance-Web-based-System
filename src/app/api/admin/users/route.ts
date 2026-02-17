@@ -29,6 +29,8 @@ interface CreateUserRequestBody {
   studentId?: string;
   course?: string;
   yearLevel?: string;
+  enrolledClubs?: string;
+  dateOfBirth?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -107,6 +109,8 @@ export async function POST(request: NextRequest) {
           student_id: body.studentId || null,
           course: body.course || null,
           year_level: body.yearLevel || null,
+          enrolled_clubs: body.enrolledClubs || null,
+          date_of_birth: body.dateOfBirth || null,
         },
       });
 

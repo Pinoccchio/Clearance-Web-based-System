@@ -14,7 +14,7 @@ import {
 export const mockUsers: Record<string, User> = {
   student: {
     id: "usr_001",
-    email: "juan.delacruz@cjc.edu.ph",
+    email: "juan.delacruz@g.cjc.edu.ph",
     firstName: "Juan",
     lastName: "Dela Cruz",
     middleName: "Santos",
@@ -25,7 +25,7 @@ export const mockUsers: Record<string, User> = {
   },
   office: {
     id: "usr_002",
-    email: "maria.santos@cjc.edu.ph",
+    email: "maria.santos@g.cjc.edu.ph",
     firstName: "Maria",
     lastName: "Santos",
     role: "office",
@@ -34,7 +34,7 @@ export const mockUsers: Record<string, User> = {
   },
   department: {
     id: "usr_003",
-    email: "roberto.lopez@cjc.edu.ph",
+    email: "roberto.lopez@g.cjc.edu.ph",
     firstName: "Roberto",
     lastName: "Lopez",
     role: "department",
@@ -43,7 +43,7 @@ export const mockUsers: Record<string, User> = {
   },
   club: {
     id: "usr_004",
-    email: "jose.reyes@cjc.edu.ph",
+    email: "jose.reyes@g.cjc.edu.ph",
     firstName: "Jose",
     lastName: "Reyes",
     role: "club",
@@ -52,7 +52,7 @@ export const mockUsers: Record<string, User> = {
   },
   admin: {
     id: "usr_005",
-    email: "admin@cjc.edu.ph",
+    email: "admin@g.cjc.edu.ph",
     firstName: "System",
     lastName: "Administrator",
     role: "admin",
@@ -180,7 +180,7 @@ export const nonAcademicOrganizations: NonAcademicOrganization[] = [
 export const mockStudents: User[] = [
   {
     id: "std_001",
-    email: "juan.delacruz@cjc.edu.ph",
+    email: "juan.delacruz@g.cjc.edu.ph",
     firstName: "Juan",
     lastName: "Dela Cruz",
     role: "student",
@@ -190,7 +190,7 @@ export const mockStudents: User[] = [
   },
   {
     id: "std_002",
-    email: "maria.santos@cjc.edu.ph",
+    email: "maria.santos@g.cjc.edu.ph",
     firstName: "Maria",
     lastName: "Santos",
     role: "student",
@@ -200,7 +200,7 @@ export const mockStudents: User[] = [
   },
   {
     id: "std_003",
-    email: "pedro.reyes@cjc.edu.ph",
+    email: "pedro.reyes@g.cjc.edu.ph",
     firstName: "Pedro",
     lastName: "Reyes",
     role: "student",
@@ -210,7 +210,7 @@ export const mockStudents: User[] = [
   },
   {
     id: "std_004",
-    email: "ana.garcia@cjc.edu.ph",
+    email: "ana.garcia@g.cjc.edu.ph",
     firstName: "Ana",
     lastName: "Garcia",
     role: "student",
@@ -220,7 +220,7 @@ export const mockStudents: User[] = [
   },
   {
     id: "std_005",
-    email: "carlos.mendoza@cjc.edu.ph",
+    email: "carlos.mendoza@g.cjc.edu.ph",
     firstName: "Carlos",
     lastName: "Mendoza",
     role: "student",

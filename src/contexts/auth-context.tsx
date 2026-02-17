@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import { User } from "@supabase/supabase-js";
-import { supabase, Profile, signIn as supabaseSignIn, signOut as supabaseSignOut, getCurrentProfile, getProfileById } from "@/lib/supabase";
+import { supabase, Profile, signIn as supabaseSignIn, signOut as supabaseSignOut, getCurrentProfile, getProfileById, getOfficeByHeadId, getDepartmentByHeadId, getClubByAdviserId } from "@/lib/supabase";
 
 interface AuthContextType {
   user: User | null;
@@ -12,14 +12,32 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<{ success: boolean; error?: string; role?: string }>;
   logout: () => Promise<void>;
   refreshProfile: () => Promise<void>;
+  orgLogo: string | null;
+  orgName: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+async function fetchOrgForProfile(profile: Profile): Promise<{ logo: string | null; name: string | null }> {
+  if (profile.role === "office") {
+    const org = await getOfficeByHeadId(profile.id);
+    return { logo: org?.logo_url ?? null, name: org?.name ?? null };
+  } else if (profile.role === "department") {
+    const org = await getDepartmentByHeadId(profile.id);
+    return { logo: org?.logo_url ?? null, name: org?.name ?? null };
+  } else if (profile.role === "club") {
+    const org = await getClubByAdviserId(profile.id);
+    return { logo: org?.logo_url ?? null, name: org?.name ?? null };
+  }
+  return { logo: null, name: null };
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [orgLogo, setOrgLogo] = useState<string | null>(null);
+  const [orgName, setOrgName] = useState<string | null>(null);
 
   const isAuthenticated = !!user && !!profile;
 
@@ -59,6 +77,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       console.log("[Auth] Profile found, role:", userProfile.role);
       setProfile(userProfile);
+      const { logo, name } = await fetchOrgForProfile(userProfile);
+      setOrgLogo(logo);
+      setOrgName(name);
       return { success: true, role: userProfile.role };
     } catch (error) {
       console.error("[Auth] Login error:", error);
@@ -73,11 +94,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await supabaseSignOut();
       setUser(null);
       setProfile(null);
+      setOrgLogo(null);
+      setOrgName(null);
     } catch (error) {
       console.error("Logout error:", error);
       // Still clear local state even if signOut fails
       setUser(null);
       setProfile(null);
+      setOrgLogo(null);
+      setOrgName(null);
     }
   }, []);
 
@@ -104,6 +129,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Use getProfileById instead of getCurrentProfile to avoid double getUser() call
         const userProfile = await getProfileById(user.id);
         setProfile(userProfile);
+        if (userProfile) {
+          const { logo, name } = await fetchOrgForProfile(userProfile);
+          setOrgLogo(logo);
+          setOrgName(name);
+        }
       } catch (error) {
         // Silent fail for initialization - user just isn't logged in
         console.warn("Auth initialization:", error);
@@ -142,6 +172,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         login,
         logout,
         refreshProfile,
+        orgLogo,
+        orgName,
       }}
     >
       {children}

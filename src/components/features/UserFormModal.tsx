@@ -12,6 +12,10 @@ import {
   createUser,
   updateProfile,
   CreateUserData,
+  getAllDepartments,
+  getAllClubs,
+  getCoursesByDepartmentId,
+  Course,
 } from "@/lib/supabase";
 import { useToast } from "@/components/ui/Toast";
 
@@ -35,6 +39,7 @@ interface FormData {
   studentId: string;
   course: string;
   yearLevel: string;
+  dateOfBirth: string;
 }
 
 interface FormErrors {
@@ -62,6 +67,7 @@ const initialFormData: FormData = {
   studentId: "",
   course: "",
   yearLevel: "",
+  dateOfBirth: "",
 };
 
 const roleOptions = [
@@ -78,21 +84,9 @@ const yearLevelOptions = [
   { value: "2", label: "2nd Year" },
   { value: "3", label: "3rd Year" },
   { value: "4", label: "4th Year" },
-  { value: "5", label: "5th Year" },
 ];
 
-const courseOptions = [
-  { value: "", label: "Select Course" },
-  { value: "BSIT", label: "BS Information Technology" },
-  { value: "BSCS", label: "BS Computer Science" },
-  { value: "BSIS", label: "BS Information Systems" },
-  { value: "BSA", label: "BS Accountancy" },
-  { value: "BSBA", label: "BS Business Administration" },
-  { value: "BSED", label: "BS Education" },
-  { value: "BSN", label: "BS Nursing" },
-  { value: "BSCRIM", label: "BS Criminology" },
-  { value: "Other", label: "Other" },
-];
+const STUDENT_ID_REGEX = /^\d{4}-\d{4}-\d+$/;
 
 export function UserFormModal({
   isOpen,
@@ -107,6 +101,18 @@ export function UserFormModal({
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [departments, setDepartments] = useState<{ id: string; name: string; code: string }[]>([]);
+  const [clubs, setClubs] = useState<{ id: string; name: string; code: string; type: string }[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [selectedClubs, setSelectedClubs] = useState<string[]>([]);
+
+  // Fetch departments and clubs when modal opens for student role
+  useEffect(() => {
+    if (isOpen && formData.role === "student") {
+      getAllDepartments().then(data => setDepartments(data.filter(d => d.status === "active")));
+      getAllClubs().then(data => setClubs(data.filter(c => c.status === "active")));
+    }
+  }, [isOpen, formData.role]);
 
   // Populate form when editing
   useEffect(() => {
@@ -123,9 +129,20 @@ export function UserFormModal({
         studentId: user.student_id || "",
         course: user.course || "",
         yearLevel: user.year_level || "",
+        dateOfBirth: user.date_of_birth || "",
       });
+      setSelectedClubs(user.enrolled_clubs ? user.enrolled_clubs.split(",") : []);
+      // Load courses for the student's department
+      if (user.role === "student" && user.department) {
+        getAllDepartments().then(depts => {
+          const dept = depts.find(d => d.code === user.department);
+          if (dept) getCoursesByDepartmentId(dept.id).then(setCourses);
+        });
+      }
     } else {
       setFormData(initialFormData);
+      setSelectedClubs([]);
+      setCourses([]);
     }
     setErrors({});
   }, [mode, user, isOpen]);
@@ -135,10 +152,30 @@ export function UserFormModal({
   ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
-    // Clear error when field is modified
     if (errors[name as keyof FormErrors]) {
       setErrors((prev) => ({ ...prev, [name]: undefined }));
     }
+  };
+
+  const handleDepartmentChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const deptCode = e.target.value;
+    setFormData(prev => ({ ...prev, department: deptCode, course: "" }));
+    if (errors.course) setErrors(prev => ({ ...prev, course: undefined }));
+    if (deptCode) {
+      const dept = departments.find(d => d.code === deptCode);
+      if (dept) {
+        const deptCourses = await getCoursesByDepartmentId(dept.id);
+        setCourses(deptCourses);
+      }
+    } else {
+      setCourses([]);
+    }
+  };
+
+  const toggleClub = (clubId: string) => {
+    setSelectedClubs(prev =>
+      prev.includes(clubId) ? prev.filter(id => id !== clubId) : [...prev, clubId]
+    );
   };
 
   const validateEmail = (email: string): boolean => {
@@ -182,6 +219,8 @@ export function UserFormModal({
     if (formData.role === "student") {
       if (!formData.studentId.trim()) {
         newErrors.studentId = "Student ID is required";
+      } else if (!STUDENT_ID_REGEX.test(formData.studentId.trim())) {
+        newErrors.studentId = "Format must be YYYY-NNNN-N (e.g. 2021-0001-5)";
       }
       if (!formData.course) {
         newErrors.course = "Course is required";
@@ -220,6 +259,12 @@ export function UserFormModal({
           course: formData.role === "student" ? formData.course : undefined,
           yearLevel:
             formData.role === "student" ? formData.yearLevel : undefined,
+          enrolledClubs: formData.role === "student" && selectedClubs.length > 0
+            ? selectedClubs.join(",")
+            : undefined,
+          dateOfBirth: formData.role === "student" && formData.dateOfBirth
+            ? formData.dateOfBirth
+            : undefined,
         };
 
         await createUser(userData);
@@ -236,6 +281,12 @@ export function UserFormModal({
           course: formData.role === "student" ? formData.course : null,
           year_level:
             formData.role === "student" ? formData.yearLevel : null,
+          enrolled_clubs: formData.role === "student" && selectedClubs.length > 0
+            ? selectedClubs.join(",")
+            : null,
+          date_of_birth: formData.role === "student" && formData.dateOfBirth
+            ? formData.dateOfBirth
+            : null,
         };
 
         await updateProfile(user.id, updates);
@@ -255,16 +306,6 @@ export function UserFormModal({
   };
 
   const isStudent = formData.role === "student";
-  const isAdmin = formData.role === "admin";
-  const isDepartment = formData.role === "department";
-  const isClub = formData.role === "club";
-  const isOffice = formData.role === "office";
-  // Hide department field for all roles except students (who have a different department field)
-  // - Department role users are linked via Department Management page
-  // - Club role users are linked via Club Management page
-  // - Office role users are linked via Office Management page
-  // - Admin doesn't need department assignment
-  const showDepartmentField = false; // No longer showing for any role in this form
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="max-w-lg">
@@ -409,17 +450,6 @@ export function UserFormModal({
             required
           />
 
-          {/* Department - for office, department, club roles only (not student or admin) */}
-          {showDepartmentField && (
-            <Input
-              label="Department/Office"
-              name="department"
-              value={formData.department}
-              onChange={handleChange}
-              placeholder="e.g., Registrar, CITCS"
-            />
-          )}
-
           {/* Student-specific fields */}
           {isStudent && (
             <>
@@ -429,8 +459,26 @@ export function UserFormModal({
                 value={formData.studentId}
                 onChange={handleChange}
                 error={errors.studentId}
-                placeholder="e.g., 2024-00001"
+                placeholder="e.g., 2021-0001-5"
                 required
+              />
+              <Input
+                label="Date of Birth"
+                name="dateOfBirth"
+                type="date"
+                value={formData.dateOfBirth}
+                onChange={handleChange}
+                helperText="Optional"
+              />
+              <Select
+                label="Department"
+                name="department"
+                value={formData.department}
+                onChange={handleDepartmentChange}
+                options={[
+                  { value: "", label: "Select Department" },
+                  ...departments.map(d => ({ value: d.code, label: d.name })),
+                ]}
               />
               <div className="grid grid-cols-2 gap-4">
                 <Select
@@ -438,9 +486,13 @@ export function UserFormModal({
                   name="course"
                   value={formData.course}
                   onChange={handleChange}
-                  options={courseOptions}
+                  options={[
+                    { value: "", label: !formData.department ? "Select Department First" : "Select Course" },
+                    ...courses.map(c => ({ value: c.code, label: c.name })),
+                  ]}
                   error={errors.course}
                   required
+                  disabled={!formData.department || courses.length === 0}
                 />
                 <Select
                   label="Year Level"
@@ -452,13 +504,28 @@ export function UserFormModal({
                   required
                 />
               </div>
-              <Input
-                label="Department"
-                name="department"
-                value={formData.department}
-                onChange={handleChange}
-                placeholder="e.g., College of IT"
-              />
+              <div>
+                <label className="block text-sm font-medium text-cjc-navy mb-1.5">
+                  Enrolled Clubs <span className="text-gray-400 font-normal">(Optional)</span>
+                </label>
+                <div className="space-y-1.5 max-h-36 overflow-y-auto border border-gray-200 rounded-lg p-2">
+                  {clubs.map(club => (
+                    <label key={club.id} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                      <input
+                        type="checkbox"
+                        checked={selectedClubs.includes(club.id)}
+                        onChange={() => toggleClub(club.id)}
+                        className="w-4 h-4 rounded border-gray-300 text-cjc-blue"
+                      />
+                      <span className="text-sm text-gray-700">{club.name}</span>
+                      <span className="text-xs text-gray-400 ml-auto">{club.type}</span>
+                    </label>
+                  ))}
+                  {clubs.length === 0 && (
+                    <p className="text-xs text-gray-400 text-center py-2">No clubs available</p>
+                  )}
+                </div>
+              </div>
             </>
           )}
 

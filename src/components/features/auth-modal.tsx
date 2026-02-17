@@ -17,8 +17,9 @@ import {
   Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { registerAdmin, registerStudent } from "@/lib/supabase";
+import { registerAdmin, registerStudent, getAllDepartments, getAllClubs, getCoursesByDepartmentId, Course } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth-context";
+import { useToast } from "@/components/ui/Toast";
 
 type AuthMode = "login" | "register";
 
@@ -27,18 +28,6 @@ interface AuthModalProps {
   onClose: () => void;
   initialMode?: AuthMode;
 }
-
-const departments = [
-  { value: "ccis", label: "College of Computing and Information Sciences (CCIS)" },
-];
-
-const courses = [
-  "Bachelor of Science in Information Technology",
-  "Bachelor of Science in Computer Science",
-  "Bachelor of Science in Information Systems",
-];
-
-const yearLevels = ["1st Year", "2nd Year", "3rd Year", "4th Year"];
 
 export function AuthModal({ isOpen, onClose, initialMode = "login" }: AuthModalProps) {
   const [mode, setMode] = useState<AuthMode>(initialMode);
@@ -87,6 +76,7 @@ export function AuthModal({ isOpen, onClose, initialMode = "login" }: AuthModalP
 function LoginForm({ onClose }: { onClose: () => void }) {
   const router = useRouter();
   const { login } = useAuth();
+  const { showToast } = useToast();
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -119,6 +109,7 @@ function LoginForm({ onClose }: { onClose: () => void }) {
     } else {
       console.log("[LoginForm] Login failed:", result.error);
       setError(result.error || "Invalid credentials. Please try again.");
+      showToast("error", "Sign In Failed", result.error || "Invalid credentials");
       setIsLoading(false);
     }
   };
@@ -152,7 +143,7 @@ function LoginForm({ onClose }: { onClose: () => void }) {
             value={formData.email}
             onChange={handleInputChange}
             className="input-base"
-            placeholder="your.email@cjc.edu.ph"
+            placeholder="your.email@g.cjc.edu.ph"
             required
           />
         </div>
@@ -227,6 +218,15 @@ function LoginForm({ onClose }: { onClose: () => void }) {
 // REGISTER FORM (Student)
 // ============================================
 
+const STUDENT_ID_REGEX = /^\d{4}-\d{4}-\d+$/;
+
+const yearLevelButtons = [
+  { value: "1", label: "1st Year" },
+  { value: "2", label: "2nd Year" },
+  { value: "3", label: "3rd Year" },
+  { value: "4", label: "4th Year" },
+];
+
 function RegisterForm({
   onClose,
   onSwitchToLogin,
@@ -235,17 +235,24 @@ function RegisterForm({
   onSwitchToLogin: () => void;
 }) {
   const router = useRouter();
+  const { showToast } = useToast();
   const [step, setStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [departments, setDepartments] = useState<{ id: string; name: string; code: string }[]>([]);
+  const [clubs, setClubs] = useState<{ id: string; name: string; code: string; type: string }[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [loadingCourses, setLoadingCourses] = useState(false);
+  const [selectedClubs, setSelectedClubs] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     studentId: "",
     firstName: "",
     lastName: "",
     middleName: "",
     email: "",
+    dateOfBirth: "",
     department: "",
     course: "",
     yearLevel: "",
@@ -253,6 +260,11 @@ function RegisterForm({
     confirmPassword: "",
     agreeToTerms: false,
   });
+
+  useEffect(() => {
+    getAllDepartments().then(data => setDepartments(data.filter(d => d.status === "active")));
+    getAllClubs().then(data => setClubs(data.filter(c => c.status === "active")));
+  }, []);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -265,10 +277,73 @@ function RegisterForm({
     }));
   };
 
+  const handleDepartmentChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const deptCode = e.target.value;
+    setFormData(prev => ({ ...prev, department: deptCode, course: "" }));
+    if (deptCode) {
+      const dept = departments.find(d => d.code === deptCode);
+      if (dept) {
+        setLoadingCourses(true);
+        const deptCourses = await getCoursesByDepartmentId(dept.id);
+        setCourses(deptCourses);
+        setLoadingCourses(false);
+      }
+    } else {
+      setCourses([]);
+    }
+  };
+
+  const toggleClub = (clubId: string) => {
+    setSelectedClubs(prev =>
+      prev.includes(clubId) ? prev.filter(id => id !== clubId) : [...prev, clubId]
+    );
+  };
+
+  const handleContinue = () => {
+    if (!formData.studentId || !formData.firstName || !formData.lastName || !formData.email) {
+      setError("Please fill in all required fields");
+      return;
+    }
+    if (!STUDENT_ID_REGEX.test(formData.studentId)) {
+      setError("Student ID must be in the format YYYY-NNNN-N (e.g. 2021-0001-5)");
+      return;
+    }
+    if (!formData.email.endsWith("@g.cjc.edu.ph")) {
+      setError("Email must be a @g.cjc.edu.ph address");
+      return;
+    }
+    setError(null);
+    setStep(2);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     setError(null);
+
+    // Step 2 field validation
+    if (!formData.department) {
+      setError("Please select your department");
+      setIsLoading(false);
+      return;
+    }
+    if (!formData.course) {
+      setError("Please select your course / program");
+      setIsLoading(false);
+      return;
+    }
+    if (!formData.yearLevel) {
+      setError("Please select your year level");
+      setIsLoading(false);
+      return;
+    }
+
+    // Terms of Service checkbox
+    if (!formData.agreeToTerms) {
+      setError("You must agree to the Terms of Service and Privacy Policy");
+      setIsLoading(false);
+      return;
+    }
 
     // Validate password match
     if (formData.password !== formData.confirmPassword) {
@@ -295,13 +370,16 @@ function RegisterForm({
         course: formData.course,
         yearLevel: formData.yearLevel,
         department: formData.department,
+        enrolledClubs: selectedClubs.length > 0 ? selectedClubs.join(",") : undefined,
+        dateOfBirth: formData.dateOfBirth || undefined,
       });
 
-      // Success - switch to login
+      showToast("success", "Account Created", "Your account has been created. Please sign in.");
       onSwitchToLogin();
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "Registration failed. Please try again.";
       setError(errorMessage);
+      showToast("error", "Registration Failed", errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -363,7 +441,7 @@ function RegisterForm({
                 value={formData.studentId}
                 onChange={handleInputChange}
                 className="input-base font-mono"
-                placeholder="e.g., 2021-00001"
+                placeholder="e.g., 2021-0001-5"
               />
             </div>
 
@@ -384,34 +462,34 @@ function RegisterForm({
                 />
               </div>
               <div>
-                <label htmlFor="lastName" className="block text-sm font-medium text-cjc-navy mb-1.5">
-                  Last Name
+                <label htmlFor="middleName" className="block text-sm font-medium text-cjc-navy mb-1.5">
+                  Middle Name <span className="text-gray-400 font-normal">(Optional)</span>
                 </label>
                 <input
                   type="text"
-                  id="lastName"
-                  name="lastName"
-                  value={formData.lastName}
+                  id="middleName"
+                  name="middleName"
+                  value={formData.middleName}
                   onChange={handleInputChange}
                   className="input-base"
-                  placeholder="Dela Cruz"
+                  placeholder="Santos"
                 />
               </div>
             </div>
 
-            {/* Middle Name */}
+            {/* Last Name */}
             <div>
-              <label htmlFor="middleName" className="block text-sm font-medium text-cjc-navy mb-1.5">
-                Middle Name <span className="text-gray-400 font-normal">(Optional)</span>
+              <label htmlFor="lastName" className="block text-sm font-medium text-cjc-navy mb-1.5">
+                Last Name
               </label>
               <input
                 type="text"
-                id="middleName"
-                name="middleName"
-                value={formData.middleName}
+                id="lastName"
+                name="lastName"
+                value={formData.lastName}
                 onChange={handleInputChange}
                 className="input-base"
-                placeholder="Santos"
+                placeholder="Dela Cruz"
               />
             </div>
 
@@ -427,22 +505,30 @@ function RegisterForm({
                 value={formData.email}
                 onChange={handleInputChange}
                 className="input-base"
-                placeholder="your.email@cjc.edu.ph"
+                placeholder="your.email@g.cjc.edu.ph"
               />
             </div>
 
-            {/* Registration Unavailable Notice */}
-            <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
-              <p className="text-sm text-amber-800 text-center font-medium">
-                Registration is not yet available.
-              </p>
+            {/* Date of Birth */}
+            <div>
+              <label htmlFor="dateOfBirth" className="block text-sm font-medium text-cjc-navy mb-1.5">
+                Date of Birth <span className="text-gray-400 font-normal">(Optional)</span>
+              </label>
+              <input
+                type="date"
+                id="dateOfBirth"
+                name="dateOfBirth"
+                value={formData.dateOfBirth}
+                onChange={handleInputChange}
+                className="input-base"
+              />
             </div>
 
-            {/* Continue Button - Disabled */}
+            {/* Continue Button */}
             <button
               type="button"
-              disabled
-              className="w-full py-3 bg-gray-300 text-gray-500 rounded-lg font-medium cursor-not-allowed"
+              onClick={handleContinue}
+              className="w-full py-3 bg-ccis-blue-primary text-white rounded-lg font-medium hover:bg-ccis-blue transition-colors"
             >
               Continue
             </button>
@@ -461,13 +547,13 @@ function RegisterForm({
                   id="department"
                   name="department"
                   value={formData.department}
-                  onChange={handleInputChange}
+                  onChange={handleDepartmentChange}
                   className="input-base appearance-none pr-10"
                 >
                   <option value="">Select your department</option>
                   {departments.map((dept) => (
-                    <option key={dept.value} value={dept.value}>
-                      {dept.label}
+                    <option key={dept.id} value={dept.code}>
+                      {dept.name}
                     </option>
                   ))}
                 </select>
@@ -486,13 +572,18 @@ function RegisterForm({
                   name="course"
                   value={formData.course}
                   onChange={handleInputChange}
-                  className="input-base appearance-none pr-10"
+                  disabled={!formData.department || loadingCourses}
+                  className="input-base appearance-none pr-10 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <option value="">Select your course</option>
-                  {courses.map((course) => (
-                    <option key={course} value={course}>
-                      {course}
-                    </option>
+                  <option value="">
+                    {!formData.department
+                      ? "Select Department First"
+                      : loadingCourses
+                      ? "Loading courses..."
+                      : "Select Course"}
+                  </option>
+                  {courses.map((c) => (
+                    <option key={c.id} value={c.code}>{c.name}</option>
                   ))}
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
@@ -505,21 +596,45 @@ function RegisterForm({
                 Year Level
               </label>
               <div className="grid grid-cols-4 gap-2">
-                {yearLevels.map((year) => (
+                {yearLevelButtons.map((yr) => (
                   <button
-                    key={year}
+                    key={yr.value}
                     type="button"
-                    onClick={() => setFormData((prev) => ({ ...prev, yearLevel: year }))}
+                    onClick={() => setFormData((prev) => ({ ...prev, yearLevel: yr.value }))}
                     className={cn(
                       "py-2 px-3 rounded-md text-sm font-medium transition-colors",
-                      formData.yearLevel === year
+                      formData.yearLevel === yr.value
                         ? "bg-cjc-navy text-white"
                         : "bg-gray-100 text-gray-600 hover:bg-gray-200"
                     )}
                   >
-                    {year}
+                    {yr.label}
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* Enrolled Clubs */}
+            <div>
+              <label className="block text-sm font-medium text-cjc-navy mb-1.5">
+                Enrolled Clubs <span className="text-gray-400 font-normal">(Optional)</span>
+              </label>
+              <div className="space-y-1.5 max-h-36 overflow-y-auto border border-gray-200 rounded-lg p-2">
+                {clubs.map(club => (
+                  <label key={club.id} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-1 rounded">
+                    <input
+                      type="checkbox"
+                      checked={selectedClubs.includes(club.id)}
+                      onChange={() => toggleClub(club.id)}
+                      className="w-4 h-4 rounded border-gray-300 text-cjc-blue"
+                    />
+                    <span className="text-sm text-gray-700">{club.name}</span>
+                    <span className="text-xs text-gray-400 ml-auto">{club.type}</span>
+                  </label>
+                ))}
+                {clubs.length === 0 && (
+                  <p className="text-xs text-gray-400 text-center py-2">No clubs available</p>
+                )}
               </div>
             </div>
 

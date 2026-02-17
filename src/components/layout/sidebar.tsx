@@ -77,6 +77,137 @@ const getDashboardOnlyNav = (role: UserRole): NavSection[] => [
   },
 ];
 
+const departmentNavSections: NavSection[] = [
+  {
+    title: "Main",
+    items: [
+      { label: "Dashboard", href: "/department", icon: <LayoutDashboard className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Clearance",
+    items: [
+      { label: "Clearance Queue", href: "/department/clearance", icon: <ClipboardList className="w-5 h-5" /> },
+      { label: "Requirements", href: "/department/requirements", icon: <CheckSquare className="w-5 h-5" /> },
+      { label: "History", href: "/department/history", icon: <History className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Management",
+    items: [
+      { label: "Students", href: "/department/students", icon: <Users className="w-5 h-5" /> },
+      { label: "Courses", href: "/department/courses", icon: <GraduationCap className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Communication",
+    items: [
+      { label: "Announcements", href: "/department/announcements", icon: <Megaphone className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Account",
+    items: [
+      { label: "Profile", href: "/department/profile", icon: <User className="w-5 h-5" /> },
+    ],
+  },
+];
+
+const officeNavSections: NavSection[] = [
+  {
+    title: "Main",
+    items: [
+      { label: "Dashboard", href: "/office", icon: <LayoutDashboard className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Clearance",
+    items: [
+      { label: "Clearance Queue", href: "/office/clearance", icon: <ClipboardList className="w-5 h-5" /> },
+      { label: "Requirements", href: "/office/requirements", icon: <CheckSquare className="w-5 h-5" /> },
+      { label: "History", href: "/office/history", icon: <History className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Communication",
+    items: [
+      { label: "Announcements", href: "/office/announcements", icon: <Megaphone className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Account",
+    items: [
+      { label: "Profile", href: "/office/profile", icon: <User className="w-5 h-5" /> },
+    ],
+  },
+];
+
+const clubNavSections: NavSection[] = [
+  {
+    title: "Main",
+    items: [
+      { label: "Dashboard", href: "/club", icon: <LayoutDashboard className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Clearance",
+    items: [
+      { label: "Clearance Queue", href: "/club/clearance", icon: <ClipboardList className="w-5 h-5" /> },
+      { label: "Requirements", href: "/club/requirements", icon: <CheckSquare className="w-5 h-5" /> },
+      { label: "History", href: "/club/history", icon: <History className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Management",
+    items: [
+      { label: "Members", href: "/club/members", icon: <Users className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Communication",
+    items: [
+      { label: "Announcements", href: "/club/announcements", icon: <Megaphone className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Account",
+    items: [
+      { label: "Profile", href: "/club/profile", icon: <User className="w-5 h-5" /> },
+    ],
+  },
+];
+
+const studentNavSections: NavSection[] = [
+  {
+    title: "Main",
+    items: [
+      { label: "Dashboard", href: "/student", icon: <LayoutDashboard className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Clearance",
+    items: [
+      { label: "Clearance Status", href: "/student/clearance", icon: <ClipboardList className="w-5 h-5" /> },
+      { label: "Requirements", href: "/student/requirements", icon: <CheckSquare className="w-5 h-5" /> },
+      { label: "Submit Clearance", href: "/student/submit", icon: <Upload className="w-5 h-5" /> },
+      { label: "Documents", href: "/student/documents", icon: <FolderOpen className="w-5 h-5" /> },
+      { label: "History", href: "/student/history", icon: <History className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Communication",
+    items: [
+      { label: "Announcements", href: "/student/announcements", icon: <Megaphone className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Account",
+    items: [
+      { label: "Profile", href: "/student/profile", icon: <User className="w-5 h-5" /> },
+    ],
+  },
+];
+
 const roleLabels: Record<UserRole, string> = {
   student: "Student",
   office: "Office Staff",
@@ -92,13 +223,20 @@ interface SidebarProps {
   isCollapsed: boolean;
   onToggleCollapse: () => void;
   onLogout?: () => void;
+  orgLogo?: string | null;
+  orgName?: string | null;
 }
 
-export default function Sidebar({ role, userName, userEmail, isCollapsed, onToggleCollapse, onLogout }: SidebarProps) {
+export default function Sidebar({ role, userName, userEmail, isCollapsed, onToggleCollapse, onLogout, orgLogo, orgName }: SidebarProps) {
   const pathname = usePathname();
 
-  // Only admin gets full navigation, other roles get dashboard only
-  const navSections = role === "admin" ? adminNavSections : getDashboardOnlyNav(role);
+  const navSections =
+    role === "admin" ? adminNavSections :
+    role === "department" ? departmentNavSections :
+    role === "office" ? officeNavSections :
+    role === "club" ? clubNavSections :
+    role === "student" ? studentNavSections :
+    getDashboardOnlyNav(role);
 
   return (
     <aside
@@ -112,8 +250,12 @@ export default function Sidebar({ role, userName, userEmail, isCollapsed, onTogg
         <Link href={`/${role}`} className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 bg-white/10 p-0.5">
             <Image
-              src="/images/logos/ccis-logo.jpg"
-              alt="CCIS Logo"
+              src={
+                (role === "office" || role === "department" || role === "club")
+                  ? (orgLogo || "/images/logos/cjc-logo.jpeg")
+                  : "/images/logos/ccis-logo.jpg"
+              }
+              alt={orgName || "CJC Logo"}
               width={40}
               height={40}
               className="w-full h-full object-cover rounded-lg"
@@ -122,7 +264,11 @@ export default function Sidebar({ role, userName, userEmail, isCollapsed, onTogg
           {!isCollapsed && (
             <div>
               <p className="text-white font-semibold">CJC Clearance</p>
-              <p className="text-white/50 text-xs">CCIS Portal</p>
+              <p className="text-white/50 text-xs truncate max-w-[140px]">
+                {(role === "office" || role === "department" || role === "club") && orgName
+                  ? orgName
+                  : "CCIS Portal"}
+              </p>
             </div>
           )}
         </Link>
@@ -189,14 +335,7 @@ export default function Sidebar({ role, userName, userEmail, isCollapsed, onTogg
           </div>
         ))}
 
-        {/* Coming Soon message for non-admin roles */}
-        {role !== "admin" && !isCollapsed && (
-          <div className="mt-6 px-3 py-4 bg-white/5 rounded-xl">
-            <p className="text-white/60 text-xs text-center">
-              More features coming soon
-            </p>
-          </div>
-        )}
+
       </nav>
 
       {/* Bottom Section */}

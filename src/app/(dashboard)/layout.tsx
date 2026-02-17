@@ -14,7 +14,7 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { profile, isLoading, isAuthenticated, logout } = useAuth();
+  const { profile, isLoading, isAuthenticated, logout, orgLogo, orgName } = useAuth();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Route protection via useEffect - handles redirects after auth state is determined
@@ -75,6 +75,8 @@ export default function DashboardLayout({
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
         onLogout={handleLogout}
+        orgLogo={orgLogo}
+        orgName={orgName}
       />
 
       {/* Main Content */}
