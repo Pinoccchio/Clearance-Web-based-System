@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Header from "@/components/layout/header";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/components/ui/Toast";
+import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import { Card } from "@/components/ui/Card";
 import { AlertCircle, Loader2 } from "lucide-react";
 import RequirementsView from "@/components/student/RequirementsView";
@@ -22,39 +23,38 @@ export default function OfficesRequirementsPage() {
   const [requirementsBySource, setRequirementsBySource] = useState<Record<string, Requirement[]>>({});
   const [isLoading, setIsLoading] = useState(true);
 
+  const loadData = useCallback(async () => {
+    if (!profile) return;
+    setIsLoading(true);
+    try {
+      const allOffices = await getAllOffices();
+      setOffices(allOffices);
+
+      const reqMap = await getRequirementsByMultipleSources(
+        allOffices.map((o) => ({ source_type: "office", source_id: o.id }))
+      );
+
+      // Re-key from "office:UUID" → "UUID"
+      const byId: Record<string, Requirement[]> = {};
+      for (const [k, v] of Object.entries(reqMap)) {
+        byId[k.split(":")[1]] = v;
+      }
+
+      setRequirementsBySource(byId);
+    } catch (err) {
+      showToast("error", "Load failed", "Failed to load office requirements.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [profile?.id, showToast]);
+
   useEffect(() => {
     if (authLoading) return;
     if (!profile) { setIsLoading(false); return; }
+    loadData();
+  }, [authLoading, loadData]);
 
-    let cancelled = false;
-
-    async function load() {
-      try {
-        const allOffices = await getAllOffices();
-        if (cancelled) return;
-        setOffices(allOffices);
-
-        const reqMap = await getRequirementsByMultipleSources(
-          allOffices.map((o) => ({ source_type: "office", source_id: o.id }))
-        );
-
-        // Re-key from "office:UUID" → "UUID"
-        const byId: Record<string, Requirement[]> = {};
-        for (const [k, v] of Object.entries(reqMap)) {
-          byId[k.split(":")[1]] = v;
-        }
-
-        if (!cancelled) setRequirementsBySource(byId);
-      } catch (err) {
-        if (!cancelled) showToast("error", "Load failed", "Failed to load office requirements.");
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    }
-
-    load();
-    return () => { cancelled = true; };
-  }, [authLoading, profile?.id]);
+  useRealtimeRefresh('requirements', loadData);
 
   if (authLoading || isLoading) {
     return (

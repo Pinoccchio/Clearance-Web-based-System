@@ -1,7 +1,8 @@
 "use client";
 
-import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
-import { CheckSquare, Upload } from "lucide-react";
+import { useState } from "react";
+import { Card } from "@/components/ui/Card";
+import { CheckSquare, Upload, ChevronDown, ChevronUp } from "lucide-react";
 import { Requirement } from "@/lib/supabase";
 
 interface Source {
@@ -34,16 +35,30 @@ function SkeletonRows() {
   );
 }
 
-export default function RequirementsView({ sources, requirementsBySource, loading, showSourceHeaders }: Props) {
+export default function RequirementsView({ sources, requirementsBySource, loading }: Props) {
+  // All sections start expanded
+  const [openSections, setOpenSections] = useState<Set<string>>(
+    () => new Set(sources.map((s) => s.id))
+  );
+
+  function toggleSection(id: string) {
+    setOpenSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
   if (loading) {
     return (
       <Card padding="none">
-        <CardHeader className="px-6 pt-5 pb-4">
-          <CardTitle className="flex items-center gap-2">
+        <div className="px-6 pt-5 pb-4 border-b border-gray-100">
+          <div className="flex items-center gap-2">
             <CheckSquare className="w-5 h-5 text-cjc-gold" />
-            Requirements
-          </CardTitle>
-        </CardHeader>
+            <span className="font-semibold text-cjc-navy">Requirements</span>
+          </div>
+        </div>
         <SkeletonRows />
       </Card>
     );
@@ -62,86 +77,97 @@ export default function RequirementsView({ sources, requirementsBySource, loadin
     <div className="space-y-4">
       {sources.map((source) => {
         const reqs = requirementsBySource[source.id] ?? [];
+        const isOpen = openSections.has(source.id);
 
         return (
           <Card key={source.id} padding="none">
-            {showSourceHeaders && (
-              <div className="px-6 pt-5 pb-3 border-b border-gray-100">
-                <p className="font-semibold text-cjc-navy text-sm">
+            {/* Accordion header — always clickable */}
+            <button
+              type="button"
+              onClick={() => toggleSection(source.id)}
+              className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-gray-50 transition-colors rounded-t-xl"
+            >
+              <div className="flex items-center gap-2">
+                <CheckSquare className="w-4 h-4 text-cjc-gold flex-shrink-0" />
+                <span className="font-semibold text-cjc-navy text-sm">
                   {source.code} — {source.name}
-                </p>
+                </span>
+                {!isOpen && reqs.length > 0 && (
+                  <span className="text-xs text-gray-400 ml-1">
+                    ({reqs.length} requirement{reqs.length !== 1 ? "s" : ""})
+                  </span>
+                )}
               </div>
-            )}
+              {isOpen ? (
+                <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" />
+              ) : (
+                <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
+              )}
+            </button>
 
-            {!showSourceHeaders && (
-              <CardHeader className="px-6 pt-5 pb-4">
-                <CardTitle className="flex items-center gap-2">
-                  <CheckSquare className="w-5 h-5 text-cjc-gold" />
-                  {source.code} — {source.name}
-                </CardTitle>
-              </CardHeader>
-            )}
-
-            {reqs.length === 0 ? (
-              <div className="px-6 py-5">
-                <p className="text-sm text-gray-400 italic">No requirements defined for this source.</p>
-              </div>
-            ) : (
-              <>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-t border-gray-100 bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
-                        <th className="px-6 py-3 text-left w-10">#</th>
-                        <th className="px-6 py-3 text-left">Requirement</th>
-                        <th className="px-6 py-3 text-left w-28">Type</th>
-                        <th className="px-6 py-3 text-left w-28">Upload</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-100">
-                      {reqs.map((req, index) => (
-                        <tr key={req.id} className="hover:bg-gray-50 transition-colors">
-                          <td className="px-6 py-4 text-gray-400 font-mono">{index + 1}</td>
-                          <td className="px-6 py-4">
-                            <p className="font-medium text-cjc-navy">{req.name}</p>
-                            {req.description && (
-                              <p className="text-xs text-gray-500 mt-0.5">{req.description}</p>
-                            )}
-                          </td>
-                          <td className="px-6 py-4">
-                            {req.is_required ? (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                Required
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                                Optional
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-6 py-4">
-                            {req.requires_upload ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
-                                <Upload className="w-3 h-3" />
-                                Required
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-400">
-                                None
-                              </span>
-                            )}
-                          </td>
+            {/* Accordion body */}
+            {isOpen && (
+              reqs.length === 0 ? (
+                <div className="px-6 py-5 border-t border-gray-100">
+                  <p className="text-sm text-gray-400 italic">No requirements defined for this source.</p>
+                </div>
+              ) : (
+                <>
+                  <div className="overflow-x-auto border-t border-gray-100">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
+                          <th className="px-6 py-3 text-left w-10">#</th>
+                          <th className="px-6 py-3 text-left">Requirement</th>
+                          <th className="px-6 py-3 text-left w-28">Type</th>
+                          <th className="px-6 py-3 text-left w-28">Upload</th>
                         </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="px-6 py-3 border-t border-gray-100 bg-gray-50 text-xs text-gray-500 rounded-b-xl">
-                  {reqs.filter((r) => r.is_required).length} required ·{" "}
-                  {reqs.filter((r) => !r.is_required).length} optional ·{" "}
-                  {reqs.filter((r) => r.requires_upload).length} need upload
-                </div>
-              </>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {reqs.map((req, index) => (
+                          <tr key={req.id} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-6 py-4 text-gray-400 font-mono">{index + 1}</td>
+                            <td className="px-6 py-4">
+                              <p className="font-medium text-cjc-navy">{req.name}</p>
+                              {req.description && (
+                                <p className="text-xs text-gray-500 mt-0.5">{req.description}</p>
+                              )}
+                            </td>
+                            <td className="px-6 py-4">
+                              {req.is_required ? (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                  Required
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                                  Optional
+                                </span>
+                              )}
+                            </td>
+                            <td className="px-6 py-4">
+                              {req.requires_upload ? (
+                                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                                  <Upload className="w-3 h-3" />
+                                  Required
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-400">
+                                  None
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="px-6 py-3 border-t border-gray-100 bg-gray-50 text-xs text-gray-500 rounded-b-xl">
+                    {reqs.filter((r) => r.is_required).length} required ·{" "}
+                    {reqs.filter((r) => !r.is_required).length} optional ·{" "}
+                    {reqs.filter((r) => r.requires_upload).length} need upload
+                  </div>
+                </>
+              )
             )}
           </Card>
         );

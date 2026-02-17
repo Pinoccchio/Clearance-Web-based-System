@@ -55,7 +55,7 @@ export function Modal({
       {/* Modal Content */}
       <div
         className={cn(
-          "relative z-10 bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] overflow-y-auto animate-slide-in",
+          "relative z-10 bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[90vh] flex flex-col animate-slide-in",
           className
         )}
         role="dialog"
@@ -70,7 +70,9 @@ export function Modal({
             <X className="w-5 h-5" />
           </button>
         )}
-        {children}
+        <div className="overflow-y-auto flex-1 min-h-0">
+          {children}
+        </div>
       </div>
     </div>
   );

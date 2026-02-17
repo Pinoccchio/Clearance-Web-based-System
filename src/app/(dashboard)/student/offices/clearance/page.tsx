@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Header from "@/components/layout/header";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/components/ui/Toast";
+import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import { Card } from "@/components/ui/Card";
 import { AlertCircle, Loader2 } from "lucide-react";
 import ClearanceStatusView from "@/components/student/ClearanceStatusView";
@@ -27,57 +28,51 @@ export default function OfficesClearancePage() {
   const [requirementCounts, setRequirementCounts] = useState<Record<string, number>>({});
   const [isLoading, setIsLoading] = useState(true);
 
+  const loadData = useCallback(async () => {
+    if (!profile) return;
+    setIsLoading(true);
+    try {
+      const [allOffices, requests] = await Promise.all([
+        getAllOffices(),
+        getStudentClearanceRequests(profile.id),
+      ]);
+
+      setOffices(allOffices);
+
+      const active = requests.find((r) => r.status === "pending" || r.status === "in_progress") ?? null;
+      setActiveRequest(active);
+
+      // Batch fetch requirement counts
+      const reqMap = await getRequirementsByMultipleSources(
+        allOffices.map((o) => ({ source_type: "office", source_id: o.id }))
+      );
+      const counts: Record<string, number> = {};
+      for (const office of allOffices) {
+        counts[office.id] = (reqMap[`office:${office.id}`] ?? []).length;
+      }
+      setRequirementCounts(counts);
+
+      // Fetch clearance items per office
+      if (active) {
+        const items = await Promise.all(
+          allOffices.map((o) => getClearanceItemForRequest(active.id, "office", o.id))
+        );
+        setClearanceItems(items.filter((i): i is ClearanceItem => i !== null));
+      }
+    } catch (err) {
+      showToast("error", "Load failed", "Failed to load office clearance status.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [profile?.id, showToast]);
+
   useEffect(() => {
     if (authLoading) return;
     if (!profile) { setIsLoading(false); return; }
+    loadData();
+  }, [authLoading, loadData]);
 
-    let cancelled = false;
-
-    async function load() {
-      try {
-        const [allOffices, requests] = await Promise.all([
-          getAllOffices(),
-          getStudentClearanceRequests(profile!.id),
-        ]);
-
-        if (cancelled) return;
-
-        setOffices(allOffices);
-
-        const active = requests.find((r) => r.status === "pending" || r.status === "in_progress") ?? null;
-        setActiveRequest(active);
-
-        // Batch fetch requirement counts
-        const reqMap = await getRequirementsByMultipleSources(
-          allOffices.map((o) => ({ source_type: "office", source_id: o.id }))
-        );
-        const counts: Record<string, number> = {};
-        for (const office of allOffices) {
-          counts[office.id] = (reqMap[`office:${office.id}`] ?? []).length;
-        }
-
-        if (cancelled) return;
-        setRequirementCounts(counts);
-
-        // Fetch clearance items per office
-        if (active) {
-          const items = await Promise.all(
-            allOffices.map((o) => getClearanceItemForRequest(active.id, "office", o.id))
-          );
-          if (!cancelled) {
-            setClearanceItems(items.filter((i): i is ClearanceItem => i !== null));
-          }
-        }
-      } catch (err) {
-        if (!cancelled) showToast("error", "Load failed", "Failed to load office clearance status.");
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    }
-
-    load();
-    return () => { cancelled = true; };
-  }, [authLoading, profile?.id]);
+  useRealtimeRefresh('clearance_items', loadData);
 
   if (authLoading || isLoading) {
     return (

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { CheckSquare, Plus, Pencil, Trash2, X, Check } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import {
@@ -13,6 +13,7 @@ import {
   Office,
 } from "@/lib/supabase";
 import { useToast } from "@/components/ui/Toast";
+import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { formatDate } from "@/lib/utils";
 
@@ -50,17 +51,12 @@ export default function OfficeRequirementsPage() {
   const [deleteTarget, setDeleteTarget] = useState<Requirement | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    if (profile?.id) {
-      loadData(profile.id);
-    }
-  }, [profile?.id]);
-
-  async function loadData(userId: string) {
+  const loadData = useCallback(async () => {
+    if (!profile?.id) return;
     setIsLoading(true);
     setError(null);
     try {
-      const off = await getOfficeByHeadId(userId);
+      const off = await getOfficeByHeadId(profile.id);
       if (!off) {
         setError("You are not assigned as an office head.");
         setIsLoading(false);
@@ -74,7 +70,13 @@ export default function OfficeRequirementsPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [profile?.id]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  useRealtimeRefresh('requirements', loadData);
 
   async function handleAdd() {
     if (!addForm.name.trim()) {

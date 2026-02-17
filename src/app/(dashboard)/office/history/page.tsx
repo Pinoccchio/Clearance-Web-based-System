@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/Table";
 import { Modal } from "@/components/ui/modal";
 import { useToast } from "@/components/ui/Toast";
+import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import {
   History,
   Search,
@@ -148,6 +149,8 @@ export default function OfficeHistoryPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useRealtimeRefresh('clearance_items', loadData);
 
   // Load submissions when a modal item is selected
   useEffect(() => {

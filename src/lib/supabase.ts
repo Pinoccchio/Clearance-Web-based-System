@@ -1618,6 +1618,28 @@ export async function getClearanceItemsByDepartment(
   return (data as ClearanceItemWithDetails[]) || [];
 }
 
+/** Fetch all clearance items for an office with nested request + student profile */
+export async function getClearanceItemsByOffice(
+  officeId: string
+): Promise<ClearanceItemWithDetails[]> {
+  const { data, error } = await supabase
+    .from('clearance_items')
+    .select(`
+      *,
+      request:clearance_requests(
+        *,
+        student:profiles(*)
+      )
+    `)
+    .eq('source_type', 'office')
+    .eq('source_id', officeId)
+    .neq('status', 'pending')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data as ClearanceItemWithDetails[]) || [];
+}
+
 /** Update a clearance item's status and remarks.
  *  Logs the transition to clearance_item_history. */
 export async function updateClearanceItem(

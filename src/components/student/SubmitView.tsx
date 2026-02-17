@@ -429,7 +429,8 @@ export default function SubmitView({
         // Determine item status badge
         let badgeVariant: "default" | "warning" | "success" | "danger" | "onHold" | "neutral" = "default";
         let badgeLabel = "Not Started";
-        if (item?.status === "pending") { badgeVariant = "neutral"; badgeLabel = "Not Submitted"; }
+        if (reqs.length === 0) { badgeVariant = "neutral"; badgeLabel = "No Requirements"; }
+        else if (item?.status === "pending") { badgeVariant = "neutral"; badgeLabel = "Not Submitted"; }
         else if (item?.status === "submitted") { badgeVariant = "warning"; badgeLabel = "Pending Review"; }
         else if (item?.status === "approved") { badgeVariant = "success"; badgeLabel = "Cleared"; }
         else if (item?.status === "rejected") { badgeVariant = "danger"; badgeLabel = "Rejected"; }
