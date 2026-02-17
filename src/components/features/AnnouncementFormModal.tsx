@@ -30,6 +30,7 @@ interface AnnouncementFormModalProps {
   mode: "add" | "edit";
   announcement?: AnnouncementWithRelations;
   currentUser: Profile;
+  departmentId?: string;  // Pre-fills dept for department role
 }
 
 interface FormData {
@@ -86,6 +87,7 @@ export function AnnouncementFormModal({
   mode,
   announcement,
   currentUser,
+  departmentId,
 }: AnnouncementFormModalProps) {
   const { showToast } = useToast();
   const [formData, setFormData] = useState<FormData>(initialFormData);
@@ -251,7 +253,7 @@ export function AnnouncementFormModal({
         // For now, we'll rely on the backend to enforce this
         switch (currentUser.role) {
           case "department":
-            department_id = formData.department_id || null;
+            department_id = formData.department_id || departmentId || null;
             break;
           case "office":
             office_id = formData.office_id || null;

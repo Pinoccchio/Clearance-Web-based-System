@@ -426,6 +426,21 @@ export async function getDepartmentById(
   return data;
 }
 
+/** Get a department by its code (e.g. "CCIS") */
+export async function getDepartmentByCode(
+  code: string
+): Promise<Department | null> {
+  const { data, error } = await supabase
+    .from("departments")
+    .select("*")
+    .ilike("code", code)
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
 /**
  * Create a new department
  */
@@ -1299,4 +1314,411 @@ export async function deleteAnnouncement(id: string): Promise<void> {
   if (error) {
     throw error;
   }
+}
+
+/** Fetch all announcements posted by a given department (scoped by department_id), including inactive ones owned by the caller */
+export async function getAnnouncementsByDepartment(
+  deptId: string
+): Promise<AnnouncementWithRelations[]> {
+  const { data, error } = await supabase
+    .from('announcements')
+    .select(`
+      *,
+      posted_by:profiles!announcements_posted_by_id_fkey(*),
+      department:departments!announcements_department_id_fkey(*)
+    `)
+    .eq('department_id', deptId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data as AnnouncementWithRelations[]) || [];
+}
+
+// ==========================================
+// System Settings (Singleton)
+// ==========================================
+
+export interface SystemSettings {
+  id: string;
+  academic_year: string;
+  current_semester: string;
+  semester_start_date?: string | null;
+  semester_deadline?: string | null;
+  graduation_start_date?: string | null;
+  graduation_deadline?: string | null;
+  allow_semester_clearance: boolean;
+  allow_graduation_clearance: boolean;
+  allow_transfer_clearance: boolean;
+  updated_by?: string | null;
+  updated_at: string;
+  created_at: string;
+}
+
+export type UpdateSystemSettingsData = Omit<SystemSettings,
+  'id' | 'created_at' | 'updated_at' | 'updated_by'
+>;
+
+/** Fetch the singleton system settings row */
+export async function getSystemSettings(): Promise<SystemSettings | null> {
+  const { data, error } = await supabase
+    .from('system_settings')
+    .select('*')
+    .limit(1)
+    .single();
+  if (error) {
+    if (error.code === 'PGRST116') return null;
+    throw error;
+  }
+  return data;
+}
+
+/** Update system settings (admin only, updates the singleton row) */
+export async function updateSystemSettings(
+  id: string,
+  data: Partial<UpdateSystemSettingsData>,
+  updatedBy: string
+): Promise<SystemSettings> {
+  const { data: settings, error } = await supabase
+    .from('system_settings')
+    .update({ ...data, updated_by: updatedBy, updated_at: new Date().toISOString() })
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return settings;
+}
+
+// ==========================================
+// Clearance Requests
+// ==========================================
+
+export interface ClearanceRequest {
+  id: string;
+  student_id: string;
+  type: 'semester' | 'graduation' | 'transfer';
+  academic_year: string;
+  semester: string;
+  status: 'pending' | 'in_progress' | 'approved' | 'rejected' | 'completed';
+  created_at: string;
+  updated_at: string;
+}
+
+/**
+ * Get all student profiles whose department column matches the given department code
+ * (students store the dept code, e.g. "CCIS", not the full name)
+ */
+export async function getStudentsByDepartment(departmentCode: string): Promise<Profile[]> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('role', 'student')
+    .eq('department', departmentCode)
+    .order('last_name', { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  return data || [];
+}
+
+/**
+ * Get clearance requests for a list of student IDs, ordered by created_at DESC.
+ * Caller picks the latest per student_id.
+ */
+export async function getClearanceRequestsByStudentIds(studentIds: string[]): Promise<ClearanceRequest[]> {
+  if (studentIds.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from('clearance_requests')
+    .select('*')
+    .in('student_id', studentIds)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    throw error;
+  }
+
+  return data || [];
+}
+
+// ==========================================
+// Requirements
+// ==========================================
+
+export interface Requirement {
+  id: string;
+  source_type: string;
+  source_id: string;
+  name: string;
+  description?: string | null;
+  is_required: boolean;
+  order: number;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Get all requirements for a given source (department/office/club) */
+export async function getRequirementsBySource(
+  sourceType: string,
+  sourceId: string
+): Promise<Requirement[]> {
+  const { data, error } = await supabase
+    .from('requirements')
+    .select('*')
+    .eq('source_type', sourceType)
+    .eq('source_id', sourceId)
+    .order('order', { ascending: true })
+    .order('created_at', { ascending: true });
+
+  if (error) throw error;
+  return data || [];
+}
+
+/** Create a new requirement */
+export async function createRequirement(data: {
+  source_type: string;
+  source_id: string;
+  name: string;
+  description?: string;
+  is_required?: boolean;
+  order?: number;
+}): Promise<Requirement> {
+  const { data: created, error } = await supabase
+    .from('requirements')
+    .insert(data)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return created;
+}
+
+/** Update a requirement */
+export async function updateRequirement(
+  id: string,
+  data: Partial<Pick<Requirement, 'name' | 'description' | 'is_required' | 'order'>>
+): Promise<Requirement> {
+  const { data: updated, error } = await supabase
+    .from('requirements')
+    .update(data)
+    .eq('id', id)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return updated;
+}
+
+/** Delete a requirement */
+export async function deleteRequirement(id: string): Promise<void> {
+  const { error } = await supabase
+    .from('requirements')
+    .delete()
+    .eq('id', id);
+
+  if (error) throw error;
+}
+
+// ==========================================
+// Clearance Items & Requirement Submissions
+// ==========================================
+
+export interface ClearanceItem {
+  id: string;
+  request_id: string;
+  source_type: string;
+  source_id: string;
+  status: 'pending' | 'approved' | 'rejected' | 'on_hold';
+  reviewed_by: string | null;
+  reviewed_at: string | null;
+  remarks: string | null;
+  created_at: string;
+}
+
+export interface RequirementSubmission {
+  id: string;
+  clearance_item_id: string;
+  requirement_id: string;
+  student_id: string;
+  file_url: string | null;
+  status: 'pending' | 'submitted' | 'verified' | 'rejected';
+  remarks: string | null;
+  submitted_at: string | null;
+  reviewed_at: string | null;
+}
+
+export interface ClearanceItemWithDetails extends ClearanceItem {
+  request: ClearanceRequest & {
+    student: Profile;
+  };
+}
+
+export interface SubmissionWithRequirement extends RequirementSubmission {
+  requirement: Requirement;
+}
+
+/** Fetch all clearance items for a department with nested request + student profile */
+export async function getClearanceItemsByDepartment(
+  deptId: string
+): Promise<ClearanceItemWithDetails[]> {
+  const { data, error } = await supabase
+    .from('clearance_items')
+    .select(`
+      *,
+      request:clearance_requests(
+        *,
+        student:profiles(*)
+      )
+    `)
+    .eq('source_type', 'department')
+    .eq('source_id', deptId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data as ClearanceItemWithDetails[]) || [];
+}
+
+/** Update a clearance item's status and remarks */
+export async function updateClearanceItem(
+  itemId: string,
+  data: { status: 'approved' | 'rejected' | 'on_hold'; remarks?: string; reviewed_by: string }
+): Promise<ClearanceItem> {
+  const { data: updated, error } = await supabase
+    .from('clearance_items')
+    .update({
+      status: data.status,
+      remarks: data.remarks ?? null,
+      reviewed_by: data.reviewed_by,
+      reviewed_at: new Date().toISOString(),
+    })
+    .eq('id', itemId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return updated;
+}
+
+/** Get all requirement submissions for a clearance item with requirement details */
+export async function getSubmissionsByItem(
+  clearanceItemId: string
+): Promise<SubmissionWithRequirement[]> {
+  const { data, error } = await supabase
+    .from('requirement_submissions')
+    .select(`
+      *,
+      requirement:requirements(*)
+    `)
+    .eq('clearance_item_id', clearanceItemId)
+    .order('submitted_at', { ascending: true });
+
+  if (error) throw error;
+  return (data as SubmissionWithRequirement[]) || [];
+}
+
+/** Fetch all processed (approved/rejected/on_hold) clearance items for a department */
+export async function getProcessedClearanceItemsByDepartment(
+  deptId: string
+): Promise<ClearanceItemWithDetails[]> {
+  const { data, error } = await supabase
+    .from('clearance_items')
+    .select(`
+      *,
+      request:clearance_requests(
+        *,
+        student:profiles(*)
+      )
+    `)
+    .eq('source_type', 'department')
+    .eq('source_id', deptId)
+    .in('status', ['approved', 'rejected', 'on_hold'])
+    .order('reviewed_at', { ascending: false });
+
+  if (error) throw error;
+  return (data as ClearanceItemWithDetails[]) || [];
+}
+
+// ==========================================
+// Student Clearance Submission Functions
+// ==========================================
+
+/** Get all clearance requests for a specific student */
+export async function getStudentClearanceRequests(studentId: string): Promise<ClearanceRequest[]> {
+  const { data, error } = await supabase
+    .from('clearance_requests')
+    .select('*')
+    .eq('student_id', studentId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return data || [];
+}
+
+/** Create a new clearance request */
+export async function createClearanceRequest(data: {
+  student_id: string;
+  type: 'semester' | 'graduation' | 'transfer';
+  academic_year: string;
+  semester: string;
+}): Promise<ClearanceRequest> {
+  const { data: created, error } = await supabase
+    .from('clearance_requests')
+    .insert({
+      student_id: data.student_id,
+      type: data.type,
+      academic_year: data.academic_year,
+      semester: data.semester,
+      status: 'pending',
+    })
+    .select()
+    .single();
+
+  if (error) throw error;
+  return created;
+}
+
+/** Get the clearance_item for a given request + source */
+export async function getClearanceItemForRequest(
+  requestId: string,
+  sourceType: string,
+  sourceId: string
+): Promise<ClearanceItem | null> {
+  const { data, error } = await supabase
+    .from('clearance_items')
+    .select('*')
+    .eq('request_id', requestId)
+    .eq('source_type', sourceType)
+    .eq('source_id', sourceId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
+
+/** Upsert a requirement submission (create or update file_url + status) */
+export async function upsertRequirementSubmission(data: {
+  clearance_item_id: string;
+  requirement_id: string;
+  student_id: string;
+  file_url: string | null;
+}): Promise<RequirementSubmission> {
+  const { data: upserted, error } = await supabase
+    .from('requirement_submissions')
+    .upsert(
+      {
+        clearance_item_id: data.clearance_item_id,
+        requirement_id: data.requirement_id,
+        student_id: data.student_id,
+        file_url: data.file_url,
+        status: data.file_url ? 'submitted' : 'pending',
+        submitted_at: data.file_url ? new Date().toISOString() : null,
+      },
+      { onConflict: 'clearance_item_id,requirement_id' }
+    )
+    .select()
+    .single();
+
+  if (error) throw error;
+  return upserted;
 }

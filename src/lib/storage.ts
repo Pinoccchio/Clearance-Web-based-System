@@ -164,3 +164,94 @@ export async function deleteAvatar(url: string): Promise<void> {
   if (!match) return;
   await supabase.storage.from(AVATARS_BUCKET).remove([match[1]]);
 }
+
+// ==========================================
+// Submission File Storage
+// ==========================================
+
+const SUBMISSIONS_BUCKET = "submissions";
+const MAX_SUBMISSION_SIZE = 10 * 1024 * 1024; // 10MB
+const SUBMISSION_FORMATS = ["image/png", "image/jpeg", "image/jpg", "image/webp", "application/pdf"];
+
+/**
+ * Validate a submission file (PDF or image, max 10MB)
+ */
+export function validateSubmissionFile(file: File): { valid: boolean; error?: string } {
+  if (!SUBMISSION_FORMATS.includes(file.type)) {
+    return {
+      valid: false,
+      error: "Invalid file format. Accepted: PNG, JPG, WEBP, PDF",
+    };
+  }
+
+  if (file.size > MAX_SUBMISSION_SIZE) {
+    return {
+      valid: false,
+      error: "File size exceeds 10MB limit",
+    };
+  }
+
+  return { valid: true };
+}
+
+/**
+ * Upload a submission file to Supabase Storage
+ * Path: {studentId}/{requirementId}_{timestamp}.{ext}
+ * Returns a signed URL (since bucket is private)
+ */
+export async function uploadSubmissionFile(
+  file: File,
+  studentId: string,
+  requirementId: string
+): Promise<string> {
+  const validation = validateSubmissionFile(file);
+  if (!validation.valid) {
+    throw new Error(validation.error);
+  }
+
+  const timestamp = Date.now();
+  const ext = file.name.split(".").pop() || "pdf";
+  const filePath = `${studentId}/${requirementId}_${timestamp}.${ext}`;
+
+  const { error: uploadError } = await supabase.storage
+    .from(SUBMISSIONS_BUCKET)
+    .upload(filePath, file, {
+      cacheControl: "3600",
+      upsert: false,
+    });
+
+  if (uploadError) {
+    throw new Error(`Failed to upload file: ${uploadError.message}`);
+  }
+
+  // Generate a signed URL valid for 1 year (bucket is private)
+  const { data: signedData, error: signedError } = await supabase.storage
+    .from(SUBMISSIONS_BUCKET)
+    .createSignedUrl(filePath, 60 * 60 * 24 * 365);
+
+  if (signedError || !signedData) {
+    throw new Error(`Failed to create signed URL: ${signedError?.message}`);
+  }
+
+  return signedData.signedUrl;
+}
+
+/**
+ * Delete a submission file from Supabase Storage given its signed URL or path
+ */
+export async function deleteSubmissionFile(url: string): Promise<void> {
+  // Extract path from signed URL pattern
+  const match = url.match(/\/storage\/v1\/object\/sign\/submissions\/([^?]+)/);
+  if (!match) {
+    console.warn("Could not extract path from submission URL:", url);
+    return;
+  }
+
+  const { error } = await supabase.storage
+    .from(SUBMISSIONS_BUCKET)
+    .remove([match[1]]);
+
+  if (error) {
+    console.error("Failed to delete submission file:", error.message);
+  }
+}
