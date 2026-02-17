@@ -743,19 +743,35 @@ export default function SubmitView({
                     {isRejectedOrOnHold ? (
                       <div className="px-5 py-4 space-y-3">
                         {item.remarks && (
-                          <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-                            <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                          <div className={`flex items-start gap-2 p-3 rounded-lg border ${
+                            item.status === 'on_hold'
+                              ? 'bg-yellow-50 border-yellow-200'
+                              : 'bg-red-50 border-red-200'
+                          }`}>
+                            <AlertCircle className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
+                              item.status === 'on_hold' ? 'text-yellow-500' : 'text-red-500'
+                            }`} />
                             <div>
-                              <p className="text-xs font-semibold text-red-700">
-                                {item.status === 'rejected' ? 'Rejected' : 'On Hold'} — Remarks
+                              <p className={`text-xs font-semibold ${
+                                item.status === 'on_hold' ? 'text-yellow-700' : 'text-red-700'
+                              }`}>
+                                {item.status === 'rejected' ? 'Rejected' : 'On Hold'} — Remarks from Reviewer
                               </p>
-                              <p className="text-xs text-red-600 mt-0.5">{item.remarks}</p>
+                              <p className={`text-xs mt-0.5 ${
+                                item.status === 'on_hold' ? 'text-yellow-600' : 'text-red-600'
+                              }`}>{item.remarks}</p>
                             </div>
                           </div>
                         )}
                         <div className="flex items-center justify-between gap-4">
                           <p className="text-xs text-gray-500">
-                            {!allUploaded
+                            {item.status === 'on_hold'
+                              ? !allUploaded
+                                ? "Follow the remarks above, then upload required files before resubmitting."
+                                : !allRequiredChecked
+                                ? "Follow the remarks above, then confirm all required items before resubmitting."
+                                : "Complete any steps in the remarks above, then resubmit when ready."
+                              : !allUploaded
                               ? "Upload all required files before resubmitting."
                               : !allRequiredChecked
                               ? "Confirm all required items before resubmitting."
