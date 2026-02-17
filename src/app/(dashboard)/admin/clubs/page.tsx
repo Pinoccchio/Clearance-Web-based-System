@@ -13,6 +13,7 @@ import {
   UserX,
   RefreshCw,
   Filter,
+  X,
 } from "lucide-react";
 import {
   ClubWithAdviser,
@@ -44,6 +45,9 @@ export default function AdminClubsPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [clubToDelete, setClubToDelete] = useState<ClubWithAdviser | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Image preview state
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // Fetch clubs
   const fetchClubs = useCallback(async () => {
@@ -249,13 +253,16 @@ export default function AdminClubsPage() {
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
                         {club.logo_url ? (
-                          <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
+                          <button
+                            className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer focus:outline-none"
+                            onClick={() => setPreviewUrl(club.logo_url!)}
+                          >
                             <img
                               src={club.logo_url}
                               alt={`${club.name} logo`}
                               className="w-full h-full object-cover"
                             />
-                          </div>
+                          </button>
                         ) : (
                           <div
                             className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
@@ -315,6 +322,8 @@ export default function AdminClubsPage() {
                             src={club.adviser.avatar_url || undefined}
                             name={getAdviserDisplayName(club) || ""}
                             size="sm"
+                            className={club.adviser.avatar_url ? "cursor-pointer" : ""}
+                            onClick={() => club.adviser.avatar_url && setPreviewUrl(club.adviser.avatar_url)}
                           />
                           <div>
                             <p className="text-sm text-cjc-navy font-medium">
@@ -387,6 +396,28 @@ export default function AdminClubsPage() {
           </div>
         )}
       </div>
+
+      {/* Image Preview Modal */}
+      {previewUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+          onClick={() => setPreviewUrl(null)}
+        >
+          <div className="relative max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={previewUrl}
+              alt="Preview"
+              className="w-full rounded-xl object-cover shadow-2xl"
+            />
+            <button
+              className="absolute top-2 right-2 bg-white/80 rounded-full p-1 text-gray-700 hover:bg-white"
+              onClick={() => setPreviewUrl(null)}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Club Form Modal */}
       <ClubFormModal

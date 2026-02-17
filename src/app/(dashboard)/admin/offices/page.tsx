@@ -11,6 +11,7 @@ import {
   UserCheck,
   UserX,
   RefreshCw,
+  X,
 } from "lucide-react";
 import {
   OfficeWithHead,
@@ -41,6 +42,9 @@ export default function AdminOfficesPage() {
     OfficeWithHead | null
   >(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Image preview state
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // Fetch offices
   const fetchOffices = useCallback(async () => {
@@ -231,13 +235,16 @@ export default function AdminOfficesPage() {
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
                         {office.logo_url ? (
-                          <div className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0">
+                          <button
+                            className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer focus:outline-none"
+                            onClick={() => setPreviewUrl(office.logo_url!)}
+                          >
                             <img
                               src={office.logo_url}
                               alt={`${office.name} logo`}
                               className="w-full h-full object-cover"
                             />
-                          </div>
+                          </button>
                         ) : (
                           <div className="w-10 h-10 rounded-lg bg-cjc-blue/10 flex items-center justify-center flex-shrink-0">
                             <Building2 className="w-5 h-5 text-cjc-blue" />
@@ -267,6 +274,8 @@ export default function AdminOfficesPage() {
                             src={office.head.avatar_url || undefined}
                             name={getHeadDisplayName(office) || ""}
                             size="sm"
+                            className={office.head.avatar_url ? "cursor-pointer" : ""}
+                            onClick={() => office.head.avatar_url && setPreviewUrl(office.head.avatar_url)}
                           />
                           <div>
                             <p className="text-sm text-cjc-navy font-medium">
@@ -342,6 +351,28 @@ export default function AdminOfficesPage() {
           </div>
         )}
       </div>
+
+      {/* Image Preview Modal */}
+      {previewUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+          onClick={() => setPreviewUrl(null)}
+        >
+          <div className="relative max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={previewUrl}
+              alt="Preview"
+              className="w-full rounded-xl object-cover shadow-2xl"
+            />
+            <button
+              className="absolute top-2 right-2 bg-white/80 rounded-full p-1 text-gray-700 hover:bg-white"
+              onClick={() => setPreviewUrl(null)}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Office Form Modal */}
       <OfficeFormModal

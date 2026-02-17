@@ -25,6 +25,7 @@ import {
   UserCheck,
   UserX,
   Loader2,
+  X,
 } from "lucide-react";
 import {
   supabase,
@@ -51,6 +52,8 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState<UserWithStatus[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // Modal states
   const [selectedUser, setSelectedUser] = useState<UserWithStatus | null>(null);
@@ -351,9 +354,12 @@ export default function AdminUsersPage() {
                         <TableCell>
                           <div className="flex items-center gap-3">
                             <Avatar
+                              src={user.avatar_url ?? undefined}
                               name={fullName}
                               size="sm"
                               variant="primary"
+                              className={user.avatar_url ? "cursor-pointer" : ""}
+                              onClick={() => user.avatar_url && setPreviewUrl(user.avatar_url)}
                             />
                             <div>
                               <p className="font-medium text-cjc-navy">
@@ -518,6 +524,28 @@ export default function AdminUsersPage() {
         mode="edit"
         user={selectedUser || undefined}
       />
+
+      {/* Image Preview Modal */}
+      {previewUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+          onClick={() => setPreviewUrl(null)}
+        >
+          <div className="relative max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={previewUrl}
+              alt="Profile preview"
+              className="w-full rounded-xl object-cover shadow-2xl"
+            />
+            <button
+              className="absolute top-2 right-2 bg-white/80 rounded-full p-1 text-gray-700 hover:bg-white"
+              onClick={() => setPreviewUrl(null)}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Delete Confirmation Dialog */}
       <ConfirmDialog

@@ -127,3 +127,40 @@ export function getLogoUrl(path: string): string {
 
   return data.publicUrl;
 }
+
+// Storage bucket name for user avatars
+const AVATARS_BUCKET = "avatars";
+
+/**
+ * Upload a user avatar image to Supabase Storage
+ * @param file - The image file to upload
+ * @param userId - The authenticated user's ID
+ * @returns The public URL of the uploaded avatar
+ */
+export async function uploadAvatar(file: File, userId: string): Promise<string> {
+  const validation = validateImageFile(file);
+  if (!validation.valid) throw new Error(validation.error);
+
+  const timestamp = Date.now();
+  const ext = file.name.split(".").pop() || "jpg";
+  const filePath = `${userId}/${userId}_${timestamp}.${ext}`;
+
+  const { error } = await supabase.storage
+    .from(AVATARS_BUCKET)
+    .upload(filePath, file, { cacheControl: "3600", upsert: true });
+
+  if (error) throw new Error(`Failed to upload avatar: ${error.message}`);
+
+  const { data } = supabase.storage.from(AVATARS_BUCKET).getPublicUrl(filePath);
+  return data.publicUrl;
+}
+
+/**
+ * Delete a user avatar from Supabase Storage
+ * @param url - The full public URL of the avatar to delete
+ */
+export async function deleteAvatar(url: string): Promise<void> {
+  const match = url.match(/\/storage\/v1\/object\/public\/avatars\/(.+)/);
+  if (!match) return;
+  await supabase.storage.from(AVATARS_BUCKET).remove([match[1]]);
+}

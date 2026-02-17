@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Header from "@/components/layout/header";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -15,12 +15,87 @@ import {
   Edit2,
   Save,
   Camera,
+  X,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
+import { uploadAvatar, deleteAvatar } from "@/lib/storage";
+import { updateProfile } from "@/lib/supabase";
+import { useToast } from "@/components/ui/Toast";
+import { cn } from "@/lib/utils";
 
 export default function StudentProfilePage() {
-  const { profile } = useAuth();
+  const { profile, user, refreshProfile } = useAuth();
+  const { showToast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    first_name: profile?.first_name ?? "",
+    middle_name: profile?.middle_name ?? "",
+    last_name: profile?.last_name ?? "",
+    email: profile?.email ?? "",
+    date_of_birth: profile?.date_of_birth ?? "",
+  });
+
+  useEffect(() => {
+    setFormData({
+      first_name: profile?.first_name ?? "",
+      middle_name: profile?.middle_name ?? "",
+      last_name: profile?.last_name ?? "",
+      email: profile?.email ?? "",
+      date_of_birth: profile?.date_of_birth ?? "",
+    });
+  }, [profile]);
+
+  const handleAvatarUpload = async (file: File) => {
+    if (!user) return;
+    setIsUploadingAvatar(true);
+    try {
+      if (profile?.avatar_url) {
+        await deleteAvatar(profile.avatar_url);
+      }
+      const url = await uploadAvatar(file, user.id);
+      await updateProfile(user.id, { avatar_url: url });
+      await refreshProfile();
+      showToast("success", "Avatar Updated", "Your profile photo has been changed.");
+    } catch (err) {
+      showToast("error", "Upload Failed", "Could not update your avatar. Please try again.");
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    setIsSaving(true);
+    try {
+      await updateProfile(user.id, {
+        first_name: formData.first_name,
+        middle_name: formData.middle_name || null,
+        last_name: formData.last_name,
+        date_of_birth: formData.date_of_birth || null,
+      });
+      await refreshProfile();
+      setIsEditing(false);
+      showToast("success", "Profile Updated", "Your personal information has been saved.");
+    } catch (err) {
+      showToast("error", "Update Failed", "Could not save your profile. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleCancel = () => {
+    setFormData({
+      first_name: profile?.first_name ?? "",
+      middle_name: profile?.middle_name ?? "",
+      last_name: profile?.last_name ?? "",
+      email: profile?.email ?? "",
+      date_of_birth: profile?.date_of_birth ?? "",
+    });
+    setIsEditing(false);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -36,14 +111,37 @@ export default function StudentProfilePage() {
             <Card padding="lg" className="text-center">
               <div className="relative inline-block mb-4">
                 <Avatar
+                  src={profile?.avatar_url ?? undefined}
                   name={`${profile?.first_name ?? ""} ${profile?.last_name ?? ""}`}
                   size="xl"
                   variant="primary"
-                  className="w-24 h-24 text-2xl"
+                  className={cn("w-24 h-24 text-2xl", profile?.avatar_url && "cursor-pointer")}
+                  onClick={() => profile?.avatar_url && setPreviewUrl(profile.avatar_url)}
                 />
-                <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-cjc-gold flex items-center justify-center text-white shadow-lg">
-                  <Camera className="w-4 h-4" />
-                </button>
+                <label
+                  htmlFor="avatar-upload"
+                  className={cn(
+                    "absolute bottom-0 right-0 w-8 h-8 rounded-full bg-cjc-gold flex items-center justify-center text-white shadow-lg cursor-pointer hover:bg-cjc-gold/80 transition-colors",
+                    isUploadingAvatar && "opacity-50 cursor-not-allowed"
+                  )}
+                >
+                  {isUploadingAvatar
+                    ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    : <Camera className="w-4 h-4" />
+                  }
+                  <input
+                    id="avatar-upload"
+                    type="file"
+                    accept="image/png,image/jpeg,image/jpg,image/webp"
+                    className="hidden"
+                    disabled={isUploadingAvatar}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleAvatarUpload(file);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
               </div>
               <h2 className="text-xl font-semibold text-cjc-navy">
                 {profile?.first_name}
@@ -81,51 +179,58 @@ export default function StudentProfilePage() {
                   <User className="w-5 h-5 text-cjc-gold" />
                   Personal Information
                 </CardTitle>
-                <Button
-                  variant={isEditing ? "primary" : "secondary"}
-                  size="sm"
-                  onClick={() => setIsEditing(!isEditing)}
-                >
-                  {isEditing ? (
-                    <>
-                      <Save className="w-4 h-4" />
-                      Save Changes
-                    </>
-                  ) : (
-                    <>
-                      <Edit2 className="w-4 h-4" />
-                      Edit
-                    </>
-                  )}
-                </Button>
+                {isEditing ? (
+                  <div className="flex gap-2">
+                    <Button variant="secondary" size="sm" onClick={handleCancel}>
+                      <X className="w-4 h-4" /> Cancel
+                    </Button>
+                    <Button variant="primary" size="sm" onClick={handleSaveProfile} isLoading={isSaving}>
+                      <Save className="w-4 h-4" /> Save Changes
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    onClick={() => setIsEditing(true)}
+                  >
+                    <Edit2 className="w-4 h-4" />
+                    Edit
+                  </Button>
+                )}
               </CardHeader>
 
               <div className="grid sm:grid-cols-2 gap-4">
                 <Input
                   label="First Name"
-                  defaultValue={profile?.first_name ?? ""}
+                  value={formData.first_name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, first_name: e.target.value }))}
                   disabled={!isEditing}
                 />
                 <Input
                   label="Middle Name"
-                  defaultValue={profile?.middle_name ?? ""}
+                  value={formData.middle_name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, middle_name: e.target.value }))}
                   disabled={!isEditing}
                 />
                 <Input
                   label="Last Name"
-                  defaultValue={profile?.last_name ?? ""}
+                  value={formData.last_name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, last_name: e.target.value }))}
                   disabled={!isEditing}
                 />
                 <Input
                   label="Email Address"
                   type="email"
-                  defaultValue={profile?.email ?? ""}
-                  disabled={!isEditing}
+                  value={formData.email}
+                  disabled={true}
+                  helper="Contact admin to change your email address."
                 />
                 <Input
                   label="Date of Birth"
                   type="date"
-                  defaultValue={profile?.date_of_birth ?? ""}
+                  value={formData.date_of_birth}
+                  onChange={(e) => setFormData(prev => ({ ...prev, date_of_birth: e.target.value }))}
                   disabled={!isEditing}
                 />
               </div>
@@ -165,6 +270,28 @@ export default function StudentProfilePage() {
           </div>
         </div>
       </div>
+
+      {/* Image Preview Modal */}
+      {previewUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+          onClick={() => setPreviewUrl(null)}
+        >
+          <div className="relative max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={previewUrl}
+              alt="Preview"
+              className="w-full rounded-xl object-cover shadow-2xl"
+            />
+            <button
+              className="absolute top-2 right-2 bg-white/80 rounded-full p-1 text-gray-700 hover:bg-white"
+              onClick={() => setPreviewUrl(null)}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

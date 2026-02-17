@@ -15,6 +15,7 @@ import {
   Building2,
   Users,
   Globe,
+  X,
 } from "lucide-react";
 import {
   AnnouncementWithRelations,
@@ -65,6 +66,9 @@ export default function AdminAnnouncementsPage() {
     AnnouncementWithRelations | null
   >(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Image preview state
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   // Fetch current user
   useEffect(() => {
@@ -395,6 +399,8 @@ export default function AdminAnnouncementsPage() {
                               src={announcement.posted_by?.avatar_url || undefined}
                               name={getPostedByName(announcement)}
                               size="sm"
+                              className={announcement.posted_by?.avatar_url ? "cursor-pointer" : ""}
+                              onClick={() => announcement.posted_by?.avatar_url && setPreviewUrl(announcement.posted_by.avatar_url)}
                             />
                             <div>
                               <p className="text-sm text-cjc-navy font-medium">
@@ -475,6 +481,28 @@ export default function AdminAnnouncementsPage() {
           </div>
         )}
       </div>
+
+      {/* Image Preview Modal */}
+      {previewUrl && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60"
+          onClick={() => setPreviewUrl(null)}
+        >
+          <div className="relative max-w-sm w-full mx-4" onClick={(e) => e.stopPropagation()}>
+            <img
+              src={previewUrl}
+              alt="Preview"
+              className="w-full rounded-xl object-cover shadow-2xl"
+            />
+            <button
+              className="absolute top-2 right-2 bg-white/80 rounded-full p-1 text-gray-700 hover:bg-white"
+              onClick={() => setPreviewUrl(null)}
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Announcement Form Modal */}
       <AnnouncementFormModal
