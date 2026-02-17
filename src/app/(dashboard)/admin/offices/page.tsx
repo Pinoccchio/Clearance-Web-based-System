@@ -275,7 +275,7 @@ export default function AdminOfficesPage() {
                             name={getHeadDisplayName(office) || ""}
                             size="sm"
                             className={office.head.avatar_url ? "cursor-pointer" : ""}
-                            onClick={() => office.head.avatar_url && setPreviewUrl(office.head.avatar_url)}
+                            onClick={() => office.head?.avatar_url && setPreviewUrl(office.head.avatar_url)}
                           />
                           <div>
                             <p className="text-sm text-cjc-navy font-medium">

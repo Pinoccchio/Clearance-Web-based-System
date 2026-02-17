@@ -228,7 +228,7 @@ export default function StudentProfilePage() {
                   type="email"
                   value={formData.email}
                   disabled={true}
-                  helper="Contact admin to change your email address."
+                  helperText="Contact admin to change your email address."
                 />
                 <Input
                   label="Date of Birth"

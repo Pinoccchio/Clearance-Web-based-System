@@ -323,7 +323,7 @@ export default function AdminClubsPage() {
                             name={getAdviserDisplayName(club) || ""}
                             size="sm"
                             className={club.adviser.avatar_url ? "cursor-pointer" : ""}
-                            onClick={() => club.adviser.avatar_url && setPreviewUrl(club.adviser.avatar_url)}
+                            onClick={() => club.adviser?.avatar_url && setPreviewUrl(club.adviser.avatar_url)}
                           />
                           <div>
                             <p className="text-sm text-cjc-navy font-medium">

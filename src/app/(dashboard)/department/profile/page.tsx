@@ -223,7 +223,7 @@ export default function DepartmentProfilePage() {
                 <p className="text-gray-500 font-mono text-sm mt-1">{department.code}</p>
               )}
               <Badge
-                variant={department?.status === "active" ? "success" : "secondary"}
+                variant={department?.status === "active" ? "success" : "neutral"}
                 className="mt-3"
               >
                 {department?.status === "active" ? "Active" : "Inactive"}
@@ -330,7 +330,7 @@ export default function DepartmentProfilePage() {
                   type="email"
                   value={profile?.email ?? ""}
                   disabled={true}
-                  helper="Contact admin to change your email address."
+                  helperText="Contact admin to change your email address."
                 />
                 <Input
                   label="Date of Birth"
@@ -382,13 +382,13 @@ export default function DepartmentProfilePage() {
                     label="Department Name"
                     value={department.name}
                     disabled={true}
-                    helper="Contact admin to change the name."
+                    helperText="Contact admin to change the name."
                   />
                   <Input
                     label="Department Code"
                     value={department.code}
                     disabled={true}
-                    helper="Contact admin to change the code."
+                    helperText="Contact admin to change the code."
                   />
                   <div className="sm:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">

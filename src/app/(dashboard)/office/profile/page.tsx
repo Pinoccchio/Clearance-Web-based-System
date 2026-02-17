@@ -216,7 +216,7 @@ export default function OfficeProfilePage() {
                 <p className="text-gray-500 font-mono text-sm mt-1">{office.code}</p>
               )}
               <Badge
-                variant={office?.status === "active" ? "success" : "secondary"}
+                variant={office?.status === "active" ? "success" : "neutral"}
                 className="mt-3"
               >
                 {office?.status === "active" ? "Active" : "Inactive"}
@@ -323,7 +323,7 @@ export default function OfficeProfilePage() {
                   type="email"
                   value={profile?.email ?? ""}
                   disabled={true}
-                  helper="Contact admin to change your email address."
+                  helperText="Contact admin to change your email address."
                 />
                 <Input
                   label="Date of Birth"
@@ -375,13 +375,13 @@ export default function OfficeProfilePage() {
                     label="Office Name"
                     value={office.name}
                     disabled={true}
-                    helper="Contact admin to change the name."
+                    helperText="Contact admin to change the name."
                   />
                   <Input
                     label="Office Code"
                     value={office.code}
                     disabled={true}
-                    helper="Contact admin to change the code."
+                    helperText="Contact admin to change the code."
                   />
                   <div className="sm:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">

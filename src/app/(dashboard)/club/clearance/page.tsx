@@ -17,7 +17,7 @@ export default function ClubClearancePage() {
           </div>
           <h2 className="text-xl font-display font-bold text-cjc-navy mb-2">Clearance Queue</h2>
           <p className="text-warm-muted max-w-md mx-auto">
-            View and process pending member clearance requests. Approve, reject, or put submissions on hold with remarks.
+            View and process pending member clearance requests. This feature is being implemented by another team member — coming soon.
           </p>
         </div>
       </div>

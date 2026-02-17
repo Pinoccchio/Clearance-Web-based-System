@@ -17,7 +17,7 @@ export default function ClubMembersPage() {
           </div>
           <h2 className="text-xl font-display font-bold text-cjc-navy mb-2">Members</h2>
           <p className="text-warm-muted max-w-md mx-auto">
-            View club members and their current clearance status.
+            View club members and their current clearance status. This feature is being implemented by another team member — coming soon.
           </p>
         </div>
       </div>

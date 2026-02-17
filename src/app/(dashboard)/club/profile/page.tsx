@@ -218,7 +218,7 @@ export default function ClubProfilePage() {
 
               <div className="flex flex-wrap gap-2 justify-center mt-3">
                 <Badge
-                  variant={club?.status === "active" ? "success" : "secondary"}
+                  variant={club?.status === "active" ? "success" : "neutral"}
                 >
                   {club?.status === "active" ? "Active" : "Inactive"}
                 </Badge>
@@ -337,7 +337,7 @@ export default function ClubProfilePage() {
                   type="email"
                   value={profile?.email ?? ""}
                   disabled={true}
-                  helper="Contact admin to change your email address."
+                  helperText="Contact admin to change your email address."
                 />
                 <Input
                   label="Date of Birth"
@@ -389,13 +389,13 @@ export default function ClubProfilePage() {
                     label="Club Name"
                     value={club.name}
                     disabled={true}
-                    helper="Contact admin to change the name."
+                    helperText="Contact admin to change the name."
                   />
                   <Input
                     label="Club Code"
                     value={club.code}
                     disabled={true}
-                    helper="Contact admin to change the code."
+                    helperText="Contact admin to change the code."
                   />
                   <div className="sm:col-span-2">
                     <label className="block text-sm font-medium text-gray-700 mb-1">

@@ -275,7 +275,7 @@ export default function AdminDepartmentsPage() {
                             name={getHeadDisplayName(dept) || ""}
                             size="sm"
                             className={dept.head.avatar_url ? "cursor-pointer" : ""}
-                            onClick={() => dept.head.avatar_url && setPreviewUrl(dept.head.avatar_url)}
+                            onClick={() => dept.head?.avatar_url && setPreviewUrl(dept.head.avatar_url)}
                           />
                           <div>
                             <p className="text-sm text-cjc-navy font-medium">
