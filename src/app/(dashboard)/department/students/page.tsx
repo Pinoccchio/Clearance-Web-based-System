@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/auth-context";
+import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -180,6 +181,8 @@ export default function DepartmentStudentsPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useRealtimeRefresh('clearance_requests', loadData);
 
   // --- Computed stats ---
   const totalCount = students.length;

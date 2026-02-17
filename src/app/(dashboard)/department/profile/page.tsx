@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import Header from "@/components/layout/header";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -51,16 +52,22 @@ export default function DepartmentProfilePage() {
     description: department?.description ?? "",
   });
 
-  // Fetch department on mount
-  useEffect(() => {
+  const loadDepartment = useCallback(async () => {
     if (!profile?.id) return;
     setIsLoadingOrg(true);
-    getDepartmentByHeadId(profile.id).then((dept) => {
-      setDepartment(dept);
-      setOrgForm({ description: dept?.description ?? "" });
-      setIsLoadingOrg(false);
-    });
+    const dept = await getDepartmentByHeadId(profile.id);
+    setDepartment(dept);
+    setOrgForm({ description: dept?.description ?? "" });
+    setIsLoadingOrg(false);
   }, [profile?.id]);
+
+  // Fetch department on mount
+  useEffect(() => {
+    loadDepartment();
+  }, [loadDepartment]);
+
+  useRealtimeRefresh('departments', loadDepartment);
+  useRealtimeRefresh('profiles', loadDepartment);
 
   // Sync personal form when profile changes
   useEffect(() => {

@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import Header from "@/components/layout/header";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/components/ui/Toast";
+import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import { Card } from "@/components/ui/Card";
 import { AlertCircle, Loader2 } from "lucide-react";
 import SubmitView from "@/components/student/SubmitView";
@@ -85,6 +86,14 @@ export default function DepartmentSubmitPage() {
     loadData(cancelled);
     return () => { cancelled.value = true; };
   }, [authLoading, loadData]);
+
+  const refreshData = useCallback(() => {
+    const cancelled = { value: false };
+    loadData(cancelled);
+  }, [loadData]);
+
+  useRealtimeRefresh('clearance_items', refreshData);
+  useRealtimeRefresh('requirement_submissions', refreshData);
 
   function handleRequestCreated(req: ClearanceRequest) {
     setActiveRequest(req);

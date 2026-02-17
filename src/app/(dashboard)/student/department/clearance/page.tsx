@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Header from "@/components/layout/header";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/components/ui/Toast";
+import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import { Card } from "@/components/ui/Card";
 import { AlertCircle, Loader2 } from "lucide-react";
 import ClearanceStatusView from "@/components/student/ClearanceStatusView";
@@ -28,50 +29,41 @@ export default function DepartmentClearancePage() {
   const [requirementCount, setRequirementCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
 
+  const loadData = useCallback(async () => {
+    if (!profile?.department) return;
+    try {
+      const [d, requests] = await Promise.all([
+        getDepartmentByCode(profile.department),
+        getStudentClearanceRequests(profile.id),
+      ]);
+
+      setDept(d);
+
+      const active = requests.find((r) => r.status === "pending" || r.status === "in_progress") ?? null;
+      setActiveRequest(active);
+
+      if (d) {
+        const [deptReqs, item] = await Promise.all([
+          getRequirementsBySource("department", d.id),
+          active ? getClearanceItemForRequest(active.id, "department", d.id) : Promise.resolve(null),
+        ]);
+        setRequirementCount(deptReqs.length);
+        setClearanceItem(item);
+      }
+    } catch (err) {
+      showToast("error", "Load failed", "Failed to load clearance status.");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [profile?.id, profile?.department, showToast]);
+
   useEffect(() => {
     if (authLoading) return;
     if (!profile?.department) { setIsLoading(false); return; }
+    loadData();
+  }, [authLoading, loadData]);
 
-    let cancelled = false;
-
-    async function load() {
-      try {
-        const [d, requests, reqs] = await Promise.all([
-          getDepartmentByCode(profile!.department!),
-          getStudentClearanceRequests(profile!.id),
-          // we will fetch reqs after we know dept id
-          Promise.resolve([] as Requirement[]),
-        ]);
-
-        if (cancelled) return;
-
-        setDept(d);
-
-        const active = requests.find((r) => r.status === "pending" || r.status === "in_progress") ?? null;
-        setActiveRequest(active);
-
-        if (d) {
-          const [deptReqs, item] = await Promise.all([
-            getRequirementsBySource("department", d.id),
-            active ? getClearanceItemForRequest(active.id, "department", d.id) : Promise.resolve(null),
-          ]);
-          if (!cancelled) {
-            setRequirementCount(deptReqs.length);
-            setClearanceItem(item);
-          }
-        }
-      } catch (err) {
-        if (!cancelled) {
-          showToast("error", "Load failed", "Failed to load clearance status.");
-        }
-      } finally {
-        if (!cancelled) setIsLoading(false);
-      }
-    }
-
-    load();
-    return () => { cancelled = true; };
-  }, [authLoading, profile?.id, profile?.department]);
+  useRealtimeRefresh('clearance_items', loadData);
 
   if (authLoading || isLoading) {
     return (

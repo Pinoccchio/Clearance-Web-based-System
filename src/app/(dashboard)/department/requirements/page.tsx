@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { CheckSquare, Plus, Pencil, Trash2, X, Check } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
+import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import {
   getDepartmentByHeadId,
   getRequirementsBySource,
@@ -50,17 +51,12 @@ export default function DepartmentRequirementsPage() {
   const [deleteTarget, setDeleteTarget] = useState<Requirement | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  useEffect(() => {
-    if (profile?.id) {
-      loadData(profile.id);
-    }
-  }, [profile?.id]);
-
-  async function loadData(userId: string) {
+  const loadData = useCallback(async () => {
+    if (!profile?.id) return;
     setIsLoading(true);
     setError(null);
     try {
-      const dept = await getDepartmentByHeadId(userId);
+      const dept = await getDepartmentByHeadId(profile.id);
       if (!dept) {
         setError("You are not assigned as a department head.");
         setIsLoading(false);
@@ -74,7 +70,13 @@ export default function DepartmentRequirementsPage() {
     } finally {
       setIsLoading(false);
     }
-  }
+  }, [profile?.id]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  useRealtimeRefresh('requirements', loadData);
 
   async function handleAdd() {
     if (!addForm.name.trim()) {

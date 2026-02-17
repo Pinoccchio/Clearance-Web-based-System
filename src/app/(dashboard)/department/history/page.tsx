@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/auth-context";
+import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -148,6 +149,8 @@ export default function DepartmentHistoryPage() {
   useEffect(() => {
     loadData();
   }, [loadData]);
+
+  useRealtimeRefresh('clearance_items', loadData);
 
   // Load submissions when a modal item is selected
   useEffect(() => {

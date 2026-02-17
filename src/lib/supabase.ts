@@ -1334,6 +1334,42 @@ export async function getAnnouncementsByDepartment(
   return (data as AnnouncementWithRelations[]) || [];
 }
 
+/** Fetch all announcements scoped to a given office (by office_id) */
+export async function getAnnouncementsByOffice(
+  officeId: string
+): Promise<AnnouncementWithRelations[]> {
+  const { data, error } = await supabase
+    .from('announcements')
+    .select(`
+      *,
+      posted_by:profiles!announcements_posted_by_id_fkey(*),
+      office:offices!announcements_office_id_fkey(*)
+    `)
+    .eq('office_id', officeId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data as AnnouncementWithRelations[]) || [];
+}
+
+/** Fetch all announcements scoped to a given club (by club_id) */
+export async function getAnnouncementsByClub(
+  clubId: string
+): Promise<AnnouncementWithRelations[]> {
+  const { data, error } = await supabase
+    .from('announcements')
+    .select(`
+      *,
+      posted_by:profiles!announcements_posted_by_id_fkey(*),
+      club:clubs!announcements_club_id_fkey(*)
+    `)
+    .eq('club_id', clubId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data as AnnouncementWithRelations[]) || [];
+}
+
 // ==========================================
 // System Settings (Singleton)
 // ==========================================

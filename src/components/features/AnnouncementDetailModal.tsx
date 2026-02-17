@@ -2,7 +2,7 @@
 
 import { Modal } from "@/components/ui/modal";
 import { AnnouncementWithRelations } from "@/lib/supabase";
-import { Calendar, MapPin, Clock, X, AlertTriangle, Bell, Info, Megaphone } from "lucide-react";
+import { Calendar, MapPin, Clock, User, X, AlertTriangle, Bell, Info, Megaphone } from "lucide-react";
 
 interface AnnouncementDetailModalProps {
   isOpen: boolean;
@@ -16,6 +16,11 @@ export function AnnouncementDetailModal({
   announcement,
 }: AnnouncementDetailModalProps) {
   if (!announcement) return null;
+
+  const roleLabel: Record<string, string> = {
+    admin: "Admin", department: "Department", office: "Office",
+    club: "Club", student: "Student",
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
@@ -146,6 +151,18 @@ export function AnnouncementDetailModal({
               <Clock className="w-4 h-4" />
               <span>Posted {formatDate(announcement.created_at)}</span>
             </div>
+            {announcement.posted_by && (
+              <div className="flex items-center gap-2">
+                <User className="w-4 h-4" />
+                <span>
+                  {announcement.posted_by.first_name} {announcement.posted_by.last_name}
+                  {" "}
+                  <span className="font-medium text-cjc-navy capitalize">
+                    ({roleLabel[announcement.posted_by.role] ?? announcement.posted_by.role})
+                  </span>
+                </span>
+              </div>
+            )}
             {announcement.expires_at && (
               <div className="flex items-center gap-2 text-warning">
                 <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />

@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import Header from "@/components/layout/header";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -47,6 +48,9 @@ export default function StudentProfilePage() {
       date_of_birth: profile?.date_of_birth ?? "",
     });
   }, [profile]);
+
+  const refresh = useCallback(() => { refreshProfile(); }, [refreshProfile]);
+  useRealtimeRefresh('profiles', refresh);
 
   const handleAvatarUpload = async (file: File) => {
     if (!user) return;
