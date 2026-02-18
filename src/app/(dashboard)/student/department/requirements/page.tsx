@@ -33,7 +33,7 @@ export default function DepartmentRequirementsPage() {
         const reqs = await getRequirementsBySource("department", d.id);
         setRequirements(reqs);
       }
-    } catch (err) {
+    } catch {
       showToast("error", "Load failed", "Failed to load requirements.");
     } finally {
       setIsLoading(false);

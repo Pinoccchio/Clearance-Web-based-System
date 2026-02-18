@@ -56,7 +56,7 @@ function ItemStatusBadge({ status }: { status: ClearanceItem["status"] }) {
       );
     case "on_hold":
       return (
-        <Badge variant="neutral" size="sm">
+        <Badge variant="onHold" size="sm">
           <PauseCircle className="w-3 h-3" />
           On Hold
         </Badge>
@@ -78,11 +78,8 @@ function ItemStatusBadge({ status }: { status: ClearanceItem["status"] }) {
   }
 }
 
-function RequestTypeBadge({ type }: { type: ClearanceRequest["type"] }) {
-  const label = type.charAt(0).toUpperCase() + type.slice(1);
-  const variant =
-    type === "graduation" ? "gold" : type === "transfer" ? "info" : "default";
-  return <Badge variant={variant} size="sm">{label}</Badge>;
+function RequestTypeBadge({ type: _ }: { type: ClearanceRequest["type"] }) {
+  return <Badge variant="default" size="sm">Semester</Badge>;
 }
 
 interface ItemWithRequest extends ClearanceItem {
@@ -245,7 +242,9 @@ export default function StudentHistoryPage() {
                             <p className="text-sm font-medium text-cjc-navy">
                               {sourceNames[item.source_id] ?? item.source_id}
                             </p>
-                            <p className="text-xs text-gray-400 capitalize">{item.source_type}</p>
+                            <p className="text-xs text-gray-400">
+                              {item.source_type === "department" ? "Department" : item.source_type === "office" ? "Office" : "Club"}
+                            </p>
                           </div>
                         </div>
                         <Button

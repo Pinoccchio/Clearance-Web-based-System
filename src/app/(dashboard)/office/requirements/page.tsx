@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { CheckSquare, Plus, Pencil, Trash2, X, Check } from "lucide-react";
+import { CheckSquare, Plus, Pencil, Trash2, X, Check, ExternalLink } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import {
   getOfficeByHeadId,
@@ -9,6 +9,7 @@ import {
   createRequirement,
   updateRequirement,
   deleteRequirement,
+  replaceRequirementLinks,
   Requirement,
   Office,
 } from "@/lib/supabase";
@@ -17,14 +18,20 @@ import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { formatDate } from "@/lib/utils";
 
+interface LinkEntry {
+  url: string;
+  label: string;
+}
+
 interface RequirementFormData {
   name: string;
   description: string;
   is_required: boolean;
   requires_upload: boolean;
+  links: LinkEntry[];
 }
 
-const emptyForm: RequirementFormData = { name: "", description: "", is_required: true, requires_upload: false };
+const emptyForm: RequirementFormData = { name: "", description: "", is_required: true, requires_upload: false, links: [] };
 
 export default function OfficeRequirementsPage() {
   const { profile } = useAuth();
@@ -99,7 +106,12 @@ export default function OfficeRequirementsPage() {
         requires_upload: addForm.requires_upload,
         order: nextOrder,
       });
-      setRequirements(prev => [...prev, created]);
+      // Save links to requirement_links table
+      const validLinks = addForm.links.filter(l => l.url.trim());
+      if (validLinks.length > 0) {
+        await replaceRequirementLinks(created.id, validLinks.map((l, i) => ({ url: l.url.trim(), label: l.label.trim() || undefined, order: i })));
+      }
+      setRequirements(prev => [...prev, { ...created, links: validLinks.map((l, i) => ({ id: '', requirement_id: created.id, url: l.url.trim(), label: l.label.trim() || null, order: i, created_at: '' })) }]);
       setAddForm(emptyForm);
       setShowAddForm(false);
       showToast("success", "Requirement Added", `"${created.name}" has been added.`);
@@ -113,7 +125,13 @@ export default function OfficeRequirementsPage() {
 
   function startEdit(req: Requirement) {
     setEditingId(req.id);
-    setEditForm({ name: req.name, description: req.description ?? "", is_required: req.is_required, requires_upload: req.requires_upload });
+    setEditForm({
+      name: req.name,
+      description: req.description ?? "",
+      is_required: req.is_required,
+      requires_upload: req.requires_upload,
+      links: (req.links ?? []).map(l => ({ url: l.url, label: l.label ?? "" })),
+    });
     setEditNameError(null);
   }
 
@@ -137,7 +155,11 @@ export default function OfficeRequirementsPage() {
         is_required: editForm.is_required,
         requires_upload: editForm.requires_upload,
       });
-      setRequirements(prev => prev.map(r => r.id === reqId ? updated : r));
+      // Replace all links for this requirement
+      const validLinks = editForm.links.filter(l => l.url.trim());
+      await replaceRequirementLinks(reqId, validLinks.map((l, i) => ({ url: l.url.trim(), label: l.label.trim() || undefined, order: i })));
+      const updatedWithLinks = { ...updated, links: validLinks.map((l, i) => ({ id: '', requirement_id: reqId, url: l.url.trim(), label: l.label.trim() || null, order: i, created_at: '' })) };
+      setRequirements(prev => prev.map(r => r.id === reqId ? updatedWithLinks : r));
       setEditingId(null);
       showToast("success", "Requirement Updated", `"${updated.name}" has been updated.`);
     } catch (err: unknown) {
@@ -282,6 +304,35 @@ export default function OfficeRequirementsPage() {
                   Requires file upload
                 </label>
               </div>
+              <div>
+                <label className="block text-sm font-medium text-cjc-navy mb-1.5">
+                  Links <span className="text-warm-muted font-normal">(optional)</span>
+                </label>
+                <div className="space-y-2">
+                  {addForm.links.map((link, i) => (
+                    <div key={i} className="border border-gray-200 rounded-lg p-3 space-y-2 bg-gray-50">
+                      <div className="flex items-center justify-between gap-2">
+                        <input type="text" value={link.label}
+                          onChange={e => setAddForm(prev => { const links = [...prev.links]; links[i] = { ...links[i], label: e.target.value }; return { ...prev, links }; })}
+                          className="input-base flex-1 font-medium" placeholder="Link name (e.g. Open Evaluation Form)" />
+                        <button type="button" onClick={() => setAddForm(prev => ({ ...prev, links: prev.links.filter((_, j) => j !== i) }))}
+                          className="p-1.5 text-gray-400 hover:text-red-500 transition-colors flex-shrink-0" title="Remove link">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                      <input type="url" value={link.url}
+                        onChange={e => setAddForm(prev => { const links = [...prev.links]; links[i] = { ...links[i], url: e.target.value }; return { ...prev, links }; })}
+                        className="input-base w-full text-sm text-gray-500" placeholder="https://example.com/form" />
+                    </div>
+                  ))}
+                  <button type="button"
+                    onClick={() => setAddForm(prev => ({ ...prev, links: [...prev.links, { url: "", label: "" }] }))}
+                    className="flex items-center gap-1.5 text-xs text-ccis-blue-primary hover:text-ccis-blue font-medium transition-colors">
+                    <Plus className="w-3.5 h-3.5" />
+                    Add Link
+                  </button>
+                </div>
+              </div>
             </div>
             <div className="flex gap-3 mt-4">
               <button
@@ -346,6 +397,7 @@ export default function OfficeRequirementsPage() {
                   <th className="px-4 py-3 text-left text-xs font-semibold text-warm-muted uppercase tracking-wider w-28">
                     Upload
                   </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-warm-muted uppercase tracking-wider w-28">Link</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-warm-muted uppercase tracking-wider w-28">
                     Added
                   </th>
@@ -359,8 +411,8 @@ export default function OfficeRequirementsPage() {
                   <tr key={req.id} className="hover:bg-gray-50/50 transition-colors">
                     {editingId === req.id ? (
                       <>
-                        <td className="px-4 py-3 text-warm-muted text-xs">{index + 1}</td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3 text-warm-muted text-xs align-top pt-4">{index + 1}</td>
+                        <td className="px-4 py-3" colSpan={5}>
                           <div className="space-y-2">
                             <input
                               type="text"
@@ -379,34 +431,54 @@ export default function OfficeRequirementsPage() {
                               rows={2}
                               placeholder="Description (optional)"
                             />
+                            <div className="flex gap-2">
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={editForm.is_required}
+                                  onChange={e => setEditForm(prev => ({ ...prev, is_required: e.target.checked }))}
+                                  className="w-4 h-4 rounded border-gray-300 text-ccis-blue-primary focus:ring-ccis-blue-primary"
+                                />
+                                <span className="text-xs text-cjc-navy">Required</span>
+                              </label>
+                              <label className="flex items-center gap-2 cursor-pointer ml-4">
+                                <input
+                                  type="checkbox"
+                                  checked={editForm.requires_upload}
+                                  onChange={e => setEditForm(prev => ({ ...prev, requires_upload: e.target.checked }))}
+                                  className="w-4 h-4 rounded border-gray-300 text-ccis-blue-primary focus:ring-ccis-blue-primary"
+                                />
+                                <span className="text-xs text-cjc-navy">Requires upload</span>
+                              </label>
+                            </div>
+                            <div className="space-y-2">
+                              <p className="text-xs font-medium text-cjc-navy">Links <span className="text-warm-muted font-normal">(optional)</span></p>
+                              {editForm.links.map((link, i) => (
+                                <div key={i} className="border border-gray-200 rounded-lg p-3 space-y-2 bg-gray-50">
+                                  <div className="flex items-center justify-between gap-2">
+                                    <input type="text" value={link.label}
+                                      onChange={e => setEditForm(prev => { const links = [...prev.links]; links[i] = { ...links[i], label: e.target.value }; return { ...prev, links }; })}
+                                      className="input-base text-sm flex-1 font-medium" placeholder="Link name (e.g. Open Evaluation Form)" />
+                                    <button type="button" onClick={() => setEditForm(prev => ({ ...prev, links: prev.links.filter((_, j) => j !== i) }))}
+                                      className="p-1.5 text-gray-400 hover:text-red-500 transition-colors flex-shrink-0">
+                                      <X className="w-3.5 h-3.5" />
+                                    </button>
+                                  </div>
+                                  <input type="url" value={link.url}
+                                    onChange={e => setEditForm(prev => { const links = [...prev.links]; links[i] = { ...links[i], url: e.target.value }; return { ...prev, links }; })}
+                                    className="input-base text-sm w-full text-gray-500" placeholder="https://example.com/form" />
+                                </div>
+                              ))}
+                              <button type="button"
+                                onClick={() => setEditForm(prev => ({ ...prev, links: [...prev.links, { url: "", label: "" }] }))}
+                                className="flex items-center gap-1.5 text-xs text-ccis-blue-primary hover:text-ccis-blue font-medium transition-colors">
+                                <Plus className="w-3.5 h-3.5" />
+                                Add Link
+                              </button>
+                            </div>
                           </div>
                         </td>
-                        <td className="px-4 py-3">
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={editForm.is_required}
-                              onChange={e => setEditForm(prev => ({ ...prev, is_required: e.target.checked }))}
-                              className="w-4 h-4 rounded border-gray-300 text-ccis-blue-primary focus:ring-ccis-blue-primary"
-                            />
-                            <span className="text-xs text-cjc-navy">Required</span>
-                          </label>
-                        </td>
-                        <td className="px-4 py-3">
-                          <label className="flex items-center gap-2 cursor-pointer">
-                            <input
-                              type="checkbox"
-                              checked={editForm.requires_upload}
-                              onChange={e => setEditForm(prev => ({ ...prev, requires_upload: e.target.checked }))}
-                              className="w-4 h-4 rounded border-gray-300 text-ccis-blue-primary focus:ring-ccis-blue-primary"
-                            />
-                            <span className="text-xs text-cjc-navy">Upload</span>
-                          </label>
-                        </td>
-                        <td className="px-4 py-3 text-warm-muted text-xs">
-                          {formatDate(req.created_at)}
-                        </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3 align-top pt-4">
                           <div className="flex items-center justify-end gap-2">
                             <button
                               onClick={() => handleSaveEdit(req.id)}
@@ -459,6 +531,21 @@ export default function OfficeRequirementsPage() {
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
                               None
                             </span>
+                          )}
+                        </td>
+                        <td className="px-4 py-4">
+                          {(req.links ?? []).length > 0 ? (
+                            <div className="flex flex-col gap-1">
+                              {(req.links ?? []).map(link => (
+                                <a key={link.id || link.url} href={link.url} target="_blank" rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors">
+                                  <ExternalLink className="w-3 h-3" />
+                                  {link.label || "Link"}
+                                </a>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400">—</span>
                           )}
                         </td>
                         <td className="px-4 py-4 text-warm-muted text-xs">

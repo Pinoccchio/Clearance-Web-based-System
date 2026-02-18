@@ -1380,11 +1380,7 @@ export interface SystemSettings {
   current_semester: string;
   semester_start_date?: string | null;
   semester_deadline?: string | null;
-  graduation_start_date?: string | null;
-  graduation_deadline?: string | null;
   allow_semester_clearance: boolean;
-  allow_graduation_clearance: boolean;
-  allow_transfer_clearance: boolean;
   updated_by?: string | null;
   updated_at: string;
   created_at: string;
@@ -1431,7 +1427,7 @@ export async function updateSystemSettings(
 export interface ClearanceRequest {
   id: string;
   student_id: string;
-  type: 'semester' | 'graduation' | 'transfer';
+  type: 'semester';
   academic_year: string;
   semester: string;
   status: 'pending' | 'in_progress' | 'approved' | 'rejected' | 'completed';
@@ -1482,6 +1478,15 @@ export async function getClearanceRequestsByStudentIds(studentIds: string[]): Pr
 // Requirements
 // ==========================================
 
+export interface RequirementLink {
+  id: string;
+  requirement_id: string;
+  url: string;
+  label?: string | null;
+  order: number;
+  created_at: string;
+}
+
 export interface Requirement {
   id: string;
   source_type: string;
@@ -1493,23 +1498,107 @@ export interface Requirement {
   order: number;
   created_at: string;
   updated_at: string;
+  links?: RequirementLink[];
 }
 
-/** Get all requirements for a given source (department/office/club) */
+/** Get all requirements for a given source (department/office/club), with embedded links */
 export async function getRequirementsBySource(
   sourceType: string,
   sourceId: string
 ): Promise<Requirement[]> {
   const { data, error } = await supabase
     .from('requirements')
-    .select('*')
+    .select('*, links:requirement_links(id, url, label, order, created_at)')
     .eq('source_type', sourceType)
     .eq('source_id', sourceId)
     .order('order', { ascending: true })
     .order('created_at', { ascending: true });
 
   if (error) throw error;
+  return (data || []).map((r) => ({
+    ...r,
+    links: ((r.links as RequirementLink[]) || []).sort((a, b) => a.order - b.order),
+  }));
+}
+
+// ==========================================
+// Requirement Links CRUD
+// ==========================================
+
+/** Get all links for a requirement */
+export async function getRequirementLinks(requirementId: string): Promise<RequirementLink[]> {
+  const { data, error } = await supabase
+    .from('requirement_links')
+    .select('*')
+    .eq('requirement_id', requirementId)
+    .order('order', { ascending: true });
+  if (error) throw error;
   return data || [];
+}
+
+/** Add a link to a requirement */
+export async function addRequirementLink(
+  requirementId: string,
+  url: string,
+  label?: string,
+  order?: number
+): Promise<RequirementLink> {
+  const { data, error } = await supabase
+    .from('requirement_links')
+    .insert({ requirement_id: requirementId, url, label: label || null, order: order ?? 0 })
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+/** Update an existing requirement link */
+export async function updateRequirementLink(
+  id: string,
+  url: string,
+  label?: string,
+  order?: number
+): Promise<RequirementLink> {
+  const updates: Record<string, unknown> = { url };
+  if (label !== undefined) updates.label = label || null;
+  if (order !== undefined) updates.order = order;
+  const { data, error } = await supabase
+    .from('requirement_links')
+    .update(updates)
+    .eq('id', id)
+    .select()
+    .single();
+  if (error) throw error;
+  return data;
+}
+
+/** Delete a requirement link */
+export async function deleteRequirementLink(id: string): Promise<void> {
+  const { error } = await supabase.from('requirement_links').delete().eq('id', id);
+  if (error) throw error;
+}
+
+/** Replace all links for a requirement (delete all then re-insert) */
+export async function replaceRequirementLinks(
+  requirementId: string,
+  links: Array<{ url: string; label?: string; order: number }>
+): Promise<void> {
+  const { error: delErr } = await supabase
+    .from('requirement_links')
+    .delete()
+    .eq('requirement_id', requirementId);
+  if (delErr) throw delErr;
+
+  if (links.length === 0) return;
+
+  const rows = links.map((l) => ({
+    requirement_id: requirementId,
+    url: l.url,
+    label: l.label || null,
+    order: l.order,
+  }));
+  const { error: insErr } = await supabase.from('requirement_links').insert(rows);
+  if (insErr) throw insErr;
 }
 
 /** Create a new requirement */
@@ -1739,7 +1828,7 @@ export async function getStudentClearanceRequests(studentId: string): Promise<Cl
 /** Create a new clearance request */
 export async function createClearanceRequest(data: {
   student_id: string;
-  type: 'semester' | 'graduation' | 'transfer';
+  type: 'semester';
   academic_year: string;
   semester: string;
 }): Promise<ClearanceRequest> {
@@ -1883,11 +1972,11 @@ export async function getRequirementsByMultipleSources(
 ): Promise<Record<string, Requirement[]>> {
   if (sources.length === 0) return {};
 
-  // Fetch all requirements for any of these source_ids
+  // Fetch all requirements for any of these source_ids, with embedded links
   const sourceIds = [...new Set(sources.map((s) => s.source_id))];
   const { data, error } = await supabase
     .from('requirements')
-    .select('*')
+    .select('*, links:requirement_links(id, url, label, order, created_at)')
     .in('source_id', sourceIds)
     .order('order', { ascending: true })
     .order('created_at', { ascending: true });
@@ -1899,7 +1988,10 @@ export async function getRequirementsByMultipleSources(
   for (const req of data ?? []) {
     const key = `${req.source_type}:${req.source_id}`;
     if (!map[key]) map[key] = [];
-    map[key].push(req);
+    map[key].push({
+      ...req,
+      links: ((req.links as RequirementLink[]) || []).sort((a, b) => a.order - b.order),
+    });
   }
   return map;
 }

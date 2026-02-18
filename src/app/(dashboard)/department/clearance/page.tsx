@@ -74,7 +74,7 @@ function ItemStatusBadge({ status }: { status: ClearanceItemWithDetails["status"
       );
     case "on_hold":
       return (
-        <Badge variant="neutral" size="sm">
+        <Badge variant="onHold" size="sm">
           <PauseCircle className="w-3 h-3" />
           On Hold
         </Badge>

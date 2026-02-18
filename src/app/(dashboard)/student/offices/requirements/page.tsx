@@ -39,9 +39,8 @@ export default function OfficesRequirementsPage() {
       for (const [k, v] of Object.entries(reqMap)) {
         byId[k.split(":")[1]] = v;
       }
-
       setRequirementsBySource(byId);
-    } catch (err) {
+    } catch {
       showToast("error", "Load failed", "Failed to load office requirements.");
     } finally {
       setIsLoading(false);

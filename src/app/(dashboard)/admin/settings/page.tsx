@@ -81,11 +81,7 @@ export default function AdminSettingsPage() {
   const [windowForm, setWindowForm] = useState({
     semester_start_date: "",
     semester_deadline: "",
-    graduation_start_date: "",
-    graduation_deadline: "",
     allow_semester_clearance: true,
-    allow_graduation_clearance: false,
-    allow_transfer_clearance: true,
   });
   const [isSavingWindows, setIsSavingWindows] = useState(false);
 
@@ -103,11 +99,7 @@ export default function AdminSettingsPage() {
           setWindowForm({
             semester_start_date: data.semester_start_date ?? "",
             semester_deadline: data.semester_deadline ?? "",
-            graduation_start_date: data.graduation_start_date ?? "",
-            graduation_deadline: data.graduation_deadline ?? "",
             allow_semester_clearance: data.allow_semester_clearance,
-            allow_graduation_clearance: data.allow_graduation_clearance,
-            allow_transfer_clearance: data.allow_transfer_clearance,
           });
         }
       } catch (err) {
@@ -154,11 +146,7 @@ export default function AdminSettingsPage() {
         {
           semester_start_date: windowForm.semester_start_date || null,
           semester_deadline: windowForm.semester_deadline || null,
-          graduation_start_date: windowForm.graduation_start_date || null,
-          graduation_deadline: windowForm.graduation_deadline || null,
           allow_semester_clearance: windowForm.allow_semester_clearance,
-          allow_graduation_clearance: windowForm.allow_graduation_clearance,
-          allow_transfer_clearance: windowForm.allow_transfer_clearance,
         },
         user.id
       );
@@ -166,11 +154,7 @@ export default function AdminSettingsPage() {
       setWindowForm({
         semester_start_date: updated.semester_start_date ?? "",
         semester_deadline: updated.semester_deadline ?? "",
-        graduation_start_date: updated.graduation_start_date ?? "",
-        graduation_deadline: updated.graduation_deadline ?? "",
         allow_semester_clearance: updated.allow_semester_clearance,
-        allow_graduation_clearance: updated.allow_graduation_clearance,
-        allow_transfer_clearance: updated.allow_transfer_clearance,
       });
       showToast("success", "Settings saved", "Clearance windows and toggles updated.");
     } catch (err) {
@@ -218,18 +202,6 @@ export default function AdminSettingsPage() {
       enabled: windowForm.allow_semester_clearance,
       start: windowForm.semester_start_date,
       deadline: windowForm.semester_deadline,
-    },
-    {
-      label: "Graduation Clearance",
-      enabled: windowForm.allow_graduation_clearance,
-      start: windowForm.graduation_start_date,
-      deadline: windowForm.graduation_deadline,
-    },
-    {
-      label: "Transfer Clearance",
-      enabled: windowForm.allow_transfer_clearance,
-      start: null as null,
-      deadline: null as null,
     },
   ];
 
@@ -341,57 +313,6 @@ export default function AdminSettingsPage() {
                   }
                   label="Allow Semester Clearance"
                   description="Enable or disable semester clearance submissions"
-                />
-              </div>
-
-              {/* Graduation Clearance */}
-              <div className="card p-6 space-y-4">
-                <h3 className="font-display font-semibold text-cjc-navy">Graduation Clearance</h3>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <Input
-                    type="date"
-                    label="Start Date"
-                    value={windowForm.graduation_start_date}
-                    onChange={(e) =>
-                      setWindowForm((prev) => ({
-                        ...prev,
-                        graduation_start_date: e.target.value,
-                      }))
-                    }
-                    helperText="Students can begin submitting from this date"
-                  />
-                  <Input
-                    type="date"
-                    label="Deadline"
-                    value={windowForm.graduation_deadline}
-                    onChange={(e) =>
-                      setWindowForm((prev) => ({ ...prev, graduation_deadline: e.target.value }))
-                    }
-                    helperText="No new submissions after this date"
-                  />
-                </div>
-                <ToggleSwitch
-                  checked={windowForm.allow_graduation_clearance}
-                  onChange={(v) =>
-                    setWindowForm((prev) => ({ ...prev, allow_graduation_clearance: v }))
-                  }
-                  label="Allow Graduation Clearance (Graduation Mode)"
-                  description='When ON, "Graduation Clearance" appears as an option on the student submit page'
-                />
-              </div>
-
-              {/* Transfer Clearance */}
-              <div className="card p-6">
-                <h3 className="font-display font-semibold text-cjc-navy mb-4">
-                  Transfer Clearance
-                </h3>
-                <ToggleSwitch
-                  checked={windowForm.allow_transfer_clearance}
-                  onChange={(v) =>
-                    setWindowForm((prev) => ({ ...prev, allow_transfer_clearance: v }))
-                  }
-                  label="Allow Transfer Clearance"
-                  description="Transfer clearance is typically available year-round"
                 />
               </div>
 

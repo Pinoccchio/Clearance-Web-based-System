@@ -11,6 +11,7 @@ import {
   SystemSettings,
   SubmissionWithRequirement,
   createClearanceRequest,
+  getStudentClearanceRequests,
   getClearanceItemForRequest,
   upsertRequirementSubmission,
   submitClearanceItem,
@@ -32,19 +33,13 @@ import {
   RefreshCw,
   Trash2,
   History,
+  ExternalLink,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/modal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import ClearanceItemHistoryTimeline from "@/components/shared/ClearanceItemHistoryTimeline";
 
-type ClearanceType = "semester" | "graduation" | "transfer";
-
-const CLEARANCE_TYPE_LABELS: Record<ClearanceType, string> = {
-  semester: "Semester Clearance",
-  graduation: "Graduation Clearance",
-  transfer: "Transfer Clearance",
-};
 
 interface Source {
   id: string;
@@ -92,7 +87,6 @@ export default function SubmitView({
 }: Props) {
   const { showToast } = useToast();
 
-  const [selectedType, setSelectedType] = useState<ClearanceType>("semester");
   const [isStarting, setIsStarting] = useState(false);
   const [openSections, setOpenSections] = useState<Set<string>>(
     new Set(
@@ -127,13 +121,22 @@ export default function SubmitView({
     setLocalSubOverrides({});
   }, [submissionsByItem]);
 
-  const allowedTypes: ClearanceType[] = systemSettings
-    ? [
-        ...(systemSettings.allow_semester_clearance ? (["semester"] as ClearanceType[]) : []),
-        ...(systemSettings.allow_transfer_clearance ? (["transfer"] as ClearanceType[]) : []),
-        ...(systemSettings.allow_graduation_clearance ? (["graduation"] as ClearanceType[]) : []),
-      ]
-    : [];
+  // When clearance items update (e.g. reviewer puts item on_hold/rejected),
+  // clear optimistic submitted state so the UI unlocks without a page refresh
+  useEffect(() => {
+    setSubmittedSources((prev) => {
+      if (prev.size === 0) return prev;
+      const next = new Set(prev);
+      for (const item of clearanceItems) {
+        if (item.status === 'on_hold' || item.status === 'rejected') {
+          next.delete(item.source_id);
+        }
+      }
+      return next.size === prev.size ? prev : next;
+    });
+  }, [clearanceItems]);
+
+  const clearanceOpen = !!(systemSettings?.allow_semester_clearance);
 
   function toggleSection(id: string) {
     setOpenSections((prev) => {
@@ -145,12 +148,26 @@ export default function SubmitView({
   }
 
   async function handleStartClearance() {
-    if (!systemSettings || allowedTypes.length === 0) return;
+    if (!systemSettings || !clearanceOpen) return;
     setIsStarting(true);
     try {
+      // Guard: check DB for existing active request first to prevent duplicates
+      const existing = await getStudentClearanceRequests(studentId);
+      const active = existing.find(
+        (r) =>
+          (r.status === 'pending' || r.status === 'in_progress') &&
+          r.academic_year === systemSettings.academic_year &&
+          r.semester === systemSettings.current_semester
+      );
+      if (active) {
+        // Already exists — surface it without creating a duplicate
+        onRequestCreated(active);
+        return;
+      }
+
       const req = await createClearanceRequest({
         student_id: studentId,
-        type: selectedType,
+        type: 'semester',
         academic_year: systemSettings.academic_year,
         semester: systemSettings.current_semester,
       });
@@ -294,7 +311,7 @@ export default function SubmitView({
 
   // Phase 1: No active request — show "Start Clearance" card
   if (!clearanceRequest) {
-    if (!systemSettings || allowedTypes.length === 0) {
+    if (!systemSettings || !clearanceOpen) {
       return (
         <Card padding="lg" className="text-center max-w-sm mx-auto">
           <Info className="w-10 h-10 text-gray-400 mx-auto mb-3" />
@@ -313,32 +330,6 @@ export default function SubmitView({
           <p className="text-sm text-gray-500">
             Starting clearance will initialize your submission with all departments, offices, and enrolled clubs at once.
           </p>
-        </div>
-
-        {/* Clearance type selector */}
-        <div>
-          <p className="text-xs font-medium text-gray-600 uppercase tracking-wide mb-2">Clearance Type</p>
-          <div className="flex flex-wrap gap-2">
-            {allowedTypes.map((type) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => setSelectedType(type)}
-                className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border-2 text-sm font-medium transition-colors ${
-                  selectedType === type
-                    ? "border-blue-600 bg-blue-50 text-blue-700"
-                    : "border-gray-200 bg-white text-gray-600 hover:border-gray-300"
-                }`}
-              >
-                <span
-                  className={`w-4 h-4 rounded-full border-2 flex-shrink-0 ${
-                    selectedType === type ? "border-blue-600 bg-blue-600" : "border-gray-300"
-                  }`}
-                />
-                {CLEARANCE_TYPE_LABELS[type]}
-              </button>
-            ))}
-          </div>
         </div>
 
         {/* Academic period */}
@@ -550,6 +541,13 @@ export default function SubmitView({
                                   >
                                     {req.is_required ? "Required" : "Optional"}
                                   </span>
+                                  {(req.links ?? []).map(link => (
+                                    <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer"
+                                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors">
+                                      <ExternalLink className="w-3 h-3" />
+                                      {link.label || "Open Link"}
+                                    </a>
+                                  ))}
                                 </div>
                                 {req.description && (
                                   <p className="text-xs text-gray-500 mt-0.5">{req.description}</p>
@@ -705,13 +703,13 @@ export default function SubmitView({
                                     type="button"
                                     disabled={isToggling || checkboxLocked}
                                     onClick={() => item && handleCheckboxToggle(req.id, item.id, !!isChecked)}
-                                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border-2 text-left transition-all ${
+                                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border-2 text-left transition-all group ${
                                       checkboxLocked
                                         ? isChecked
                                           ? "border-green-200 bg-green-50 cursor-default"
                                           : "border-gray-200 bg-gray-50 cursor-default opacity-60"
                                         : isChecked
-                                          ? "border-green-300 bg-green-50 hover:bg-green-100"
+                                          ? "border-green-300 bg-green-50 hover:border-red-300 hover:bg-red-50 cursor-pointer"
                                           : "border-dashed border-gray-300 bg-gray-50 hover:border-blue-400 hover:bg-blue-50"
                                     }`}
                                   >
@@ -720,14 +718,26 @@ export default function SubmitView({
                                     ) : (
                                       <div className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 border-2 transition-colors ${
                                         isChecked
-                                          ? "bg-green-500 border-green-500"
+                                          ? checkboxLocked
+                                            ? "bg-green-500 border-green-500"
+                                            : "bg-green-500 border-green-500 group-hover:bg-red-400 group-hover:border-red-400"
                                           : "border-gray-400 bg-white"
                                       }`}>
                                         {isChecked && <CheckCircle className="w-3 h-3 text-white" />}
                                       </div>
                                     )}
-                                    <span className={`text-xs font-medium ${isChecked ? "text-green-700" : "text-gray-500"}`}>
-                                      {isChecked ? "Confirmed" : "Click to confirm compliance"}
+                                    <span className={`text-xs font-medium transition-colors ${
+                                      isChecked
+                                        ? checkboxLocked
+                                          ? "text-green-700"
+                                          : "text-green-700 group-hover:text-red-600"
+                                        : "text-gray-500"
+                                    }`}>
+                                      {isChecked
+                                        ? checkboxLocked
+                                          ? "Confirmed"
+                                          : <><span className="group-hover:hidden">Confirmed</span><span className="hidden group-hover:inline">Click to undo</span></>
+                                        : "Click to confirm compliance"}
                                     </span>
                                   </button>
                                 );

@@ -51,8 +51,6 @@ const STATUS_OPTIONS = [
 const TYPE_OPTIONS = [
   { value: "all", label: "All Types" },
   { value: "semester", label: "Semester" },
-  { value: "graduation", label: "Graduation" },
-  { value: "transfer", label: "Transfer" },
 ];
 
 function ItemStatusBadge({ status }: { status: ClearanceItemWithDetails["status"] }) {
@@ -73,7 +71,7 @@ function ItemStatusBadge({ status }: { status: ClearanceItemWithDetails["status"
       );
     case "on_hold":
       return (
-        <Badge variant="neutral" size="sm">
+        <Badge variant="onHold" size="sm">
           <PauseCircle className="w-3 h-3" />
           On Hold
         </Badge>
@@ -96,11 +94,8 @@ function SubmissionStatusBadge({ status }: { status: SubmissionWithRequirement["
   }
 }
 
-function TypeBadge({ type }: { type: string }) {
-  const label = type.charAt(0).toUpperCase() + type.slice(1);
-  const variant =
-    type === "graduation" ? "gold" : type === "transfer" ? "info" : "default";
-  return <Badge variant={variant} size="sm">{label}</Badge>;
+function TypeBadge({ type: _ }: { type: string }) {
+  return <Badge variant="default" size="sm">Semester</Badge>;
 }
 
 export default function OfficeHistoryPage() {
@@ -415,10 +410,12 @@ export default function OfficeHistoryPage() {
                   <span className="text-xs text-gray-600">{formatDate(selectedItem.reviewed_at)}</span>
                 </div>
               )}
-              <div className="flex items-center justify-between">
-                <span className="text-xs text-gray-500">Reviewed by</span>
-                <span className="text-xs text-gray-600">Office Head</span>
-              </div>
+              {selectedItem.reviewed_by && (
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-gray-500">Reviewed by</span>
+                  <span className="text-xs text-gray-600">{office?.name ?? "Office"}</span>
+                </div>
+              )}
               {selectedItem.remarks && (
                 <div className="pt-1">
                   <span className="text-xs text-gray-500">Remarks: </span>
