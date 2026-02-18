@@ -1495,6 +1495,8 @@ export interface Requirement {
   description?: string | null;
   is_required: boolean;
   requires_upload: boolean;
+  is_published: boolean;
+  first_published_at: string | null;
   order: number;
   created_at: string;
   updated_at: string;
@@ -1624,7 +1626,7 @@ export async function createRequirement(data: {
 /** Update a requirement */
 export async function updateRequirement(
   id: string,
-  data: Partial<Pick<Requirement, 'name' | 'description' | 'is_required' | 'requires_upload' | 'order'>>
+  data: Partial<Pick<Requirement, 'name' | 'description' | 'is_required' | 'requires_upload' | 'order' | 'is_published'>>
 ): Promise<Requirement> {
   const { data: updated, error } = await supabase
     .from('requirements')
@@ -1668,7 +1670,7 @@ export interface RequirementSubmission {
   clearance_item_id: string;
   requirement_id: string;
   student_id: string;
-  file_url: string | null;
+  file_urls: string[];
   status: 'pending' | 'submitted' | 'verified' | 'rejected';
   remarks: string | null;
   submitted_at: string | null;
@@ -1866,13 +1868,14 @@ export async function getClearanceItemForRequest(
   return data;
 }
 
-/** Upsert a requirement submission (create or update file_url + status) */
+/** Upsert a requirement submission (create or replace file_urls array + status) */
 export async function upsertRequirementSubmission(data: {
   clearance_item_id: string;
   requirement_id: string;
   student_id: string;
-  file_url: string | null;
+  file_urls: string[];
 }): Promise<RequirementSubmission> {
+  const hasFiles = data.file_urls.length > 0;
   const { data: upserted, error } = await supabase
     .from('requirement_submissions')
     .upsert(
@@ -1880,9 +1883,9 @@ export async function upsertRequirementSubmission(data: {
         clearance_item_id: data.clearance_item_id,
         requirement_id: data.requirement_id,
         student_id: data.student_id,
-        file_url: data.file_url,
-        status: data.file_url ? 'submitted' : 'pending',
-        submitted_at: data.file_url ? new Date().toISOString() : null,
+        file_urls: data.file_urls,
+        status: hasFiles ? 'submitted' : 'pending',
+        submitted_at: hasFiles ? new Date().toISOString() : null,
       },
       { onConflict: 'clearance_item_id,requirement_id' }
     )
@@ -1891,6 +1894,78 @@ export async function upsertRequirementSubmission(data: {
 
   if (error) throw error;
   return upserted;
+}
+
+/** Append a single file URL to an existing submission's file_urls array.
+ *  Creates the row if it does not exist yet. */
+export async function addFileToSubmission(
+  clearanceItemId: string,
+  requirementId: string,
+  studentId: string,
+  url: string
+): Promise<RequirementSubmission> {
+  // Fetch existing row first
+  const { data: existing } = await supabase
+    .from('requirement_submissions')
+    .select('*')
+    .eq('clearance_item_id', clearanceItemId)
+    .eq('requirement_id', requirementId)
+    .maybeSingle();
+
+  const currentUrls: string[] = existing?.file_urls ?? [];
+  const newUrls = [...currentUrls, url];
+
+  const { data: upserted, error } = await supabase
+    .from('requirement_submissions')
+    .upsert(
+      {
+        clearance_item_id: clearanceItemId,
+        requirement_id: requirementId,
+        student_id: studentId,
+        file_urls: newUrls,
+        status: 'submitted',
+        submitted_at: existing?.submitted_at ?? new Date().toISOString(),
+      },
+      { onConflict: 'clearance_item_id,requirement_id' }
+    )
+    .select()
+    .single();
+
+  if (error) throw error;
+  return upserted;
+}
+
+/** Remove a single file URL from a submission's file_urls array. */
+export async function removeFileFromSubmission(
+  clearanceItemId: string,
+  requirementId: string,
+  url: string
+): Promise<RequirementSubmission> {
+  const { data: existing, error: fetchError } = await supabase
+    .from('requirement_submissions')
+    .select('*')
+    .eq('clearance_item_id', clearanceItemId)
+    .eq('requirement_id', requirementId)
+    .single();
+
+  if (fetchError) throw fetchError;
+
+  const newUrls = (existing.file_urls as string[]).filter((u) => u !== url);
+
+  const { data: updated, error } = await supabase
+    .from('requirement_submissions')
+    .update({
+      file_urls: newUrls,
+      status: newUrls.length > 0 ? 'submitted' : 'pending',
+      submitted_at: newUrls.length > 0 ? existing.submitted_at : null,
+    })
+    .eq('clearance_item_id', clearanceItemId)
+    .eq('requirement_id', requirementId)
+    .select()
+    .single();
+
+  if (error) throw error;
+  return updated;
 }
 
 /** Acknowledge a single non-upload requirement (checkbox tick) */
@@ -1907,7 +1982,7 @@ export async function acknowledgeRequirement(data: {
         clearance_item_id: data.clearance_item_id,
         requirement_id: data.requirement_id,
         student_id: data.student_id,
-        file_url: null,
+        file_urls: [],
         status: data.acknowledged ? 'submitted' : 'pending',
         submitted_at: data.acknowledged ? new Date().toISOString() : null,
       },
@@ -1953,7 +2028,7 @@ export async function batchAcknowledgeRequirements(
     clearance_item_id: clearanceItemId,
     requirement_id: reqId,
     student_id: studentId,
-    file_url: null,
+    file_urls: [] as string[],
     status: 'submitted' as const,
     submitted_at: new Date().toISOString(),
   }));
@@ -1984,6 +2059,56 @@ export async function getRequirementsByMultipleSources(
   if (error) throw error;
 
   // Group by `${source_type}:${source_id}`
+  const map: Record<string, Requirement[]> = {};
+  for (const req of data ?? []) {
+    const key = `${req.source_type}:${req.source_id}`;
+    if (!map[key]) map[key] = [];
+    map[key].push({
+      ...req,
+      links: ((req.links as RequirementLink[]) || []).sort((a, b) => a.order - b.order),
+    });
+  }
+  return map;
+}
+
+/** Get only published requirements for a given source (student-facing) */
+export async function getPublishedRequirementsBySource(
+  sourceType: string,
+  sourceId: string
+): Promise<Requirement[]> {
+  const { data, error } = await supabase
+    .from('requirements')
+    .select('*, links:requirement_links(id, url, label, order, created_at)')
+    .eq('source_type', sourceType)
+    .eq('source_id', sourceId)
+    .eq('is_published', true)
+    .order('order', { ascending: true })
+    .order('created_at', { ascending: true });
+
+  if (error) throw error;
+  return (data || []).map((r) => ({
+    ...r,
+    links: ((r.links as RequirementLink[]) || []).sort((a, b) => a.order - b.order),
+  }));
+}
+
+/** Get only published requirements for multiple sources (student-facing) */
+export async function getPublishedRequirementsByMultipleSources(
+  sources: Array<{ source_type: string; source_id: string }>
+): Promise<Record<string, Requirement[]>> {
+  if (sources.length === 0) return {};
+
+  const sourceIds = [...new Set(sources.map((s) => s.source_id))];
+  const { data, error } = await supabase
+    .from('requirements')
+    .select('*, links:requirement_links(id, url, label, order, created_at)')
+    .in('source_id', sourceIds)
+    .eq('is_published', true)
+    .order('order', { ascending: true })
+    .order('created_at', { ascending: true });
+
+  if (error) throw error;
+
   const map: Record<string, Requirement[]> = {};
   for (const req of data ?? []) {
     const key = `${req.source_type}:${req.source_id}`;

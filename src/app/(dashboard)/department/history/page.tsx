@@ -467,19 +467,20 @@ export default function DepartmentHistoryPage() {
                           <p className="text-xs text-amber-600 mt-0.5">{sub.remarks}</p>
                         )}
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
+                      <div className="flex items-center gap-2 shrink-0 flex-wrap">
                         <SubmissionStatusBadge status={sub.status} />
-                        {sub.file_url && (
+                        {(sub.file_urls ?? []).map((fileUrl, idx) => (
                           <a
-                            href={sub.file_url}
+                            key={idx}
+                            href={fileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:text-blue-800"
-                            title="View file"
+                            title={`View file ${idx + 1}`}
                           >
                             <ExternalLink className="w-4 h-4" />
                           </a>
-                        )}
+                        ))}
                       </div>
                     </div>
                   ))}

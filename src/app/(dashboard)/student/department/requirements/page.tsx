@@ -12,7 +12,7 @@ import {
   Department,
   Requirement,
   getDepartmentByCode,
-  getRequirementsBySource,
+  getPublishedRequirementsBySource,
 } from "@/lib/supabase";
 
 export default function DepartmentRequirementsPage() {
@@ -30,7 +30,7 @@ export default function DepartmentRequirementsPage() {
       setDept(d);
 
       if (d) {
-        const reqs = await getRequirementsBySource("department", d.id);
+        const reqs = await getPublishedRequirementsBySource("department", d.id);
         setRequirements(reqs);
       }
     } catch {

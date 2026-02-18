@@ -13,7 +13,8 @@ import {
   createClearanceRequest,
   getStudentClearanceRequests,
   getClearanceItemForRequest,
-  upsertRequirementSubmission,
+  addFileToSubmission,
+  removeFileFromSubmission,
   submitClearanceItem,
   batchAcknowledgeRequirements,
   acknowledgeRequirement,
@@ -30,7 +31,6 @@ import {
   CheckCircle,
   Loader2,
   Eye,
-  RefreshCw,
   Trash2,
   History,
   ExternalLink,
@@ -101,10 +101,10 @@ export default function SubmitView({
         .map((s) => s.id)
     )
   );
-  const [fileMap, setFileMap] = useState<Record<string, File | null>>({});
   const [fileErrors, setFileErrors] = useState<Record<string, string>>({});
   const [uploadingReqs, setUploadingReqs] = useState<Set<string>>(new Set());
-  const [deletingReqs, setDeletingReqs] = useState<Set<string>>(new Set());
+  // Track per-URL deletion state
+  const [deletingUrls, setDeletingUrls] = useState<Set<string>>(new Set());
   const [lightboxUrl, setLightboxUrl] = useState<string | null>(null);
   // Optimistic local overrides: reqId → updated sub (or null = deleted)
   const [localSubOverrides, setLocalSubOverrides] = useState<Record<string, SubmissionWithRequirement | null>>({});
@@ -192,18 +192,13 @@ export default function SubmitView({
     setUploadingReqs((prev) => new Set(prev).add(reqId));
     try {
       const url = await uploadSubmissionFile(file, studentId, reqId);
-      const upserted = await upsertRequirementSubmission({
-        clearance_item_id: clearanceItemId,
-        requirement_id: reqId,
-        student_id: studentId,
-        file_url: url,
-      });
-      // Optimistic update — show submitted chip immediately, no flicker
+      const updated = await addFileToSubmission(clearanceItemId, reqId, studentId, url);
+      // Optimistic update — show updated file list immediately
       setLocalSubOverrides((prev) => ({
         ...prev,
-        [reqId]: { ...upserted, requirement: { id: reqId } as SubmissionWithRequirement["requirement"] },
+        [reqId]: { ...updated, requirement: { id: reqId } as SubmissionWithRequirement["requirement"] },
       }));
-      showToast("success", "File uploaded", "Your file has been submitted.");
+      showToast("success", "File uploaded", "Your file has been added.");
       onUploadComplete?.();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Upload failed";
@@ -231,24 +226,24 @@ export default function SubmitView({
   }
 
   async function handleDeleteFile(reqId: string, clearanceItemId: string, fileUrl: string) {
-    setDeletingReqs((prev) => new Set(prev).add(reqId));
+    setDeletingUrls((prev) => new Set(prev).add(fileUrl));
     try {
       await deleteSubmissionFile(fileUrl);
-      await upsertRequirementSubmission({
-        clearance_item_id: clearanceItemId,
-        requirement_id: reqId,
-        student_id: studentId,
-        file_url: null,
-      });
-      // Optimistic update — show upload zone immediately, no flicker
-      setLocalSubOverrides((prev) => ({ ...prev, [reqId]: null }));
-      showToast("success", "File removed", "Your submission file has been removed.");
+      const updated = await removeFileFromSubmission(clearanceItemId, reqId, fileUrl);
+      // Optimistic update — reflect removed URL immediately
+      setLocalSubOverrides((prev) => ({
+        ...prev,
+        [reqId]: updated.file_urls.length > 0
+          ? { ...updated, requirement: { id: reqId } as SubmissionWithRequirement["requirement"] }
+          : null,
+      }));
+      showToast("success", "File removed", "The file has been removed.");
       onUploadComplete?.();
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Failed to remove file";
       showToast("error", "Remove failed", msg);
     } finally {
-      setDeletingReqs((prev) => { const n = new Set(prev); n.delete(reqId); return n; });
+      setDeletingUrls((prev) => { const n = new Set(prev); n.delete(fileUrl); return n; });
     }
   }
 
@@ -270,7 +265,7 @@ export default function SubmitView({
               clearance_item_id: clearanceItemId,
               requirement_id: reqId,
               student_id: studentId,
-              file_url: null,
+              file_urls: [],
               status: 'submitted' as const,
               remarks: null,
               submitted_at: new Date().toISOString(),
@@ -483,7 +478,7 @@ export default function SubmitView({
                 const sub = r.id in localSubOverrides
                   ? localSubOverrides[r.id]
                   : existingSubsForItem.find((s) => s.requirement_id === r.id);
-                return sub?.file_url;
+                return (sub?.file_urls?.length ?? 0) > 0;
               });
               const allRequiredChecked = requiredCheckboxReqs.every((r) => {
                 const sub = r.id in localSubOverrides
@@ -559,105 +554,92 @@ export default function SubmitView({
                             <div className="sm:w-72 flex-shrink-0">
                               {req.requires_upload ? (
                                 <>
+                                  {/* List of already-uploaded files */}
+                                  {existingSub && (existingSub.file_urls?.length ?? 0) > 0 && (
+                                    <div className="space-y-1.5 mb-2">
+                                      {(existingSub.file_urls ?? []).map((fileUrl, urlIdx) => {
+                                        const isDeletingThis = deletingUrls.has(fileUrl);
+                                        const isPdf = fileUrl.toLowerCase().includes('.pdf');
+                                        return (
+                                          <div key={urlIdx} className="rounded-lg border border-green-200 bg-green-50 overflow-hidden">
+                                            {isDeletingThis ? (
+                                              <div className="flex items-center gap-2 px-3 py-2">
+                                                <Loader2 className="w-3.5 h-3.5 text-red-400 animate-spin flex-shrink-0" />
+                                                <p className="text-xs text-red-600">Removing...</p>
+                                              </div>
+                                            ) : isPdf ? (
+                                              <a
+                                                href={fileUrl}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="flex items-center gap-2 px-3 py-2 hover:bg-green-100 transition-colors"
+                                              >
+                                                <FileText className="w-4 h-4 text-green-600 flex-shrink-0" />
+                                                <span className="text-xs font-medium text-green-700 flex-1 truncate">
+                                                  File {urlIdx + 1} (PDF)
+                                                </span>
+                                                <Eye className="w-3.5 h-3.5 text-green-500 flex-shrink-0" />
+                                              </a>
+                                            ) : (
+                                              <button
+                                                type="button"
+                                                onClick={() => setLightboxUrl(fileUrl)}
+                                                className="w-full block group relative"
+                                                title="View file"
+                                              >
+                                                {/* eslint-disable-next-line @next/next/no-img-element */}
+                                                <img
+                                                  src={fileUrl}
+                                                  alt={`Submitted file ${urlIdx + 1}`}
+                                                  className="w-full h-20 object-cover"
+                                                  onError={(e) => {
+                                                    (e.currentTarget as HTMLImageElement).style.display = "none";
+                                                    (e.currentTarget.nextElementSibling as HTMLElement | null)?.style.setProperty("display", "flex");
+                                                  }}
+                                                />
+                                                <div className="hidden w-full h-20 items-center justify-center bg-gray-100">
+                                                  <FileText className="w-6 h-6 text-gray-400" />
+                                                </div>
+                                                <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
+                                                  <Eye className="w-4 h-4 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow" />
+                                                </div>
+                                              </button>
+                                            )}
+                                            {/* Per-file delete row */}
+                                            {!isDeletingThis && (
+                                              <div className="flex items-center justify-between gap-2 px-3 py-1.5 border-t border-green-200">
+                                                <div className="flex items-center gap-1 min-w-0">
+                                                  <CheckCircle className="w-3 h-3 text-green-600 flex-shrink-0" />
+                                                  <span className="text-[11px] font-medium text-green-700">
+                                                    File {urlIdx + 1}
+                                                  </span>
+                                                </div>
+                                                {!isLocked && (
+                                                  <button
+                                                    type="button"
+                                                    onClick={() => item && setPendingDelete({ reqId: req.id, clearanceItemId: item.id, fileUrl })}
+                                                    className="flex items-center gap-1 px-2 py-0.5 text-[11px] font-medium text-red-500 hover:bg-red-100 rounded-md transition-colors flex-shrink-0"
+                                                    title="Remove this file"
+                                                  >
+                                                    <Trash2 className="w-3 h-3" />
+                                                    Remove
+                                                  </button>
+                                                )}
+                                              </div>
+                                            )}
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+
+                                  {/* Add-file dropzone (always shown unless locked) */}
                                   {isUploading ? (
                                     <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 border border-blue-200">
                                       <Loader2 className="w-4 h-4 text-blue-500 animate-spin flex-shrink-0" />
                                       <p className="text-xs text-blue-700">Uploading...</p>
                                     </div>
-                                  ) : deletingReqs.has(req.id) ? (
-                                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-50 border border-red-200">
-                                      <Loader2 className="w-4 h-4 text-red-400 animate-spin flex-shrink-0" />
-                                      <p className="text-xs text-red-600">Removing...</p>
-                                    </div>
-                                  ) : existingSub && existingSub.file_url ? (
-                                    <div className="rounded-lg border border-green-200 bg-green-50 overflow-hidden">
-                                      {/* Preview thumbnail for images */}
-                                      {!existingSub.file_url.includes('token=') || existingSub.file_url.match(/\.(png|jpe?g|webp)/i) ? (
-                                        <button
-                                          type="button"
-                                          onClick={() => setLightboxUrl(existingSub.file_url)}
-                                          className="w-full block group relative"
-                                          title="View file"
-                                        >
-                                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                                          <img
-                                            src={existingSub.file_url}
-                                            alt="Submitted file"
-                                            className="w-full h-28 object-cover"
-                                            onError={(e) => {
-                                              (e.currentTarget as HTMLImageElement).style.display = "none";
-                                              (e.currentTarget.nextElementSibling as HTMLElement | null)?.style.setProperty("display", "flex");
-                                            }}
-                                          />
-                                          <div className="hidden w-full h-28 items-center justify-center bg-gray-100">
-                                            <FileText className="w-8 h-8 text-gray-400" />
-                                          </div>
-                                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
-                                            <Eye className="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity drop-shadow" />
-                                          </div>
-                                        </button>
-                                      ) : (
-                                        <a
-                                          href={existingSub.file_url}
-                                          target="_blank"
-                                          rel="noopener noreferrer"
-                                          className="flex items-center gap-2 px-3 py-3 hover:bg-green-100 transition-colors"
-                                        >
-                                          <FileText className="w-5 h-5 text-green-600 flex-shrink-0" />
-                                          <span className="text-xs font-medium text-green-700">View PDF</span>
-                                          <Eye className="w-3.5 h-3.5 text-green-500 ml-auto" />
-                                        </a>
-                                      )}
-                                      {/* Status row + actions */}
-                                      <div className="flex items-center justify-between gap-2 px-3 py-2 border-t border-green-200">
-                                        <div className="flex items-center gap-1.5 min-w-0">
-                                          <CheckCircle className="w-3.5 h-3.5 text-green-600 flex-shrink-0" />
-                                          <div className="min-w-0">
-                                            <p className="text-xs font-medium text-green-700 leading-none">Submitted</p>
-                                            {existingSub.submitted_at && (
-                                              <p className="text-[10px] text-green-500 mt-0.5">{formatDate(existingSub.submitted_at)}</p>
-                                            )}
-                                          </div>
-                                        </div>
-                                        <div className="flex items-center gap-1 flex-shrink-0">
-                                          {!isLocked && (
-                                            <>
-                                              {/* Replace button */}
-                                              <button
-                                                type="button"
-                                                onClick={() => fileInputRefs.current[req.id]?.click()}
-                                                className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-blue-600 hover:bg-blue-100 rounded-md transition-colors"
-                                                title="Replace file"
-                                              >
-                                                <RefreshCw className="w-3 h-3" />
-                                                Replace
-                                              </button>
-                                              {/* Delete button */}
-                                              <button
-                                                type="button"
-                                                onClick={() => item && setPendingDelete({ reqId: req.id, clearanceItemId: item.id, fileUrl: existingSub.file_url! })}
-                                                className="flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-red-500 hover:bg-red-100 rounded-md transition-colors"
-                                                title="Remove file"
-                                              >
-                                                <Trash2 className="w-3 h-3" />
-                                                Remove
-                                              </button>
-                                            </>
-                                          )}
-                                        </div>
-                                      </div>
-                                      {/* Hidden replace input */}
-                                      <input
-                                        ref={(el) => { fileInputRefs.current[req.id] = el; }}
-                                        type="file"
-                                        accept=".png,.jpg,.jpeg,.webp,.pdf"
-                                        className="sr-only"
-                                        onChange={(e) =>
-                                          item && handleFileSelect(req.id, item.id, e.target.files?.[0] ?? null)
-                                        }
-                                      />
-                                    </div>
-                                  ) : item ? (
+                                  ) : item && !isLocked ? (
                                     <div
                                       className={`relative border-2 border-dashed rounded-lg px-3 py-3 text-center cursor-pointer transition-colors ${
                                         error
@@ -669,7 +651,11 @@ export default function SubmitView({
                                       onClick={() => fileInputRefs.current[req.id]?.click()}
                                     >
                                       <Upload className="w-5 h-5 text-gray-400 mx-auto mb-1" />
-                                      <p className="text-xs text-gray-500">Click or drag to upload</p>
+                                      <p className="text-xs text-gray-500">
+                                        {existingSub && (existingSub.file_urls?.length ?? 0) > 0
+                                          ? "Add another file"
+                                          : "Click or drag to upload"}
+                                      </p>
                                       <p className="text-xs text-gray-400 mt-0.5">PNG, JPG, WEBP, PDF</p>
                                       <input
                                         ref={(el) => { fileInputRefs.current[req.id] = el; }}
@@ -681,11 +667,11 @@ export default function SubmitView({
                                         }
                                       />
                                     </div>
-                                  ) : (
+                                  ) : !item ? (
                                     <p className="text-xs text-gray-400 italic">
                                       Clearance item not yet created.
                                     </p>
-                                  )}
+                                  ) : null}
 
                                   {error && (
                                     <p className="text-xs text-red-600 mt-1 flex items-center gap-1">
@@ -881,7 +867,7 @@ export default function SubmitView({
       confirmText="Remove"
       cancelText="Cancel"
       variant="warning"
-      isLoading={pendingDelete ? deletingReqs.has(pendingDelete.reqId) : false}
+      isLoading={pendingDelete ? deletingUrls.has(pendingDelete.fileUrl) : false}
     />
 
     {/* History Timeline Modal */}

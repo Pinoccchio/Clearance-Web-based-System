@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { CheckSquare, Plus, Pencil, Trash2, X, Check, ExternalLink } from "lucide-react";
+import { CheckSquare, Plus, Pencil, Trash2, X, Check, ExternalLink, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
 import {
@@ -57,6 +57,10 @@ export default function DepartmentRequirementsPage() {
   // Delete state
   const [deleteTarget, setDeleteTarget] = useState<Requirement | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Publish state
+  const [togglingPublish, setTogglingPublish] = useState<Set<string>>(new Set());
+  const [isBulkPublishing, setIsBulkPublishing] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!profile?.id) return;
@@ -186,6 +190,37 @@ export default function DepartmentRequirementsPage() {
     }
   }
 
+  async function handleTogglePublish(req: Requirement) {
+    setTogglingPublish(prev => new Set(prev).add(req.id));
+    try {
+      const updated = await updateRequirement(req.id, { is_published: !req.is_published });
+      setRequirements(prev => prev.map(r => r.id === req.id ? { ...r, is_published: updated.is_published } : r));
+      showToast("success",
+        updated.is_published ? "Requirement Published" : "Requirement Unpublished",
+        `"${req.name}" is now ${updated.is_published ? "live and visible to students" : "in draft mode"}.`
+      );
+    } catch (err: unknown) {
+      showToast("error", "Error", err instanceof Error ? err.message : "Failed to update");
+    } finally {
+      setTogglingPublish(prev => { const n = new Set(prev); n.delete(req.id); return n; });
+    }
+  }
+
+  async function handleBulkPublish() {
+    const drafts = requirements.filter(r => !r.is_published);
+    if (drafts.length === 0) return;
+    setIsBulkPublishing(true);
+    try {
+      await Promise.all(drafts.map(r => updateRequirement(r.id, { is_published: true })));
+      setRequirements(prev => prev.map(r => ({ ...r, is_published: true })));
+      showToast("success", "All Published", `${drafts.length} requirement${drafts.length !== 1 ? "s" : ""} are now live.`);
+    } catch (err: unknown) {
+      showToast("error", "Error", err instanceof Error ? err.message : "Failed to bulk publish");
+    } finally {
+      setIsBulkPublishing(false);
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-surface-warm">
@@ -232,17 +267,28 @@ export default function DepartmentRequirementsPage() {
             <p className="text-sm text-warm-muted">{department?.name}</p>
             <h1 className="text-2xl font-display font-bold text-cjc-navy">Requirements</h1>
           </div>
-          <button
-            onClick={() => {
-              setShowAddForm(true);
-              setAddForm(emptyForm);
-              setAddNameError(null);
-            }}
-            className="flex items-center gap-2 px-4 py-2 bg-ccis-blue-primary text-white rounded-lg hover:bg-ccis-blue transition-colors text-sm font-medium"
-          >
-            <Plus className="w-4 h-4" />
-            Add Requirement
-          </button>
+          <div className="flex items-center gap-2">
+            {requirements.some(r => !r.is_published) && (
+              <button onClick={handleBulkPublish} disabled={isBulkPublishing}
+                className="flex items-center gap-2 px-4 py-2 border border-ccis-blue-primary text-ccis-blue-primary rounded-lg hover:bg-ccis-blue-primary/5 transition-colors text-sm font-medium disabled:opacity-50">
+                {isBulkPublishing
+                  ? <div className="w-4 h-4 border-2 border-ccis-blue-primary/30 border-t-ccis-blue-primary rounded-full animate-spin" />
+                  : <Eye className="w-4 h-4" />}
+                Publish All
+              </button>
+            )}
+            <button
+              onClick={() => {
+                setShowAddForm(true);
+                setAddForm(emptyForm);
+                setAddNameError(null);
+              }}
+              className="flex items-center gap-2 px-4 py-2 bg-ccis-blue-primary text-white rounded-lg hover:bg-ccis-blue transition-colors text-sm font-medium"
+            >
+              <Plus className="w-4 h-4" />
+              Add Requirement
+            </button>
+          </div>
         </div>
       </header>
 
@@ -398,6 +444,7 @@ export default function DepartmentRequirementsPage() {
                     Upload
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-warm-muted uppercase tracking-wider w-28">Link</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-warm-muted uppercase tracking-wider w-24">Status</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-warm-muted uppercase tracking-wider w-28">
                     Added
                   </th>
@@ -412,7 +459,7 @@ export default function DepartmentRequirementsPage() {
                     {editingId === req.id ? (
                       <>
                         <td className="px-4 py-3 text-warm-muted text-xs align-top pt-4">{index + 1}</td>
-                        <td className="px-4 py-3" colSpan={5}>
+                        <td className="px-4 py-3" colSpan={6}>
                           <div className="space-y-2">
                             <input
                               type="text"
@@ -548,6 +595,29 @@ export default function DepartmentRequirementsPage() {
                             <span className="text-xs text-gray-400">—</span>
                           )}
                         </td>
+                        <td className="px-4 py-4">
+                          <div className="flex items-center gap-2">
+                            {req.is_published ? (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                                <Eye className="w-3 h-3" />Live
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                                <EyeOff className="w-3 h-3" />Draft
+                              </span>
+                            )}
+                            <button
+                              onClick={() => handleTogglePublish(req)}
+                              disabled={togglingPublish.has(req.id)}
+                              title={req.is_published ? "Unpublish" : "Publish"}
+                              className={`p-1.5 rounded-md transition-colors ${req.is_published ? "text-gray-400 hover:text-orange-600 hover:bg-orange-50" : "text-gray-400 hover:text-green-600 hover:bg-green-50"}`}
+                            >
+                              {togglingPublish.has(req.id)
+                                ? <div className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />
+                                : req.is_published ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                          </div>
+                        </td>
                         <td className="px-4 py-4 text-warm-muted text-xs">
                           {formatDate(req.created_at)}
                         </td>
@@ -581,7 +651,9 @@ export default function DepartmentRequirementsPage() {
         {/* Footer summary */}
         {requirements.length > 0 && (
           <p className="text-xs text-warm-muted px-1">
-            {activeCount} active requirement{activeCount !== 1 ? "s" : ""} · {optionalCount} optional
+            {requirements.filter(r => r.is_published).length} live ·{" "}
+            {requirements.filter(r => !r.is_published).length} draft ·{" "}
+            {activeCount} required · {optionalCount} optional
           </p>
         )}
       </div>

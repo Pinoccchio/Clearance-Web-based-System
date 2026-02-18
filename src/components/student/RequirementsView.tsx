@@ -71,7 +71,7 @@ function SubmissionStatusBadge({
       );
     }
     // pending, rejected, on_hold — student uploaded/confirmed but item is not currently under review
-    const label = sub.file_url ? "Uploaded" : "Confirmed";
+    const label = (sub.file_urls?.length ?? 0) > 0 ? "Uploaded" : "Confirmed";
     return (
       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
         <CheckCircle className="w-3 h-3" />
@@ -288,16 +288,17 @@ export default function RequirementsView({
                               {hasSubmissions && (
                                 <td className="px-6 py-4">
                                   <SubmissionStatusBadge sub={sub} itemStatus={item?.status} />
-                                  {sub?.file_url && (
+                                  {sub && (sub.file_urls?.length ?? 0) > 0 && (sub.file_urls ?? []).map((url, idx) => (
                                     <a
-                                      href={sub.file_url}
+                                      key={idx}
+                                      href={url}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="block text-xs text-blue-600 hover:underline mt-1"
                                     >
-                                      View file
+                                      View file {(sub.file_urls?.length ?? 0) > 1 ? idx + 1 : ""}
                                     </a>
-                                  )}
+                                  ))}
                                 </td>
                               )}
                             </tr>
@@ -311,7 +312,7 @@ export default function RequirementsView({
                     {reqs.filter((r) => !r.is_required).length} optional ·{" "}
                     {reqs.filter((r) => r.requires_upload).length} need upload
                     {hasSubmissions && subs.length > 0 && (
-                      <> · {subs.filter((s) => s.file_url || s.status === "submitted" || s.status === "verified").length} submitted</>
+                      <> · {subs.filter((s) => (s.file_urls?.length ?? 0) > 0 || s.status === "submitted" || s.status === "verified").length} submitted</>
                     )}
                   </div>
                 </>

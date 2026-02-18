@@ -18,7 +18,7 @@ import {
   getDepartmentByCode,
   getStudentClearanceRequests,
   getClearanceItemForRequest,
-  getRequirementsBySource,
+  getPublishedRequirementsBySource,
   getSubmissionsByItem,
   getSystemSettings,
 } from "@/lib/supabase";
@@ -54,7 +54,7 @@ export default function DepartmentSubmitPage() {
       setActiveRequest(active);
 
       if (d) {
-        const reqs = await getRequirementsBySource("department", d.id);
+        const reqs = await getPublishedRequirementsBySource("department", d.id);
         if (cancelled.value) return;
         setRequirements(reqs);
 

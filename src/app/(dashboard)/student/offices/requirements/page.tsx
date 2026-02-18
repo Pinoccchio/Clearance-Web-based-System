@@ -12,7 +12,7 @@ import {
   Office,
   Requirement,
   getAllOffices,
-  getRequirementsByMultipleSources,
+  getPublishedRequirementsByMultipleSources,
 } from "@/lib/supabase";
 
 export default function OfficesRequirementsPage() {
@@ -30,7 +30,7 @@ export default function OfficesRequirementsPage() {
       const allOffices = await getAllOffices();
       setOffices(allOffices);
 
-      const reqMap = await getRequirementsByMultipleSources(
+      const reqMap = await getPublishedRequirementsByMultipleSources(
         allOffices.map((o) => ({ source_type: "office", source_id: o.id }))
       );
 

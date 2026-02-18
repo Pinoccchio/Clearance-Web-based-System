@@ -18,7 +18,7 @@ import {
   getAllOffices,
   getStudentClearanceRequests,
   getClearanceItemForRequest,
-  getRequirementsByMultipleSources,
+  getPublishedRequirementsByMultipleSources,
   getSubmissionsByItem,
   getSystemSettings,
 } from "@/lib/supabase";
@@ -54,7 +54,7 @@ export default function OfficesSubmitPage() {
       setActiveRequest(active);
 
       // Batch fetch requirements
-      const reqMap = await getRequirementsByMultipleSources(
+      const reqMap = await getPublishedRequirementsByMultipleSources(
         allOffices.map((o) => ({ source_type: "office", source_id: o.id }))
       );
       const byId: Record<string, Requirement[]> = {};

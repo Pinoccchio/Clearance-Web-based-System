@@ -567,36 +567,38 @@ export default function OfficeClearancePage() {
                             <p className="text-xs text-amber-600 mt-0.5">{sub.remarks}</p>
                           )}
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex items-start gap-2 shrink-0 flex-wrap justify-end max-w-[200px]">
                           {req.requires_upload ? (
-                            sub?.file_url ? (
+                            sub && (sub.file_urls?.length ?? 0) > 0 ? (
                               <>
                                 <SubmissionStatusBadge status={sub.status} />
-                                {(() => {
-                                  const isPdf = sub.file_url.toLowerCase().includes('.pdf');
+                                {(sub.file_urls ?? []).map((fileUrl, idx) => {
+                                  const isPdf = fileUrl.toLowerCase().includes('.pdf');
                                   return isPdf ? (
                                     <a
-                                      href={sub.file_url}
+                                      key={idx}
+                                      href={fileUrl}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="flex items-center gap-1 px-2 py-1 rounded-md bg-gray-100 hover:bg-gray-200 text-gray-600 text-xs transition-colors"
-                                      title="Open PDF"
+                                      title={`Open PDF ${idx + 1}`}
                                     >
                                       <FileText className="w-3.5 h-3.5" />
-                                      PDF
+                                      PDF {idx + 1}
                                       <ExternalLink className="w-3 h-3 opacity-60" />
                                     </a>
                                   ) : (
                                     <button
+                                      key={idx}
                                       type="button"
-                                      onClick={() => setLightboxUrl(sub.file_url)}
+                                      onClick={() => setLightboxUrl(fileUrl)}
                                       className="relative w-12 h-12 rounded-lg overflow-hidden border border-gray-200 hover:border-blue-400 transition-colors flex-shrink-0 group"
-                                      title="View image"
+                                      title={`View image ${idx + 1}`}
                                     >
                                       {/* eslint-disable-next-line @next/next/no-img-element */}
                                       <img
-                                        src={sub.file_url}
-                                        alt="Submission file"
+                                        src={fileUrl}
+                                        alt={`Submission file ${idx + 1}`}
                                         className="w-full h-full object-cover"
                                       />
                                       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
@@ -604,7 +606,7 @@ export default function OfficeClearancePage() {
                                       </div>
                                     </button>
                                   );
-                                })()}
+                                })}
                               </>
                             ) : (
                               <Badge variant="neutral" size="sm">No file</Badge>
@@ -622,9 +624,8 @@ export default function OfficeClearancePage() {
               )}
             </div>
 
-            {/* Action section (only if not yet approved) */}
-            {selectedItem.status !== "approved" && (
-              <div className="border-t border-gray-100 pt-4 space-y-4">
+            {/* Action section */}
+            <div className="border-t border-gray-100 pt-4 space-y-4">
                 <h3 className="text-sm font-semibold text-cjc-navy">Take Action</h3>
 
                 {/* Action buttons */}
@@ -697,7 +698,6 @@ export default function OfficeClearancePage() {
                   </Button>
                 )}
               </div>
-            )}
           </div>
         )}
       </Modal>
