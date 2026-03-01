@@ -12,6 +12,7 @@ import {
   Clock,
   Globe,
   BookOpen,
+  Users,
 } from "lucide-react";
 import { AnnouncementWithRelations, getActiveAnnouncements } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth-context";
@@ -59,11 +60,16 @@ export default function StudentAnnouncementsPage() {
     setError(null);
     try {
       const all = await getActiveAnnouncements();
-      // Show system-wide announcements OR announcements for the student's department
+      // Parse enrolled club IDs
+      const enrolledClubIds = profile.enrolled_clubs
+        ? profile.enrolled_clubs.split(",").map((id) => id.trim()).filter(Boolean)
+        : [];
+      // Show system-wide announcements, department-specific, or club-specific
       const visible = all.filter(
         (a) =>
           a.is_system_wide ||
-          (a.department_id && a.department?.code === profile.department)
+          (a.department_id && a.department?.code === profile.department) ||
+          (a.club_id && enrolledClubIds.includes(a.club_id))
       );
       // Sort by priority then date
       visible.sort((a, b) => {
@@ -98,7 +104,8 @@ export default function StudentAnnouncementsPage() {
     total: announcements.length,
     urgent: announcements.filter((a) => a.priority === "urgent").length,
     systemWide: announcements.filter((a) => a.is_system_wide).length,
-    deptSpecific: announcements.filter((a) => !a.is_system_wide).length,
+    deptSpecific: announcements.filter((a) => !a.is_system_wide && a.department_id).length,
+    clubSpecific: announcements.filter((a) => !a.is_system_wide && a.club_id).length,
   };
 
   const formatDate = (dateString: string) =>
@@ -159,7 +166,7 @@ export default function StudentAnnouncementsPage() {
         )}
 
         {/* Stats Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
           <div className="card p-4 text-center">
             <p className="text-2xl font-bold text-cjc-navy">{stats.total}</p>
             <p className="text-sm text-warm-muted">Total</p>
@@ -174,7 +181,11 @@ export default function StudentAnnouncementsPage() {
           </div>
           <div className="card p-4 text-center">
             <p className="text-2xl font-bold text-amber-500">{stats.deptSpecific}</p>
-            <p className="text-sm text-warm-muted">Dept-specific</p>
+            <p className="text-sm text-warm-muted">Department</p>
+          </div>
+          <div className="card p-4 text-center">
+            <p className="text-2xl font-bold text-purple-500">{stats.clubSpecific}</p>
+            <p className="text-sm text-warm-muted">Clubs</p>
           </div>
         </div>
 
@@ -237,6 +248,11 @@ export default function StudentAnnouncementsPage() {
                         <span className="inline-flex items-center gap-1 text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
                           <Globe className="w-3 h-3" />
                           System-wide
+                        </span>
+                      ) : a.club_id ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">
+                          <Users className="w-3 h-3" />
+                          {a.club?.name ?? "Club"}
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-1 text-xs text-amber-600 bg-amber-50 px-2 py-0.5 rounded-full">

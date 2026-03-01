@@ -150,6 +150,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (event === "SIGNED_OUT") {
         setUser(null);
         setProfile(null);
+        setOrgLogo(null);
+        setOrgName(null);
       } else if (event === "TOKEN_REFRESHED" && session?.user) {
         setUser(session.user);
       }
@@ -157,8 +159,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // This prevents the async deadlock issue
     });
 
+    // Handle auth errors globally (like token refresh failures)
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      if (event.reason?.message?.includes('Failed to fetch') ||
+          event.reason?.message?.includes('refresh_token')) {
+        console.warn('Auth session expired, clearing state...');
+        setUser(null);
+        setProfile(null);
+        setOrgLogo(null);
+        setOrgName(null);
+        // Clear storage to force re-login
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('sb-joyrstittieqqfvvuuwb-auth-token');
+        }
+      }
+    };
+
+    // Add error listener for unhandled auth errors
+    if (typeof window !== 'undefined') {
+      window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    }
+
     return () => {
       subscription.unsubscribe();
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+      }
     };
   }, []);
 

@@ -1016,6 +1016,24 @@ export async function getClubByAdviserId(userId: string): Promise<Club | null> {
   return data;
 }
 
+/** Get all students enrolled in a specific club by checking enrolled_clubs field */
+export async function getMembersByClub(clubId: string): Promise<Profile[]> {
+  const { data, error } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('role', 'student')
+    .order('last_name', { ascending: true });
+
+  if (error) throw error;
+
+  // Filter client-side for exact match in comma-separated enrolled_clubs (stores club IDs)
+  const filtered = (data || []).filter(p =>
+    p.enrolled_clubs?.split(',').map((c: string) => c.trim()).includes(clubId)
+  );
+
+  return filtered;
+}
+
 // ==========================================
 // Course Management Types and Functions
 // ==========================================
@@ -1731,6 +1749,50 @@ export async function getClearanceItemsByOffice(
   return (data as ClearanceItemWithDetails[]) || [];
 }
 
+/** Fetch all clearance items for a club with nested request + student profile
+ *  (excludes pending items - for clearance queue) */
+export async function getClearanceItemsByClub(
+  clubId: string
+): Promise<ClearanceItemWithDetails[]> {
+  const { data, error } = await supabase
+    .from('clearance_items')
+    .select(`
+      *,
+      request:clearance_requests(
+        *,
+        student:profiles(*)
+      )
+    `)
+    .eq('source_type', 'club')
+    .eq('source_id', clubId)
+    .neq('status', 'pending')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data as ClearanceItemWithDetails[]) || [];
+}
+
+/** Fetch ALL clearance items for a club including pending (for dashboard stats) */
+export async function getAllClearanceItemsByClub(
+  clubId: string
+): Promise<ClearanceItemWithDetails[]> {
+  const { data, error } = await supabase
+    .from('clearance_items')
+    .select(`
+      *,
+      request:clearance_requests(
+        *,
+        student:profiles(*)
+      )
+    `)
+    .eq('source_type', 'club')
+    .eq('source_id', clubId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data as ClearanceItemWithDetails[]) || [];
+}
+
 /** Update a clearance item's status and remarks.
  *  Logs the transition to clearance_item_history. */
 export async function updateClearanceItem(
@@ -1766,7 +1828,9 @@ export async function updateClearanceItem(
         actor_id: data.reviewed_by,
         actor_role: profile?.role ?? null,
         remarks: data.remarks ?? null,
-      }).then();
+      }).then(({ error }) => {
+        if (error) console.error('Failed to log clearance history:', error);
+      });
     });
 
   return updated;
@@ -1868,6 +1932,38 @@ export async function getClearanceItemForRequest(
   return data;
 }
 
+/** Get or create a clearance_item for a given request + source.
+ *  This is useful for clubs since the DB trigger doesn't create them automatically. */
+export async function getOrCreateClearanceItem(
+  requestId: string,
+  sourceType: string,
+  sourceId: string
+): Promise<ClearanceItem | null> {
+  // First try to get existing
+  const existing = await getClearanceItemForRequest(requestId, sourceType, sourceId);
+  if (existing) return existing;
+
+  // Try to create new clearance item
+  const { data, error } = await supabase
+    .from('clearance_items')
+    .insert({
+      request_id: requestId,
+      source_type: sourceType,
+      source_id: sourceId,
+      status: 'pending',
+    })
+    .select()
+    .single();
+
+  if (error) {
+    // Log the actual error for debugging
+    console.warn('Could not create clearance item:', error.message || error.code || JSON.stringify(error));
+    // Return null instead of throwing - UI will handle gracefully
+    return null;
+  }
+  return data;
+}
+
 /** Upsert a requirement submission (create or replace file_urls array + status) */
 export async function upsertRequirementSubmission(data: {
   clearance_item_id: string;
@@ -1949,6 +2045,7 @@ export async function removeFileFromSubmission(
     .single();
 
   if (fetchError) throw fetchError;
+  if (!existing) throw new Error('Submission not found');
 
   const newUrls = (existing.file_urls as string[]).filter((u) => u !== url);
 
@@ -2014,7 +2111,9 @@ export async function submitClearanceItem(
     actor_id: studentId,
     actor_role: 'student',
     remarks: null,
-  }).then();
+  }).then(({ error }) => {
+    if (error) console.error('Failed to log clearance history:', error);
+  });
 }
 
 /** Create acknowledgement rows for non-upload requirements when student submits */
