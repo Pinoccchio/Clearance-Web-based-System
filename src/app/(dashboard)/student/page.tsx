@@ -268,7 +268,7 @@ export default function StudentDashboardPage() {
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
                   <GraduationCap className="w-4 h-4" />
-                  Department
+                  Department ({studentDept ? 1 : 0})
                 </div>
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
@@ -344,33 +344,6 @@ export default function StudentDashboardPage() {
                 <p className="text-xs text-gray-400 mt-1">Contact your administrator if this is unexpected.</p>
               </div>
             )}
-          </div>
-        </Card>
-
-        {/* Quick Actions */}
-        <Card padding="md">
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <Link href="/student/requirements">
-              <Button variant="secondary" className="w-full justify-start">
-                <FileText className="w-4 h-4 mr-2" />
-                View Requirements
-              </Button>
-            </Link>
-            <Link href="/student/department/submit">
-              <Button variant="ccisPrimary" className="w-full justify-start">
-                <ArrowRight className="w-4 h-4 mr-2" />
-                Submit Clearance
-              </Button>
-            </Link>
-            <Link href="/student/history">
-              <Button variant="secondary" className="w-full justify-start">
-                <Clock className="w-4 h-4 mr-2" />
-                View History
-              </Button>
-            </Link>
           </div>
         </Card>
 

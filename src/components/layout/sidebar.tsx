@@ -183,6 +183,7 @@ const studentNavSections: NavSection[] = [
     title: "Main",
     items: [
       { label: "Dashboard", href: "/student", icon: <LayoutDashboard className="w-5 h-5" /> },
+      { label: "History", href: "/student/history", icon: <History className="w-5 h-5" /> },
     ],
   },
   {

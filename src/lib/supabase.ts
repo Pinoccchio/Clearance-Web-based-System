@@ -1749,6 +1749,27 @@ export async function getClearanceItemsByOffice(
   return (data as ClearanceItemWithDetails[]) || [];
 }
 
+/** Fetch ALL clearance items for an office including pending (for dashboard stats) */
+export async function getAllClearanceItemsByOffice(
+  officeId: string
+): Promise<ClearanceItemWithDetails[]> {
+  const { data, error } = await supabase
+    .from('clearance_items')
+    .select(`
+      *,
+      request:clearance_requests(
+        *,
+        student:profiles(*)
+      )
+    `)
+    .eq('source_type', 'office')
+    .eq('source_id', officeId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data as ClearanceItemWithDetails[]) || [];
+}
+
 /** Fetch all clearance items for a club with nested request + student profile
  *  (excludes pending items - for clearance queue) */
 export async function getClearanceItemsByClub(
