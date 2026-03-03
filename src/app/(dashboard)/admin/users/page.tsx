@@ -26,6 +26,7 @@ import {
   UserX,
   Loader2,
   X,
+  FileSpreadsheet,
 } from "lucide-react";
 import {
   supabase,
@@ -36,6 +37,7 @@ import {
   Club,
 } from "@/lib/supabase";
 import { UserFormModal } from "@/components/features/UserFormModal";
+import { BatchImportModal } from "@/components/features/BatchImportModal";
 import { useToast } from "@/components/ui/Toast";
 
 interface UserWithStatus extends Profile {
@@ -60,6 +62,7 @@ export default function AdminUsersPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isBatchImportModalOpen, setIsBatchImportModalOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
   // Fetch users from Supabase
@@ -311,6 +314,10 @@ export default function AdminUsersPage() {
               onChange={(e) => setRoleFilter(e.target.value)}
             />
           </div>
+          <Button variant="secondary" onClick={() => setIsBatchImportModalOpen(true)}>
+            <FileSpreadsheet className="w-4 h-4" />
+            Import Excel
+          </Button>
           <Button variant="primary" onClick={handleAddUser}>
             <Plus className="w-4 h-4" />
             Add User
@@ -523,6 +530,13 @@ export default function AdminUsersPage() {
         onSuccess={handleModalSuccess}
         mode="edit"
         user={selectedUser || undefined}
+      />
+
+      {/* Batch Import Modal */}
+      <BatchImportModal
+        isOpen={isBatchImportModalOpen}
+        onClose={() => setIsBatchImportModalOpen(false)}
+        onSuccess={handleModalSuccess}
       />
 
       {/* Image Preview Modal */}

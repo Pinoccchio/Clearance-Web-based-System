@@ -2309,3 +2309,26 @@ export async function getProcessedClearanceItemsByClub(
   if (error) throw error;
   return (data as ClearanceItemWithDetails[]) || [];
 }
+
+// ==========================================
+// Password Reset Functions
+// ==========================================
+
+/**
+ * Send a password reset email to the user
+ * User will receive an email with a link to reset their password
+ */
+export async function sendPasswordResetEmail(email: string) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${typeof window !== 'undefined' ? window.location.origin : ''}/reset-password`,
+  });
+  if (error) throw error;
+}
+
+/**
+ * Update the current user's password (used after clicking reset link)
+ */
+export async function updateUserPassword(newPassword: string) {
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) throw error;
+}

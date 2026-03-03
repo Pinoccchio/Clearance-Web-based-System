@@ -67,11 +67,18 @@ function useInView(ref: RefObject<HTMLElement | null>, threshold = 0.1) {
 // Enhanced animated counter with overshoot easing
 function AnimatedCounter({ value, inView, className = "" }: { value: number; inView: boolean; className?: string }) {
   const [count, setCount] = useState(0);
-  const [hasAnimated, setHasAnimated] = useState(false);
+  const [animatedValue, setAnimatedValue] = useState<number | null>(null);
 
   useEffect(() => {
-    if (!inView || hasAnimated) return;
-    setHasAnimated(true);
+    // Only animate if in view AND value is different from what we last animated
+    if (!inView || value === animatedValue) return;
+    setAnimatedValue(value);
+
+    // If value is 0, just set it directly (no animation needed)
+    if (value === 0) {
+      setCount(0);
+      return;
+    }
 
     let startTime: number | null = null;
     const duration = 1500;
@@ -90,7 +97,7 @@ function AnimatedCounter({ value, inView, className = "" }: { value: number; inV
       if (progress < 1) requestAnimationFrame(animate);
     };
     requestAnimationFrame(animate);
-  }, [inView, value, hasAnimated]);
+  }, [inView, value, animatedValue]);
 
   return <span className={className}>{count}</span>;
 }
@@ -106,7 +113,7 @@ interface ClearanceSource {
 export default function LandingPage() {
   const router = useRouter();
   const { isAuthenticated, profile, isLoading } = useAuth();
-  const [authModal, setAuthModal] = useState<"login" | "register" | null>(null);
+  const [authModal, setAuthModal] = useState<"login" | null>(null);
 
   // Scroll state for navigation
   const [scrollY, setScrollY] = useState(0);
@@ -293,15 +300,9 @@ export default function LandingPage() {
               <div className="flex items-center gap-3">
                 <button
                   onClick={() => setAuthModal("login")}
-                  className="nav-link-animated text-sm font-medium text-cjc-navy/70 hover:text-cjc-navy transition-colors px-3 py-2"
-                >
-                  Sign In
-                </button>
-                <button
-                  onClick={() => setAuthModal("register")}
                   className="btn btn-ccis-blue btn-glow btn-magnetic text-sm"
                 >
-                  Get Started
+                  Sign In
                 </button>
               </div>
             </div>
@@ -357,12 +358,6 @@ export default function LandingPage() {
                   >
                     Access Portal
                     <ArrowRight className="w-4 h-4" />
-                  </button>
-                  <button
-                    onClick={() => setAuthModal("register")}
-                    className="btn btn-secondary text-base px-8 py-3.5"
-                  >
-                    Create Account
                   </button>
                 </div>
 
@@ -886,17 +881,11 @@ export default function LandingPage() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
-                onClick={() => setAuthModal("register")}
+                onClick={() => setAuthModal("login")}
                 className="btn bg-white text-ccis-blue-primary hover:bg-gray-100 text-base px-10 py-4 font-semibold"
               >
-                Create Your Account
+                Sign In to Get Started
                 <ArrowRight className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setAuthModal("login")}
-                className="btn btn-outline-white text-base px-10 py-4"
-              >
-                Sign In
               </button>
             </div>
           </div>
