@@ -101,7 +101,7 @@ export default function StudentDashboardPage() {
   const enrolledClubs = clubs.filter((c) => enrolledClubIds.includes(c.id));
 
   // Calculate stats
-  const clearedCount = items.filter((i) => i.status === "approved").length;
+  const approvedCount = items.filter((i) => i.status === "approved").length;
   const pendingReviewCount = items.filter((i) => i.status === "submitted").length;
   const rejectedCount = items.filter((i) => i.status === "rejected").length;
   const onHoldCount = items.filter((i) => i.status === "on_hold").length;
@@ -135,9 +135,9 @@ export default function StudentDashboardPage() {
     }
     switch (status) {
       case "submitted":
-        return <Badge variant="warning" size="sm">Pending Review</Badge>;
+        return <Badge variant="warning" size="sm">Submitted</Badge>;
       case "approved":
-        return <Badge variant="success" size="sm">Cleared</Badge>;
+        return <Badge variant="success" size="sm">Approved</Badge>;
       case "rejected":
         return <Badge variant="danger" size="sm">Rejected</Badge>;
       case "on_hold":
@@ -194,7 +194,7 @@ export default function StudentDashboardPage() {
   }
 
   // Calculate progress percentage
-  const progressPercent = totalSources > 0 ? Math.round((clearedCount / totalSources) * 100) : 0;
+  const progressPercent = totalSources > 0 ? Math.round((approvedCount / totalSources) * 100) : 0;
 
   return (
     <div className="min-h-screen bg-surface-warm">
@@ -228,8 +228,8 @@ export default function StudentDashboardPage() {
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="card p-4 text-center">
             <CheckCircle2 className="w-8 h-8 text-success mx-auto mb-2" />
-            <p className="text-2xl font-bold text-cjc-navy">{clearedCount}/{totalSources}</p>
-            <p className="text-sm text-warm-muted">Cleared</p>
+            <p className="text-2xl font-bold text-cjc-navy">{approvedCount}/{totalSources}</p>
+            <p className="text-sm text-warm-muted">Approved</p>
             {totalSources > 0 && (
               <div className="mt-2 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                 <div
@@ -242,7 +242,7 @@ export default function StudentDashboardPage() {
           <div className="card p-4 text-center">
             <Clock className="w-8 h-8 text-pending mx-auto mb-2" />
             <p className="text-2xl font-bold text-cjc-navy">{pendingReviewCount}</p>
-            <p className="text-sm text-warm-muted">Pending Review</p>
+            <p className="text-sm text-warm-muted">Awaiting Review</p>
           </div>
           <div className="card p-4 text-center">
             <AlertTriangle className="w-8 h-8 text-warning mx-auto mb-2" />

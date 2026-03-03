@@ -34,31 +34,39 @@ import {
   Department,
   Profile,
   ClearanceRequest,
+  ClearanceItem,
   getDepartmentByHeadId,
   getStudentsByDepartment,
   getClearanceRequestsByStudentIds,
+  getClearanceItemsBySourceAndRequests,
 } from "@/lib/supabase";
 import { formatDate } from "@/lib/utils";
 
-type ClearanceStatus = "cleared" | "pending" | "in_progress" | "rejected" | "none";
+type ClearanceStatus = "approved" | "pending" | "submitted" | "in_progress" | "rejected" | "on_hold" | "none";
 
 interface StudentWithClearance extends Profile {
   latestRequest: ClearanceRequest | null;
+  deptItem: ClearanceItem | null;
   clearanceStatus: ClearanceStatus;
 }
 
-function deriveStatus(request: ClearanceRequest | null): ClearanceStatus {
-  if (!request) return "none";
-  switch (request.status) {
+/**
+ * Derive status from the department's clearance item (not the overall request).
+ * This shows whether THIS department has approved the student's item.
+ */
+function deriveStatusFromItem(item: ClearanceItem | null): ClearanceStatus {
+  if (!item) return "none";
+  switch (item.status) {
     case "approved":
-    case "completed":
-      return "cleared";
+      return "approved";
+    case "submitted":
+      return "submitted";
     case "pending":
       return "pending";
-    case "in_progress":
-      return "in_progress";
     case "rejected":
       return "rejected";
+    case "on_hold":
+      return "on_hold";
     default:
       return "none";
   }
@@ -66,25 +74,32 @@ function deriveStatus(request: ClearanceRequest | null): ClearanceStatus {
 
 function ClearanceBadge({ status }: { status: ClearanceStatus }) {
   switch (status) {
-    case "cleared":
+    case "approved":
       return (
         <Badge variant="approved" size="sm">
           <CheckCircle className="w-3 h-3" />
-          Cleared
+          Approved
+        </Badge>
+      );
+    case "submitted":
+      return (
+        <Badge variant="pending" size="sm">
+          <Clock className="w-3 h-3" />
+          Submitted
         </Badge>
       );
     case "pending":
       return (
-        <Badge variant="pending" size="sm">
+        <Badge variant="neutral" size="sm">
           <Clock className="w-3 h-3" />
-          Pending
+          Not Started
         </Badge>
       );
-    case "in_progress":
+    case "on_hold":
       return (
         <Badge variant="warning" size="sm">
           <Clock className="w-3 h-3" />
-          In Progress
+          On Hold
         </Badge>
       );
     case "rejected":
@@ -106,9 +121,10 @@ function ClearanceBadge({ status }: { status: ClearanceStatus }) {
 
 const STATUS_OPTIONS = [
   { value: "", label: "All Status" },
-  { value: "cleared", label: "Cleared" },
-  { value: "pending", label: "Pending" },
-  { value: "in_progress", label: "In Progress" },
+  { value: "approved", label: "Approved" },
+  { value: "submitted", label: "Submitted" },
+  { value: "pending", label: "Not Started" },
+  { value: "on_hold", label: "On Hold" },
   { value: "rejected", label: "Rejected" },
   { value: "none", label: "No Request" },
 ];
@@ -159,13 +175,25 @@ export default function DepartmentStudentsPage() {
         }
       }
 
-      // 5. Build StudentWithClearance[]
+      // 5. Fetch department-specific clearance items for these requests
+      const requestIds = requests.map((r) => r.id);
+      const deptItems = await getClearanceItemsBySourceAndRequests('department', dept.id, requestIds);
+
+      // Map items by request_id for quick lookup
+      const itemByRequest = new Map<string, ClearanceItem>();
+      for (const item of deptItems) {
+        itemByRequest.set(item.request_id, item);
+      }
+
+      // 6. Build StudentWithClearance[] using department item status
       const enriched: StudentWithClearance[] = studentProfiles.map((s) => {
         const latestRequest = latestByStudent.get(s.id) ?? null;
+        const deptItem = latestRequest ? itemByRequest.get(latestRequest.id) ?? null : null;
         return {
           ...s,
           latestRequest,
-          clearanceStatus: deriveStatus(latestRequest),
+          deptItem,
+          clearanceStatus: deriveStatusFromItem(deptItem),
         };
       });
 
@@ -186,10 +214,9 @@ export default function DepartmentStudentsPage() {
 
   // --- Computed stats ---
   const totalCount = students.length;
-  const clearedCount = students.filter((s) => s.clearanceStatus === "cleared").length;
-  const pendingCount = students.filter(
-    (s) => s.clearanceStatus === "pending" || s.clearanceStatus === "in_progress"
-  ).length;
+  const approvedCount = students.filter((s) => s.clearanceStatus === "approved").length;
+  const submittedCount = students.filter((s) => s.clearanceStatus === "submitted").length;
+  const notStartedCount = students.filter((s) => s.clearanceStatus === "pending").length;
   const noRequestCount = students.filter((s) => s.clearanceStatus === "none").length;
 
   // --- Filtered list ---
@@ -221,7 +248,7 @@ export default function DepartmentStudentsPage() {
 
       <div className="p-6 space-y-6">
         {/* Stats Row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           <Card padding="sm" className="text-center">
             <p className="text-2xl font-bold text-cjc-navy">
               {isLoading ? "..." : totalCount}
@@ -230,15 +257,21 @@ export default function DepartmentStudentsPage() {
           </Card>
           <Card padding="sm" className="text-center">
             <p className="text-2xl font-bold text-green-600">
-              {isLoading ? "..." : clearedCount}
+              {isLoading ? "..." : approvedCount}
             </p>
-            <p className="text-sm text-gray-500">Cleared</p>
+            <p className="text-sm text-gray-500">Approved</p>
           </Card>
           <Card padding="sm" className="text-center">
-            <p className="text-2xl font-bold text-amber-600">
-              {isLoading ? "..." : pendingCount}
+            <p className="text-2xl font-bold text-blue-600">
+              {isLoading ? "..." : submittedCount}
             </p>
-            <p className="text-sm text-gray-500">Pending / In Progress</p>
+            <p className="text-sm text-gray-500">Submitted</p>
+          </Card>
+          <Card padding="sm" className="text-center">
+            <p className="text-2xl font-bold text-gray-600">
+              {isLoading ? "..." : notStartedCount}
+            </p>
+            <p className="text-sm text-gray-500">Not Started</p>
           </Card>
           <Card padding="sm" className="text-center">
             <p className="text-2xl font-bold text-gray-500">

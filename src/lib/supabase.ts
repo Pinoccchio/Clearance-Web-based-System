@@ -2331,6 +2331,28 @@ export async function getProcessedClearanceItemsByClub(
   return (data as ClearanceItemWithDetails[]) || [];
 }
 
+/**
+ * Get clearance items for a specific source (department/office/club) by student request IDs.
+ * Used by admin list pages to show the source-specific clearance status for each student.
+ */
+export async function getClearanceItemsBySourceAndRequests(
+  sourceType: 'department' | 'office' | 'club',
+  sourceId: string,
+  requestIds: string[]
+): Promise<ClearanceItem[]> {
+  if (requestIds.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from('clearance_items')
+    .select('*')
+    .eq('source_type', sourceType)
+    .eq('source_id', sourceId)
+    .in('request_id', requestIds);
+
+  if (error) throw error;
+  return data || [];
+}
+
 // ==========================================
 // Password Reset Functions
 // ==========================================

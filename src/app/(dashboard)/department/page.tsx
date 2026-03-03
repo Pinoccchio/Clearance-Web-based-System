@@ -205,9 +205,9 @@ export default function DepartmentDashboard() {
       case "cleared":
         return <Badge variant="success" size="sm"><CheckCircle2 className="w-3 h-3" /> Cleared</Badge>;
       case "pending":
-        return <Badge variant="warning" size="sm"><Clock className="w-3 h-3" /> Pending</Badge>;
+        return <Badge variant="neutral" size="sm"><Clock className="w-3 h-3" /> Not Started</Badge>;
       case "in_progress":
-        return <Badge variant="pending" size="sm"><Clock className="w-3 h-3" /> In Progress</Badge>;
+        return <Badge variant="warning" size="sm"><Clock className="w-3 h-3" /> In Progress</Badge>;
       case "rejected":
         return <Badge variant="danger" size="sm"><XCircle className="w-3 h-3" /> Rejected</Badge>;
       default:
@@ -290,16 +290,21 @@ export default function DepartmentDashboard() {
 
       <div className="p-6 space-y-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           <div className="card p-4 text-center">
             <Users className="w-8 h-8 text-cjc-blue mx-auto mb-2" />
             <p className="text-2xl font-bold text-cjc-navy">{stats.total}</p>
             <p className="text-sm text-warm-muted">Total Students</p>
           </div>
           <div className="card p-4 text-center">
-            <Clock className="w-8 h-8 text-pending mx-auto mb-2" />
-            <p className="text-2xl font-bold text-cjc-navy">{stats.pending + stats.inProgress}</p>
-            <p className="text-sm text-warm-muted">Pending</p>
+            <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+            <p className="text-2xl font-bold text-cjc-navy">{stats.pending}</p>
+            <p className="text-sm text-warm-muted">Not Started</p>
+          </div>
+          <div className="card p-4 text-center">
+            <Clock className="w-8 h-8 text-amber-500 mx-auto mb-2" />
+            <p className="text-2xl font-bold text-cjc-navy">{stats.inProgress}</p>
+            <p className="text-sm text-warm-muted">In Progress</p>
           </div>
           <div className="card p-4 text-center">
             <CheckCircle2 className="w-8 h-8 text-success mx-auto mb-2" />
@@ -326,7 +331,7 @@ export default function DepartmentDashboard() {
           <CardHeader>
             <CardTitle>Student Clearance Overview</CardTitle>
           </CardHeader>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
             <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
               <CheckCircle2 className="w-5 h-5 text-green-600" />
               <div>
@@ -334,11 +339,18 @@ export default function DepartmentDashboard() {
                 <p className="text-xs text-green-600">Cleared</p>
               </div>
             </div>
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+              <Clock className="w-5 h-5 text-gray-500" />
+              <div>
+                <p className="text-lg font-bold text-gray-700">{stats.pending}</p>
+                <p className="text-xs text-gray-500">Not Started</p>
+              </div>
+            </div>
             <div className="flex items-center gap-3 p-3 bg-amber-50 rounded-lg">
               <Clock className="w-5 h-5 text-amber-600" />
               <div>
-                <p className="text-lg font-bold text-amber-700">{stats.pending + stats.inProgress}</p>
-                <p className="text-xs text-amber-600">Pending</p>
+                <p className="text-lg font-bold text-amber-700">{stats.inProgress}</p>
+                <p className="text-xs text-amber-600">In Progress</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 bg-red-50 rounded-lg">
@@ -348,7 +360,7 @@ export default function DepartmentDashboard() {
                 <p className="text-xs text-red-600">Rejected</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg">
               <Users className="w-5 h-5 text-gray-500" />
               <div>
                 <p className="text-lg font-bold text-gray-700">{stats.noRequest}</p>

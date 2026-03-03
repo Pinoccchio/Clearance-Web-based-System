@@ -115,10 +115,10 @@ export default function ClearanceStatusView({
             badgeLabel = "Not Submitted";
           } else if (item.status === "submitted") {
             badgeVariant = "warning";
-            badgeLabel = "Pending Review";
+            badgeLabel = "Submitted";
           } else if (item.status === "approved") {
             badgeVariant = "success";
-            badgeLabel = "Cleared";
+            badgeLabel = "Approved";
           } else if (item.status === "rejected") {
             badgeVariant = "danger";
             badgeLabel = "Rejected";
@@ -176,10 +176,10 @@ export default function ClearanceStatusView({
                 </div>
               )}
 
-              {/* Cleared date */}
+              {/* Approved date */}
               {item?.status === "approved" && item.reviewed_at && (
                 <p className="text-xs text-gray-400 mt-1">
-                  Cleared on {formatDate(item.reviewed_at)}
+                  Approved on {formatDate(item.reviewed_at)}
                 </p>
               )}
             </Card>

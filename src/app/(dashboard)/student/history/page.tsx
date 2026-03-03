@@ -218,7 +218,7 @@ export default function StudentHistoryPage() {
                       Started {formatDate(request.created_at)}
                     </span>
                     <span className="text-xs text-gray-500">
-                      {approvedCount}/{total} cleared
+                      {approvedCount}/{total} approved
                     </span>
                   </div>
                   {isExpanded ? (

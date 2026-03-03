@@ -34,31 +34,39 @@ import {
   Club,
   Profile,
   ClearanceRequest,
+  ClearanceItem,
   getClubByAdviserId,
   getMembersByClub,
   getClearanceRequestsByStudentIds,
+  getClearanceItemsBySourceAndRequests,
 } from "@/lib/supabase";
 import { formatDate } from "@/lib/utils";
 
-type ClearanceStatus = "cleared" | "pending" | "in_progress" | "rejected" | "none";
+type ClearanceStatus = "approved" | "pending" | "submitted" | "in_progress" | "rejected" | "on_hold" | "none";
 
 interface MemberWithClearance extends Profile {
   latestRequest: ClearanceRequest | null;
+  clubItem: ClearanceItem | null;
   clearanceStatus: ClearanceStatus;
 }
 
-function deriveStatus(request: ClearanceRequest | null): ClearanceStatus {
-  if (!request) return "none";
-  switch (request.status) {
+/**
+ * Derive status from the club's clearance item (not the overall request).
+ * This shows whether THIS club has approved the member's item.
+ */
+function deriveStatusFromItem(item: ClearanceItem | null): ClearanceStatus {
+  if (!item) return "none";
+  switch (item.status) {
     case "approved":
-    case "completed":
-      return "cleared";
+      return "approved";
+    case "submitted":
+      return "submitted";
     case "pending":
       return "pending";
-    case "in_progress":
-      return "in_progress";
     case "rejected":
       return "rejected";
+    case "on_hold":
+      return "on_hold";
     default:
       return "none";
   }
@@ -66,25 +74,32 @@ function deriveStatus(request: ClearanceRequest | null): ClearanceStatus {
 
 function ClearanceBadge({ status }: { status: ClearanceStatus }) {
   switch (status) {
-    case "cleared":
+    case "approved":
       return (
         <Badge variant="approved" size="sm">
           <CheckCircle className="w-3 h-3" />
-          Cleared
+          Approved
+        </Badge>
+      );
+    case "submitted":
+      return (
+        <Badge variant="pending" size="sm">
+          <Clock className="w-3 h-3" />
+          Submitted
         </Badge>
       );
     case "pending":
       return (
-        <Badge variant="pending" size="sm">
+        <Badge variant="neutral" size="sm">
           <Clock className="w-3 h-3" />
-          Pending
+          Not Started
         </Badge>
       );
-    case "in_progress":
+    case "on_hold":
       return (
         <Badge variant="warning" size="sm">
           <Clock className="w-3 h-3" />
-          In Progress
+          On Hold
         </Badge>
       );
     case "rejected":
@@ -106,9 +121,10 @@ function ClearanceBadge({ status }: { status: ClearanceStatus }) {
 
 const STATUS_OPTIONS = [
   { value: "", label: "All Status" },
-  { value: "cleared", label: "Cleared" },
-  { value: "pending", label: "Pending" },
-  { value: "in_progress", label: "In Progress" },
+  { value: "approved", label: "Approved" },
+  { value: "submitted", label: "Submitted" },
+  { value: "pending", label: "Not Started" },
+  { value: "on_hold", label: "On Hold" },
   { value: "rejected", label: "Rejected" },
   { value: "none", label: "No Request" },
 ];
@@ -158,13 +174,25 @@ export default function ClubMembersPage() {
         }
       }
 
-      // 5. Build MemberWithClearance[]
+      // 5. Fetch club-specific clearance items for these requests
+      const requestIds = requests.map((r) => r.id);
+      const clubItems = await getClearanceItemsBySourceAndRequests('club', clubData.id, requestIds);
+
+      // Map items by request_id for quick lookup
+      const itemByRequest = new Map<string, ClearanceItem>();
+      for (const item of clubItems) {
+        itemByRequest.set(item.request_id, item);
+      }
+
+      // 6. Build MemberWithClearance[] using club item status
       const enriched: MemberWithClearance[] = memberProfiles.map((m) => {
         const latestRequest = latestByMember.get(m.id) ?? null;
+        const clubItem = latestRequest ? itemByRequest.get(latestRequest.id) ?? null : null;
         return {
           ...m,
           latestRequest,
-          clearanceStatus: deriveStatus(latestRequest),
+          clubItem,
+          clearanceStatus: deriveStatusFromItem(clubItem),
         };
       });
 
@@ -185,10 +213,9 @@ export default function ClubMembersPage() {
 
   // --- Computed stats ---
   const totalCount = members.length;
-  const clearedCount = members.filter((m) => m.clearanceStatus === "cleared").length;
-  const pendingCount = members.filter(
-    (m) => m.clearanceStatus === "pending" || m.clearanceStatus === "in_progress"
-  ).length;
+  const approvedCount = members.filter((m) => m.clearanceStatus === "approved").length;
+  const submittedCount = members.filter((m) => m.clearanceStatus === "submitted").length;
+  const notStartedCount = members.filter((m) => m.clearanceStatus === "pending").length;
   const noRequestCount = members.filter((m) => m.clearanceStatus === "none").length;
 
   // --- Filtered list ---
@@ -225,7 +252,7 @@ export default function ClubMembersPage() {
 
       <div className="p-6 space-y-6">
         {/* Stats Row */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           <Card padding="sm" className="text-center">
             <p className="text-2xl font-bold text-cjc-navy">
               {isLoading ? "..." : totalCount}
@@ -234,15 +261,21 @@ export default function ClubMembersPage() {
           </Card>
           <Card padding="sm" className="text-center">
             <p className="text-2xl font-bold text-green-600">
-              {isLoading ? "..." : clearedCount}
+              {isLoading ? "..." : approvedCount}
             </p>
-            <p className="text-sm text-gray-500">Cleared</p>
+            <p className="text-sm text-gray-500">Approved</p>
           </Card>
           <Card padding="sm" className="text-center">
-            <p className="text-2xl font-bold text-amber-600">
-              {isLoading ? "..." : pendingCount}
+            <p className="text-2xl font-bold text-blue-600">
+              {isLoading ? "..." : submittedCount}
             </p>
-            <p className="text-sm text-gray-500">Pending / In Progress</p>
+            <p className="text-sm text-gray-500">Submitted</p>
+          </Card>
+          <Card padding="sm" className="text-center">
+            <p className="text-2xl font-bold text-gray-600">
+              {isLoading ? "..." : notStartedCount}
+            </p>
+            <p className="text-sm text-gray-500">Not Started</p>
           </Card>
           <Card padding="sm" className="text-center">
             <p className="text-2xl font-bold text-gray-500">
