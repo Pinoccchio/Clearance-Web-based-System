@@ -492,11 +492,10 @@ export default function SubmitView({
                 item?.status === 'approved' ||
                 submittedSources.has(source.id);
 
-              const isRejectedOrOnHold =
-                item?.status === 'rejected' ||
-                item?.status === 'on_hold';
+              const isRejected = item?.status === 'rejected';
+              const isOnHold = item?.status === 'on_hold';
 
-              const isAlreadySubmitted = isLocked || isRejectedOrOnHold;
+              const isAlreadySubmitted = isLocked || isRejected || isOnHold;
 
               return (
               <div className="border-t border-gray-100">
@@ -737,38 +736,56 @@ export default function SubmitView({
                 )}
                 {item && (
                   <div className="border-t border-gray-100">
-                    {isRejectedOrOnHold ? (
+                    {isOnHold ? (
+                      /* On Hold: Student can resubmit online with corrections */
                       <div className="px-5 py-4 space-y-3">
                         {item.remarks && (
-                          <div className={`flex items-start gap-2 p-3 rounded-lg border ${
-                            item.status === 'on_hold'
-                              ? 'bg-yellow-50 border-yellow-200'
-                              : 'bg-red-50 border-red-200'
-                          }`}>
-                            <AlertCircle className={`w-4 h-4 flex-shrink-0 mt-0.5 ${
-                              item.status === 'on_hold' ? 'text-yellow-500' : 'text-red-500'
-                            }`} />
+                          <div className="flex items-start gap-2 p-3 rounded-lg border bg-yellow-50 border-yellow-200">
+                            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-yellow-500" />
                             <div>
-                              <p className={`text-xs font-semibold ${
-                                item.status === 'on_hold' ? 'text-yellow-700' : 'text-red-700'
-                              }`}>
-                                {item.status === 'rejected' ? 'Rejected' : 'On Hold'} — Remarks from Reviewer
+                              <p className="text-xs font-semibold text-yellow-700">
+                                On Hold — Remarks from Reviewer
                               </p>
-                              <p className={`text-xs mt-0.5 ${
-                                item.status === 'on_hold' ? 'text-yellow-600' : 'text-red-600'
-                              }`}>{item.remarks}</p>
+                              <p className="text-xs mt-0.5 text-yellow-600">{item.remarks}</p>
                             </div>
                           </div>
                         )}
                         <div className="flex items-center justify-between gap-4">
                           <p className="text-xs text-gray-500">
-                            {item.status === 'on_hold'
-                              ? !allUploaded
-                                ? "Follow the remarks above, then upload required files before resubmitting."
-                                : !allRequiredChecked
-                                ? "Follow the remarks above, then confirm all required items before resubmitting."
-                                : "Complete any steps in the remarks above, then resubmit when ready."
-                              : !allUploaded
+                            {!allUploaded
+                              ? "Upload all required files before resubmitting."
+                              : !allRequiredChecked
+                              ? "Confirm all required items before resubmitting."
+                              : "Address the remarks above, then resubmit."}
+                          </p>
+                          <Button
+                            variant="primary"
+                            size="sm"
+                            disabled={!isReady || submittingSource === source.id}
+                            isLoading={submittingSource === source.id}
+                            onClick={() => setPendingSubmit({ sourceId: source.id, item })}
+                          >
+                            Resubmit for Review
+                          </Button>
+                        </div>
+                      </div>
+                    ) : isRejected ? (
+                      /* Rejected: Student can resubmit online with corrections */
+                      <div className="px-5 py-4 space-y-3">
+                        {item.remarks && (
+                          <div className="flex items-start gap-2 p-3 rounded-lg border bg-red-50 border-red-200">
+                            <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5 text-red-500" />
+                            <div>
+                              <p className="text-xs font-semibold text-red-700">
+                                Rejected — Remarks from Reviewer
+                              </p>
+                              <p className="text-xs mt-0.5 text-red-600">{item.remarks}</p>
+                            </div>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between gap-4">
+                          <p className="text-xs text-gray-500">
+                            {!allUploaded
                               ? "Upload all required files before resubmitting."
                               : !allRequiredChecked
                               ? "Confirm all required items before resubmitting."
@@ -840,7 +857,7 @@ export default function SubmitView({
       }
       message={
         pendingSubmit?.item?.status === 'rejected' || pendingSubmit?.item?.status === 'on_hold'
-          ? "You are resubmitting after the department's review. Make sure you've addressed the remarks before continuing."
+          ? "You are resubmitting after the reviewer's feedback. Make sure you've addressed the remarks before continuing."
           : "Once submitted, your clearance request enters the review queue. Make sure all required documents are correct before continuing."
       }
       confirmText={

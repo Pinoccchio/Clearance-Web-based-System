@@ -1,16 +1,16 @@
 "use client";
 
 import { CheckCircle2, Clock, PauseCircle, FileText, Building2 } from "lucide-react";
-import { mockUsers } from "@/lib/mock-data";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function OfficeDashboard() {
-  const user = mockUsers.office;
+  const { orgName, profile } = useAuth();
 
   return (
     <div className="min-h-screen bg-surface-warm">
       <header className="bg-white border-b border-border-warm">
         <div className="px-6 py-5">
-          <p className="text-sm text-warm-muted">{user.department}</p>
+          <p className="text-sm text-warm-muted">{orgName ?? "Office"}</p>
           <h1 className="text-2xl font-display font-bold text-cjc-navy">
             Office Dashboard
           </h1>
@@ -51,8 +51,8 @@ export default function OfficeDashboard() {
             This is a placeholder - full functionality coming soon.
           </p>
           <div className="flex flex-wrap gap-2 justify-center text-sm text-warm-muted">
-            <span className="px-3 py-1 bg-surface-warm rounded-full">{user.department}</span>
-            <span className="px-3 py-1 bg-surface-warm rounded-full">{user.position}</span>
+            <span className="px-3 py-1 bg-surface-warm rounded-full">{orgName ?? "Office"}</span>
+            <span className="px-3 py-1 bg-surface-warm rounded-full">{profile?.role === "office" ? "Office Head" : "Staff"}</span>
           </div>
         </div>
       </div>

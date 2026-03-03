@@ -154,10 +154,25 @@ export default function ClearanceStatusView({
                 </div>
               </div>
 
-              {/* Rejected / on-hold remarks */}
-              {(item?.status === "rejected" || item?.status === "on_hold") && item.remarks && (
+              {/* Rejected remarks */}
+              {item?.status === "rejected" && item.remarks && (
                 <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700">
                   <span className="font-semibold">Remarks: </span>{item.remarks}
+                </div>
+              )}
+
+              {/* On Hold - requires office visit */}
+              {item?.status === "on_hold" && (
+                <div className="mt-2 space-y-2">
+                  {item.remarks && (
+                    <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-xs text-yellow-700">
+                      <span className="font-semibold">Remarks: </span>{item.remarks}
+                    </div>
+                  )}
+                  <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700">
+                    <span className="font-semibold">Action Required: </span>
+                    Please visit the office to resolve this item. Online resubmission is not available.
+                  </div>
                 </div>
               )}
 

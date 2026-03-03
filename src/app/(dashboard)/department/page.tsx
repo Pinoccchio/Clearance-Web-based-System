@@ -1,16 +1,16 @@
 "use client";
 
 import { CheckCircle2, Clock, Users, TrendingUp, GraduationCap } from "lucide-react";
-import { mockUsers } from "@/lib/mock-data";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function DepartmentDashboard() {
-  const user = mockUsers.department;
+  const { orgName, profile } = useAuth();
 
   return (
     <div className="min-h-screen bg-surface-warm">
       <header className="bg-white border-b border-border-warm">
         <div className="px-6 py-5">
-          <p className="text-sm text-warm-muted">{user.department}</p>
+          <p className="text-sm text-warm-muted">{orgName ?? "Department"}</p>
           <h1 className="text-2xl font-display font-bold text-cjc-navy">
             Department Dashboard
           </h1>
@@ -51,8 +51,8 @@ export default function DepartmentDashboard() {
             This is a placeholder - full functionality coming soon.
           </p>
           <div className="flex flex-wrap gap-2 justify-center text-sm text-warm-muted">
-            <span className="px-3 py-1 bg-surface-warm rounded-full">{user.department}</span>
-            <span className="px-3 py-1 bg-surface-warm rounded-full">{user.position}</span>
+            <span className="px-3 py-1 bg-surface-warm rounded-full">{orgName ?? "Department"}</span>
+            <span className="px-3 py-1 bg-surface-warm rounded-full">{profile?.role === "department" ? "Department Head" : "Staff"}</span>
           </div>
         </div>
       </div>

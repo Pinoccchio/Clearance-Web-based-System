@@ -2,11 +2,11 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { CheckSquare, Plus, Pencil, Trash2, X, Check, ExternalLink, Eye, EyeOff } from "lucide-react";
+import { RequirementFormModal } from "@/components/features/RequirementFormModal";
 import { useAuth } from "@/contexts/auth-context";
 import {
   getOfficeByHeadId,
   getRequirementsBySource,
-  createRequirement,
   updateRequirement,
   deleteRequirement,
   replaceRequirementLinks,
@@ -42,11 +42,8 @@ export default function OfficeRequirementsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Add form state
-  const [showAddForm, setShowAddForm] = useState(false);
-  const [addForm, setAddForm] = useState<RequirementFormData>(emptyForm);
-  const [addNameError, setAddNameError] = useState<string | null>(null);
-  const [isAdding, setIsAdding] = useState(false);
+  // Add modal state
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // Edit state
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -88,44 +85,6 @@ export default function OfficeRequirementsPage() {
   }, [loadData]);
 
   useRealtimeRefresh('requirements', loadData);
-
-  async function handleAdd() {
-    if (!addForm.name.trim()) {
-      setAddNameError("Requirement name is required");
-      return;
-    }
-    if (!office) return;
-    setAddNameError(null);
-    setIsAdding(true);
-    try {
-      const nextOrder = requirements.length > 0
-        ? Math.max(...requirements.map(r => r.order)) + 1
-        : 0;
-      const created = await createRequirement({
-        source_type: "office",
-        source_id: office.id,
-        name: addForm.name.trim(),
-        description: addForm.description.trim() || undefined,
-        is_required: addForm.is_required,
-        requires_upload: addForm.requires_upload,
-        order: nextOrder,
-      });
-      // Save links to requirement_links table
-      const validLinks = addForm.links.filter(l => l.url.trim());
-      if (validLinks.length > 0) {
-        await replaceRequirementLinks(created.id, validLinks.map((l, i) => ({ url: l.url.trim(), label: l.label.trim() || undefined, order: i })));
-      }
-      setRequirements(prev => [...prev, { ...created, links: validLinks.map((l, i) => ({ id: '', requirement_id: created.id, url: l.url.trim(), label: l.label.trim() || null, order: i, created_at: '' })) }]);
-      setAddForm(emptyForm);
-      setShowAddForm(false);
-      showToast("success", "Requirement Added", `"${created.name}" has been added.`);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to add requirement";
-      showToast("error", "Error", msg);
-    } finally {
-      setIsAdding(false);
-    }
-  }
 
   function startEdit(req: Requirement) {
     setEditingId(req.id);
@@ -278,11 +237,7 @@ export default function OfficeRequirementsPage() {
               </button>
             )}
             <button
-              onClick={() => {
-                setShowAddForm(true);
-                setAddForm(emptyForm);
-                setAddNameError(null);
-              }}
+              onClick={() => setIsAddModalOpen(true)}
               className="flex items-center gap-2 px-4 py-2 bg-ccis-blue-primary text-white rounded-lg hover:bg-ccis-blue transition-colors text-sm font-medium"
             >
               <Plus className="w-4 h-4" />
@@ -293,117 +248,6 @@ export default function OfficeRequirementsPage() {
       </header>
 
       <div className="p-6 space-y-4">
-        {/* Add Form */}
-        {showAddForm && (
-          <div className="card p-5">
-            <h3 className="font-semibold text-cjc-navy mb-4">New Requirement</h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-cjc-navy mb-1.5">
-                  Name <span className="text-red-500">*</span>
-                </label>
-                <input
-                  type="text"
-                  value={addForm.name}
-                  onChange={e => setAddForm(prev => ({ ...prev, name: e.target.value }))}
-                  className="input-base"
-                  placeholder="e.g., Clear library dues"
-                  autoFocus
-                />
-                {addNameError && (
-                  <p className="mt-1 text-xs text-red-500">{addNameError}</p>
-                )}
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-cjc-navy mb-1.5">
-                  Description <span className="text-warm-muted font-normal">(optional)</span>
-                </label>
-                <textarea
-                  value={addForm.description}
-                  onChange={e => setAddForm(prev => ({ ...prev, description: e.target.value }))}
-                  className="input-base resize-none"
-                  rows={2}
-                  placeholder="Additional notes shown to students"
-                />
-              </div>
-              <div className="flex items-center gap-3">
-                <input
-                  id="add-is-required"
-                  type="checkbox"
-                  checked={addForm.is_required}
-                  onChange={e => setAddForm(prev => ({ ...prev, is_required: e.target.checked }))}
-                  className="w-4 h-4 rounded border-gray-300 text-ccis-blue-primary focus:ring-ccis-blue-primary"
-                />
-                <label htmlFor="add-is-required" className="text-sm font-medium text-cjc-navy">
-                  Mark as required
-                </label>
-              </div>
-              <div className="flex items-center gap-3">
-                <input
-                  id="add-requires-upload"
-                  type="checkbox"
-                  checked={addForm.requires_upload}
-                  onChange={e => setAddForm(prev => ({ ...prev, requires_upload: e.target.checked }))}
-                  className="w-4 h-4 rounded border-gray-300 text-ccis-blue-primary focus:ring-ccis-blue-primary"
-                />
-                <label htmlFor="add-requires-upload" className="text-sm font-medium text-cjc-navy">
-                  Requires file upload
-                </label>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-cjc-navy mb-1.5">
-                  Links <span className="text-warm-muted font-normal">(optional)</span>
-                </label>
-                <div className="space-y-2">
-                  {addForm.links.map((link, i) => (
-                    <div key={i} className="border border-gray-200 rounded-lg p-3 space-y-2 bg-gray-50">
-                      <div className="flex items-center justify-between gap-2">
-                        <input type="text" value={link.label}
-                          onChange={e => setAddForm(prev => { const links = [...prev.links]; links[i] = { ...links[i], label: e.target.value }; return { ...prev, links }; })}
-                          className="input-base flex-1 font-medium" placeholder="Link name (e.g. Open Evaluation Form)" />
-                        <button type="button" onClick={() => setAddForm(prev => ({ ...prev, links: prev.links.filter((_, j) => j !== i) }))}
-                          className="p-1.5 text-gray-400 hover:text-red-500 transition-colors flex-shrink-0" title="Remove link">
-                          <X className="w-4 h-4" />
-                        </button>
-                      </div>
-                      <input type="url" value={link.url}
-                        onChange={e => setAddForm(prev => { const links = [...prev.links]; links[i] = { ...links[i], url: e.target.value }; return { ...prev, links }; })}
-                        className="input-base w-full text-sm text-gray-500" placeholder="https://example.com/form" />
-                    </div>
-                  ))}
-                  <button type="button"
-                    onClick={() => setAddForm(prev => ({ ...prev, links: [...prev.links, { url: "", label: "" }] }))}
-                    className="flex items-center gap-1.5 text-xs text-ccis-blue-primary hover:text-ccis-blue font-medium transition-colors">
-                    <Plus className="w-3.5 h-3.5" />
-                    Add Link
-                  </button>
-                </div>
-              </div>
-            </div>
-            <div className="flex gap-3 mt-4">
-              <button
-                onClick={handleAdd}
-                disabled={isAdding}
-                className="flex items-center gap-2 px-4 py-2 bg-ccis-blue-primary text-white rounded-lg hover:bg-ccis-blue transition-colors text-sm font-medium disabled:opacity-50"
-              >
-                {isAdding ? (
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <Plus className="w-4 h-4" />
-                )}
-                Add
-              </button>
-              <button
-                onClick={() => setShowAddForm(false)}
-                className="flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-600 rounded-lg hover:bg-gray-50 transition-colors text-sm"
-              >
-                <X className="w-4 h-4" />
-                Cancel
-              </button>
-            </div>
-          </div>
-        )}
-
         {/* Requirements Table */}
         <div className="card overflow-hidden">
           {requirements.length === 0 ? (
@@ -416,11 +260,7 @@ export default function OfficeRequirementsPage() {
                 Add requirements students must complete for office clearance.
               </p>
               <button
-                onClick={() => {
-                  setShowAddForm(true);
-                  setAddForm(emptyForm);
-                  setAddNameError(null);
-                }}
+                onClick={() => setIsAddModalOpen(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-ccis-blue-primary text-white rounded-lg hover:bg-ccis-blue transition-colors text-sm font-medium mx-auto"
               >
                 <Plus className="w-4 h-4" />
@@ -669,6 +509,21 @@ export default function OfficeRequirementsPage() {
         isLoading={isDeleting}
         variant="danger"
       />
+
+      {/* Add Requirement Modal */}
+      {office && (
+        <RequirementFormModal
+          isOpen={isAddModalOpen}
+          onClose={() => setIsAddModalOpen(false)}
+          onSuccess={() => {
+            setIsAddModalOpen(false);
+            loadData();
+          }}
+          sourceType="office"
+          sourceId={office.id}
+          existingRequirements={requirements}
+        />
+      )}
     </div>
   );
 }
