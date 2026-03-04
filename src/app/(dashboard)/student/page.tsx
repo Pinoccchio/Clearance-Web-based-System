@@ -14,6 +14,7 @@ import {
   RefreshCw,
   FileText,
   AlertTriangle,
+  Info,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -100,11 +101,26 @@ export default function StudentDashboardPage() {
     : [];
   const enrolledClubs = clubs.filter((c) => enrolledClubIds.includes(c.id));
 
-  // Calculate stats
-  const approvedCount = items.filter((i) => i.status === "approved").length;
-  const pendingReviewCount = items.filter((i) => i.status === "submitted").length;
-  const rejectedCount = items.filter((i) => i.status === "rejected").length;
-  const onHoldCount = items.filter((i) => i.status === "on_hold").length;
+  // Filter items to current period only
+  const currentItems = items.filter(
+    (i) =>
+      i.request?.academic_year === settings?.academic_year &&
+      i.request?.semester === settings?.current_semester
+  );
+
+  // Check for old incomplete clearance requests
+  const hasOldIncomplete = items.some(
+    (i) =>
+      (i.request?.academic_year !== settings?.academic_year ||
+        i.request?.semester !== settings?.current_semester) &&
+      (i.request?.status === "pending" || i.request?.status === "in_progress")
+  );
+
+  // Calculate stats from current period items only
+  const approvedCount = currentItems.filter((i) => i.status === "approved").length;
+  const pendingReviewCount = currentItems.filter((i) => i.status === "submitted").length;
+  const rejectedCount = currentItems.filter((i) => i.status === "rejected").length;
+  const onHoldCount = currentItems.filter((i) => i.status === "on_hold").length;
   const actionRequiredCount = rejectedCount + onHoldCount;
 
   // Total sources: 1 department + all offices + enrolled clubs
@@ -122,9 +138,9 @@ export default function StudentDashboardPage() {
     sourceNameMap[`club:${c.id}`] = c.name;
   }
 
-  // Group items by source_type for display
+  // Group items by source_type for display (current period only)
   const getItemsForSource = (sourceType: string, sourceId: string) => {
-    return items.find(
+    return currentItems.find(
       (i) => i.source_type === sourceType && i.source_id === sourceId
     );
   };
@@ -255,6 +271,19 @@ export default function StudentDashboardPage() {
             <p className="text-sm text-warm-muted">Total Sources</p>
           </div>
         </div>
+
+        {/* Old period notice */}
+        {hasOldIncomplete && (
+          <div className="flex items-start gap-3 p-4 rounded-lg bg-blue-50 border border-blue-200">
+            <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-blue-700">
+              You have incomplete clearance from a previous period.{" "}
+              <Link href="/student/history" className="font-medium underline hover:text-blue-900">
+                Check your history for details
+              </Link>.
+            </p>
+          </div>
+        )}
 
         {/* Clearance Status Section */}
         <Card padding="md">

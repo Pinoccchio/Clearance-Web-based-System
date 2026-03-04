@@ -1,3 +1,4 @@
+y
 -- Migration: Replace file_url (text) with file_urls (text[]) on requirement_submissions
 -- Run this in the Supabase SQL editor or via supabase db push
 

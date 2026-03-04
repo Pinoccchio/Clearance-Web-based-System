@@ -12,8 +12,10 @@ import { useAuth } from "@/contexts/auth-context";
 import {
   getSystemSettings,
   updateSystemSettings,
+  countActiveRequestsForPeriod,
   SystemSettings,
 } from "@/lib/supabase";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { cn } from "@/lib/utils";
 
 // ── Inline toggle component ──────────────────────────────────────────────────
@@ -70,6 +72,10 @@ export default function AdminSettingsPage() {
   const [settings, setSettings] = useState<SystemSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Transition warning state
+  const [activeRequestCount, setActiveRequestCount] = useState<number>(0);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+
   // Tab 1 — Academic Period
   const [academicForm, setAcademicForm] = useState({
     academic_year: "",
@@ -101,6 +107,13 @@ export default function AdminSettingsPage() {
             semester_deadline: data.semester_deadline ?? "",
             allow_semester_clearance: data.allow_semester_clearance,
           });
+          // Fetch active request count for current period
+          try {
+            const count = await countActiveRequestsForPeriod(data.academic_year, data.current_semester);
+            setActiveRequestCount(count);
+          } catch {
+            // Non-critical, default to 0
+          }
         }
       } catch (err) {
         console.error("Failed to load settings:", err);
@@ -114,7 +127,21 @@ export default function AdminSettingsPage() {
   }, []);
 
   // ── Save Academic Period ───────────────────────────────────────────────────
-  async function saveAcademic() {
+  function saveAcademic() {
+    if (!settings || !user) return;
+    // Check if values actually changed
+    const periodChanged =
+      academicForm.academic_year !== settings.academic_year ||
+      academicForm.current_semester !== settings.current_semester;
+
+    if (periodChanged && activeRequestCount > 0) {
+      setIsConfirmOpen(true);
+      return;
+    }
+    doSaveAcademic();
+  }
+
+  async function doSaveAcademic() {
     if (!settings || !user) return;
     setIsSavingAcademic(true);
     try {
@@ -127,6 +154,13 @@ export default function AdminSettingsPage() {
         user.id
       );
       setSettings(updated);
+      // Refresh active request count for new period
+      try {
+        const count = await countActiveRequestsForPeriod(updated.academic_year, updated.current_semester);
+        setActiveRequestCount(count);
+      } catch {
+        // Non-critical
+      }
       showToast("success", "Settings saved", "Academic period has been updated.");
     } catch (err) {
       console.error("Save academic failed:", err);
@@ -260,6 +294,12 @@ export default function AdminSettingsPage() {
                 <p className="text-sm text-blue-700">
                   Changing the academic period affects all <strong>new</strong> clearance requests.
                   Existing requests keep their original period and are not touched.
+                  {activeRequestCount > 0 && (
+                    <>
+                      {" "}There {activeRequestCount === 1 ? "is" : "are"} currently{" "}
+                      <strong>{activeRequestCount}</strong> active request{activeRequestCount !== 1 ? "s" : ""} for this period.
+                    </>
+                  )}
                 </p>
               </div>
 
@@ -401,6 +441,21 @@ export default function AdminSettingsPage() {
 
         </Tabs>
       </div>
+
+      <ConfirmDialog
+        isOpen={isConfirmOpen}
+        onClose={() => setIsConfirmOpen(false)}
+        onConfirm={() => {
+          setIsConfirmOpen(false);
+          doSaveAcademic();
+        }}
+        title="Change Academic Period?"
+        message={`There ${activeRequestCount === 1 ? "is" : "are"} ${activeRequestCount} active clearance request${activeRequestCount !== 1 ? "s" : ""} for ${settings?.current_semester}, A.Y. ${settings?.academic_year}. These requests will remain in the system as historical records but will no longer appear as active for students. Students will need to start new clearance requests for the new period.`}
+        confirmText="Change Period"
+        cancelText="Cancel"
+        variant="warning"
+        isLoading={isSavingAcademic}
+      />
     </div>
   );
 }

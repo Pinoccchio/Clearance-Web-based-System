@@ -6,7 +6,6 @@ import {
   NonAcademicOrganization,
   ClearanceRequest,
   Announcement,
-  Notification,
   ActivityLog,
 } from "./types";
 
@@ -454,39 +453,6 @@ export const announcements: Announcement[] = [
     author: "IT Department",
     priority: "normal",
     createdAt: "2024-01-16T16:00:00Z",
-  },
-];
-
-export const notifications: Notification[] = [
-  {
-    id: "notif_001",
-    userId: "usr_001",
-    title: "Clearance Approved",
-    message: "Your Library clearance has been approved by Mrs. Santos.",
-    type: "success",
-    isRead: false,
-    createdAt: "2024-01-15T10:30:00Z",
-    link: "/student/clearance/clr_001",
-  },
-  {
-    id: "notif_002",
-    userId: "usr_001",
-    title: "Action Required",
-    message: "Please submit your exit interview form to the Guidance Office.",
-    type: "warning",
-    isRead: false,
-    createdAt: "2024-01-14T14:00:00Z",
-    link: "/student/clearance/clr_001",
-  },
-  {
-    id: "notif_003",
-    userId: "usr_001",
-    title: "Finance Clearance Approved",
-    message: "Your Finance Office clearance has been approved by Mr. Reyes.",
-    type: "success",
-    isRead: true,
-    createdAt: "2024-01-16T14:20:00Z",
-    link: "/student/clearance/clr_001",
   },
 ];
 

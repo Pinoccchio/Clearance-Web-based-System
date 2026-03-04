@@ -13,10 +13,12 @@ import {
   ClearanceRequest,
   ClearanceItem,
   Requirement,
+  SystemSettings,
   getDepartmentByCode,
   getStudentClearanceRequests,
   getClearanceItemForRequest,
   getRequirementsBySource,
+  getSystemSettings,
 } from "@/lib/supabase";
 
 export default function DepartmentClearancePage() {
@@ -24,6 +26,7 @@ export default function DepartmentClearancePage() {
   const { showToast } = useToast();
 
   const [dept, setDept] = useState<Department | null>(null);
+  const [systemSettings, setSystemSettings] = useState<SystemSettings | null>(null);
   const [activeRequest, setActiveRequest] = useState<ClearanceRequest | null>(null);
   const [clearanceItem, setClearanceItem] = useState<ClearanceItem | null>(null);
   const [requirementCount, setRequirementCount] = useState(0);
@@ -32,14 +35,21 @@ export default function DepartmentClearancePage() {
   const loadData = useCallback(async () => {
     if (!profile?.department) return;
     try {
-      const [d, requests] = await Promise.all([
+      const [d, requests, sys] = await Promise.all([
         getDepartmentByCode(profile.department),
         getStudentClearanceRequests(profile.id),
+        getSystemSettings(),
       ]);
 
       setDept(d);
+      setSystemSettings(sys);
 
-      const active = requests.find((r) => r.status === "pending" || r.status === "in_progress") ?? null;
+      const active = requests.find(
+        (r) =>
+          (r.status === "pending" || r.status === "in_progress" || r.status === "completed") &&
+          r.academic_year === sys?.academic_year &&
+          r.semester === sys?.current_semester
+      ) ?? null;
       setActiveRequest(active);
 
       if (d) {

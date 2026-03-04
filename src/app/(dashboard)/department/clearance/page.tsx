@@ -38,11 +38,15 @@ import {
   Requirement,
   ClearanceItemWithDetails,
   SubmissionWithRequirement,
+  SystemSettings,
+  DistinctPeriod,
   getDepartmentByHeadId,
   getClearanceItemsByDepartment,
   updateClearanceItem,
   getSubmissionsByItem,
   getRequirementsBySource,
+  getSystemSettings,
+  getDistinctPeriods,
 } from "@/lib/supabase";
 import { formatDate } from "@/lib/utils";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -121,6 +125,7 @@ export default function DepartmentClearancePage() {
   const { showToast } = useToast();
 
   const [department, setDepartment] = useState<Department | null>(null);
+  const [systemSettings, setSystemSettings] = useState<SystemSettings | null>(null);
   const [items, setItems] = useState<ClearanceItemWithDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -139,6 +144,8 @@ export default function DepartmentClearancePage() {
   // Filters
   const [statusFilter, setStatusFilter] = useState("all");
   const [search, setSearch] = useState("");
+  const [periodFilter, setPeriodFilter] = useState("");
+  const [distinctPeriods, setDistinctPeriods] = useState<DistinctPeriod[]>([]);
 
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
 
@@ -151,7 +158,20 @@ export default function DepartmentClearancePage() {
     setIsLoading(true);
     setError(null);
     try {
-      const dept = await getDepartmentByHeadId(profile.id);
+      const [dept, settings] = await Promise.all([
+        getDepartmentByHeadId(profile.id),
+        getSystemSettings(),
+      ]);
+      setSystemSettings(settings);
+
+      const periods = await getDistinctPeriods(
+        settings ? { academic_year: settings.academic_year, semester: settings.current_semester } : undefined
+      );
+      setDistinctPeriods(periods);
+
+      const currentKey = settings ? `${settings.academic_year}|${settings.current_semester}` : "";
+      setPeriodFilter((prev) => (prev === "" ? currentKey : prev));
+
       if (!dept) {
         setError("Your department could not be found.");
         setItems([]);
@@ -201,8 +221,18 @@ export default function DepartmentClearancePage() {
       .finally(() => setIsLoadingSubmissions(false));
   }, [selectedItem, showToast]);
 
+  // Period-filtered items
+  const [filterYear, filterSemester] = periodFilter.split("|");
+  const periodFiltered = periodFilter
+    ? items.filter(
+        (i) =>
+          i.request?.academic_year === filterYear &&
+          i.request?.semester === filterSemester
+      )
+    : [];
+
   // Filtered items
-  const filtered = items.filter((item) => {
+  const filtered = periodFiltered.filter((item) => {
     const student = item.request?.student;
     const fullName = student
       ? `${student.first_name} ${student.last_name}`.toLowerCase()
@@ -277,6 +307,24 @@ export default function DepartmentClearancePage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               leftIcon={<Search className="w-4 h-4" />}
+            />
+          </div>
+          <div className="w-64">
+            <Select
+              options={[
+                ...distinctPeriods.map((p) => {
+                  const key = `${p.academic_year}|${p.semester}`;
+                  const isCurrent = systemSettings &&
+                    p.academic_year === systemSettings.academic_year &&
+                    p.semester === systemSettings.current_semester;
+                  return {
+                    value: key,
+                    label: isCurrent ? `${p.academic_year} — ${p.semester} (Current)` : `${p.academic_year} — ${p.semester}`,
+                  };
+                }),
+              ]}
+              value={periodFilter}
+              onChange={(e) => setPeriodFilter(e.target.value)}
             />
           </div>
           <div className="w-48">

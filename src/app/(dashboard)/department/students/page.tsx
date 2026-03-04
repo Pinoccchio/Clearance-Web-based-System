@@ -37,10 +37,14 @@ import {
   Profile,
   ClearanceRequest,
   ClearanceItem,
+  SystemSettings,
+  DistinctPeriod,
   getDepartmentByHeadId,
   getStudentsByDepartment,
   getClearanceRequestsByStudentIds,
   getClearanceItemsBySourceAndRequests,
+  getSystemSettings,
+  getDistinctPeriods,
 } from "@/lib/supabase";
 import { formatDate } from "@/lib/utils";
 
@@ -164,14 +168,31 @@ export default function DepartmentStudentsPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<StudentWithClearance | null>(null);
+  const [systemSettings, setSystemSettings] = useState<SystemSettings | null>(null);
+  const [periodFilter, setPeriodFilter] = useState("");
+  const [distinctPeriods, setDistinctPeriods] = useState<DistinctPeriod[]>([]);
 
   const loadData = useCallback(async () => {
     if (!profile?.id) return;
 
     setIsLoading(true);
     try {
-      // 1. Find this user's department
-      const dept = await getDepartmentByHeadId(profile.id);
+      // 1. Find this user's department + fetch system settings
+      const [dept, settings] = await Promise.all([
+        getDepartmentByHeadId(profile.id),
+        getSystemSettings(),
+      ]);
+      setSystemSettings(settings);
+
+      // Fetch distinct periods, injecting the current system period so it always appears
+      const periods = await getDistinctPeriods(
+        settings ? { academic_year: settings.academic_year, semester: settings.current_semester } : undefined
+      );
+      setDistinctPeriods(periods);
+
+      // Initialize periodFilter to current period on first load
+      const currentKey = settings ? `${settings.academic_year}|${settings.current_semester}` : "";
+      setPeriodFilter((prev) => (prev === "" ? currentKey : prev));
       if (!dept) {
         setDepartment(null);
         setStudents([]);
@@ -192,11 +213,13 @@ export default function DepartmentStudentsPage() {
       const studentIds = studentProfiles.map((s) => s.id);
       const requests = await getClearanceRequestsByStudentIds(studentIds);
 
-      // 4. Map: pick latest request per student (requests already ordered DESC)
-      const latestByStudent = new Map<string, ClearanceRequest>();
+      // 4. Map: pick latest request per student for the selected period
+      const effectiveFilter = periodFilter || currentKey;
+      const [filterYear, filterSemester] = effectiveFilter.split("|");
+      const activeMap = new Map<string, ClearanceRequest>();
       for (const req of requests) {
-        if (!latestByStudent.has(req.student_id)) {
-          latestByStudent.set(req.student_id, req);
+        if (!activeMap.has(req.student_id) && req.academic_year === filterYear && req.semester === filterSemester) {
+          activeMap.set(req.student_id, req);
         }
       }
 
@@ -212,7 +235,7 @@ export default function DepartmentStudentsPage() {
 
       // 6. Build StudentWithClearance[] using overall request status + dept item status
       const enriched: StudentWithClearance[] = studentProfiles.map((s) => {
-        const latestRequest = latestByStudent.get(s.id) ?? null;
+        const latestRequest = activeMap.get(s.id) ?? null;
         const deptItem = latestRequest ? itemByRequest.get(latestRequest.id) ?? null : null;
         return {
           ...s,
@@ -230,7 +253,7 @@ export default function DepartmentStudentsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [profile?.id, showToast]);
+  }, [profile?.id, showToast, periodFilter]);
 
   useEffect(() => {
     loadData();
@@ -315,6 +338,24 @@ export default function DepartmentStudentsPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               leftIcon={<Search className="w-4 h-4" />}
+            />
+          </div>
+          <div className="w-64">
+            <Select
+              options={[
+...distinctPeriods.map((p) => {
+                  const key = `${p.academic_year}|${p.semester}`;
+                  const isCurrent = systemSettings &&
+                    p.academic_year === systemSettings.academic_year &&
+                    p.semester === systemSettings.current_semester;
+                  return {
+                    value: key,
+                    label: isCurrent ? `${p.academic_year} — ${p.semester} (Current)` : `${p.academic_year} — ${p.semester}`,
+                  };
+                }),
+              ]}
+              value={periodFilter}
+              onChange={(e) => setPeriodFilter(e.target.value)}
             />
           </div>
           <div className="w-48">

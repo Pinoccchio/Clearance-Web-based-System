@@ -1438,6 +1438,21 @@ export async function updateSystemSettings(
   return settings;
 }
 
+/** Count active (pending/in_progress) clearance requests for a specific period */
+export async function countActiveRequestsForPeriod(
+  academicYear: string,
+  semester: string
+): Promise<number> {
+  const { count, error } = await supabase
+    .from("clearance_requests")
+    .select("*", { count: "exact", head: true })
+    .in("status", ["pending", "in_progress"])
+    .eq("academic_year", academicYear)
+    .eq("semester", semester);
+  if (error) throw error;
+  return count ?? 0;
+}
+
 // ==========================================
 // Clearance Requests
 // ==========================================
@@ -1490,6 +1505,50 @@ export async function getClearanceRequestsByStudentIds(studentIds: string[]): Pr
   }
 
   return data || [];
+}
+
+// ==========================================
+// Distinct Periods
+// ==========================================
+
+export interface DistinctPeriod {
+  academic_year: string;
+  semester: string;
+}
+
+export async function getDistinctPeriods(
+  currentPeriod?: { academic_year: string; semester: string }
+): Promise<DistinctPeriod[]> {
+  const { data, error } = await supabase
+    .from('clearance_requests')
+    .select('academic_year, semester')
+    .order('academic_year', { ascending: false });
+  if (error) throw error;
+
+  // De-duplicate in JS (Supabase JS client has no DISTINCT)
+  const seen = new Set<string>();
+  const unique: DistinctPeriod[] = [];
+  for (const row of data ?? []) {
+    const key = `${row.academic_year}|${row.semester}`;
+    if (!seen.has(key)) { seen.add(key); unique.push({ academic_year: row.academic_year, semester: row.semester }); }
+  }
+
+  // Ensure the current system period is always present
+  if (currentPeriod) {
+    const currentKey = `${currentPeriod.academic_year}|${currentPeriod.semester}`;
+    if (!seen.has(currentKey)) {
+      unique.push({ academic_year: currentPeriod.academic_year, semester: currentPeriod.semester });
+    }
+  }
+
+  // Sort: year DESC, then Summer > 2nd Semester > 1st Semester
+  const semOrder: Record<string, number> = { 'Summer': 0, '2nd Semester': 1, '1st Semester': 2 };
+  unique.sort((a, b) => {
+    if (b.academic_year > a.academic_year) return 1;
+    if (b.academic_year < a.academic_year) return -1;
+    return (semOrder[a.semester] ?? 99) - (semOrder[b.semester] ?? 99);
+  });
+  return unique;
 }
 
 // ==========================================

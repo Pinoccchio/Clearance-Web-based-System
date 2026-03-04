@@ -37,10 +37,14 @@ import {
   Profile,
   ClearanceRequest,
   ClearanceItem,
+  SystemSettings,
+  DistinctPeriod,
   getClubByAdviserId,
   getMembersByClub,
   getClearanceRequestsByStudentIds,
   getClearanceItemsBySourceAndRequests,
+  getSystemSettings,
+  getDistinctPeriods,
 } from "@/lib/supabase";
 import { formatDate } from "@/lib/utils";
 
@@ -164,14 +168,31 @@ export default function ClubMembersPage() {
   const [statusFilter, setStatusFilter] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedMember, setSelectedMember] = useState<MemberWithClearance | null>(null);
+  const [systemSettings, setSystemSettings] = useState<SystemSettings | null>(null);
+  const [periodFilter, setPeriodFilter] = useState("");
+  const [distinctPeriods, setDistinctPeriods] = useState<DistinctPeriod[]>([]);
 
   const loadData = useCallback(async () => {
     if (!profile?.id) return;
 
     setIsLoading(true);
     try {
-      // 1. Find this user's club
-      const clubData = await getClubByAdviserId(profile.id);
+      // 1. Find this user's club + fetch system settings
+      const [clubData, settings] = await Promise.all([
+        getClubByAdviserId(profile.id),
+        getSystemSettings(),
+      ]);
+      setSystemSettings(settings);
+
+      // Fetch distinct periods, injecting the current system period so it always appears
+      const periods = await getDistinctPeriods(
+        settings ? { academic_year: settings.academic_year, semester: settings.current_semester } : undefined
+      );
+      setDistinctPeriods(periods);
+
+      // Initialize periodFilter to current period on first load
+      const currentKey = settings ? `${settings.academic_year}|${settings.current_semester}` : "";
+      setPeriodFilter((prev) => (prev === "" ? currentKey : prev));
       if (!clubData) {
         setClub(null);
         setMembers([]);
@@ -191,11 +212,13 @@ export default function ClubMembersPage() {
       const memberIds = memberProfiles.map((m) => m.id);
       const requests = await getClearanceRequestsByStudentIds(memberIds);
 
-      // 4. Map: pick latest request per member (requests already ordered DESC)
-      const latestByMember = new Map<string, ClearanceRequest>();
+      // 4. Map: pick latest request per member for the selected period
+      const effectiveFilter = periodFilter || currentKey;
+      const [filterYear, filterSemester] = effectiveFilter.split("|");
+      const activeMap = new Map<string, ClearanceRequest>();
       for (const req of requests) {
-        if (!latestByMember.has(req.student_id)) {
-          latestByMember.set(req.student_id, req);
+        if (!activeMap.has(req.student_id) && req.academic_year === filterYear && req.semester === filterSemester) {
+          activeMap.set(req.student_id, req);
         }
       }
 
@@ -211,7 +234,7 @@ export default function ClubMembersPage() {
 
       // 6. Build MemberWithClearance[] using overall request status + club item status
       const enriched: MemberWithClearance[] = memberProfiles.map((m) => {
-        const latestRequest = latestByMember.get(m.id) ?? null;
+        const latestRequest = activeMap.get(m.id) ?? null;
         const clubItem = latestRequest ? itemByRequest.get(latestRequest.id) ?? null : null;
         return {
           ...m,
@@ -229,7 +252,7 @@ export default function ClubMembersPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [profile?.id, showToast]);
+  }, [profile?.id, showToast, periodFilter]);
 
   useEffect(() => {
     loadData();
@@ -319,6 +342,24 @@ export default function ClubMembersPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               leftIcon={<Search className="w-4 h-4" />}
+            />
+          </div>
+          <div className="w-64">
+            <Select
+              options={[
+...distinctPeriods.map((p) => {
+                  const key = `${p.academic_year}|${p.semester}`;
+                  const isCurrent = systemSettings &&
+                    p.academic_year === systemSettings.academic_year &&
+                    p.semester === systemSettings.current_semester;
+                  return {
+                    value: key,
+                    label: isCurrent ? `${p.academic_year} — ${p.semester} (Current)` : `${p.academic_year} — ${p.semester}`,
+                  };
+                }),
+              ]}
+              value={periodFilter}
+              onChange={(e) => setPeriodFilter(e.target.value)}
             />
           </div>
           <div className="w-48">

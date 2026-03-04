@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CheckCircle, Clock, XCircle, PauseCircle, MinusCircle, Info, History } from "lucide-react";
+import { CheckCircle, Clock, XCircle, PauseCircle, MinusCircle, Info, History, PartyPopper } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -79,6 +79,23 @@ export default function ClearanceStatusView({
           <Link href={submitHref}>
             <Button variant="gold" size="md">Start Clearance</Button>
           </Link>
+        </Card>
+      </div>
+    );
+  }
+
+  if (clearanceRequest.status === "completed") {
+    return (
+      <div className="flex items-center justify-center">
+        <Card padding="lg" className="text-center max-w-md w-full">
+          <CheckCircle className="w-10 h-10 text-green-500 mx-auto mb-3" />
+          <h3 className="text-base font-semibold text-cjc-navy mb-1">Clearance Completed</h3>
+          <p className="text-sm text-gray-500">
+            All {sourceType} clearance items have been approved. You are fully cleared for this period.
+          </p>
+          <p className="text-xs text-gray-400 mt-2">
+            {clearanceRequest.academic_year} — {clearanceRequest.semester}
+          </p>
         </Card>
       </div>
     );

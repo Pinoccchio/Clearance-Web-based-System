@@ -155,7 +155,7 @@ export default function SubmitView({
       const existing = await getStudentClearanceRequests(studentId);
       const active = existing.find(
         (r) =>
-          (r.status === 'pending' || r.status === 'in_progress') &&
+          (r.status === 'pending' || r.status === 'in_progress' || r.status === 'completed') &&
           r.academic_year === systemSettings.academic_year &&
           r.semester === systemSettings.current_semester
       );
@@ -304,6 +304,24 @@ export default function SubmitView({
     );
   }
 
+  // Clearance completed — no further submissions needed
+  if (clearanceRequest?.status === "completed") {
+    return (
+      <div className="flex items-center justify-center">
+        <Card padding="lg" className="text-center max-w-md w-full">
+          <CheckCircle className="w-10 h-10 text-green-500 mx-auto mb-3" />
+          <h3 className="text-base font-semibold text-cjc-navy mb-1">Clearance Completed</h3>
+          <p className="text-sm text-gray-500">
+            All clearance items have been approved. No further submissions are needed for this period.
+          </p>
+          <p className="text-xs text-gray-400 mt-2">
+            {clearanceRequest.academic_year} — {clearanceRequest.semester}
+          </p>
+        </Card>
+      </div>
+    );
+  }
+
   // Phase 1: No active request — show "Start Clearance" card
   if (!clearanceRequest) {
     if (!systemSettings || !clearanceOpen) {
@@ -322,7 +340,7 @@ export default function SubmitView({
 
     return (
       <div className="flex items-center justify-center">
-        <Card padding="lg" className="max-w-lg w-full space-y-5">
+        <Card padding="lg" className="max-w-lg w-full space-y-5 text-center">
           <div>
             <h3 className="text-base font-semibold text-cjc-navy mb-1">Start Your Clearance</h3>
             <p className="text-sm text-gray-500">
@@ -331,7 +349,7 @@ export default function SubmitView({
           </div>
 
           {/* Academic period */}
-          <div className="flex gap-6 text-sm text-gray-600">
+          <div className="flex justify-center gap-6 text-sm text-gray-600">
             <div>
               <span className="font-medium text-gray-700">Academic Year:</span>{" "}
               {systemSettings.academic_year}
@@ -342,7 +360,7 @@ export default function SubmitView({
             </div>
           </div>
 
-          <div className="text-center">
+          <div>
             <Button
               variant="gold"
               size="md"

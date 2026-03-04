@@ -12,10 +12,12 @@ import {
   Club,
   ClearanceRequest,
   ClearanceItem,
+  SystemSettings,
   getClubById,
   getStudentClearanceRequests,
   getOrCreateClearanceItem,
   getRequirementsBySource,
+  getSystemSettings,
 } from "@/lib/supabase";
 
 interface ClubSource {
@@ -30,6 +32,7 @@ export default function StudentClubsClearancePage() {
   const { showToast } = useToast();
 
   const [clubs, setClubs] = useState<Club[]>([]);
+  const [systemSettings, setSystemSettings] = useState<SystemSettings | null>(null);
   const [activeRequest, setActiveRequest] = useState<ClearanceRequest | null>(null);
   const [clearanceItems, setClearanceItems] = useState<ClearanceItem[]>([]);
   const [requirementCounts, setRequirementCounts] = useState<Record<string, number>>({});
@@ -48,16 +51,23 @@ export default function StudentClubsClearancePage() {
         return;
       }
 
-      // Fetch all clubs and requests in parallel
-      const [clubsData, requests] = await Promise.all([
+      // Fetch all clubs, requests, and system settings in parallel
+      const [clubsData, requests, sys] = await Promise.all([
         Promise.all(clubIds.map((id) => getClubById(id))),
         getStudentClearanceRequests(profile.id),
+        getSystemSettings(),
       ]);
 
       const validClubs = clubsData.filter((c): c is Club => c !== null);
       setClubs(validClubs);
+      setSystemSettings(sys);
 
-      const active = requests.find((r) => r.status === "pending" || r.status === "in_progress") ?? null;
+      const active = requests.find(
+        (r) =>
+          (r.status === "pending" || r.status === "in_progress" || r.status === "completed") &&
+          r.academic_year === sys?.academic_year &&
+          r.semester === sys?.current_semester
+      ) ?? null;
       setActiveRequest(active);
 
       // Fetch requirements count and clearance items for each club

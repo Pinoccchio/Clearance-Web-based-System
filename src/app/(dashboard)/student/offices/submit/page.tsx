@@ -50,7 +50,12 @@ export default function OfficesSubmitPage() {
       setSystemSettings(sys);
       setOffices(allOffices);
 
-      const active = requests.find((r) => r.status === "pending" || r.status === "in_progress") ?? null;
+      const active = requests.find(
+        (r) =>
+          (r.status === "pending" || r.status === "in_progress" || r.status === "completed") &&
+          r.academic_year === sys?.academic_year &&
+          r.semester === sys?.current_semester
+      ) ?? null;
       setActiveRequest(active);
 
       // Batch fetch requirements

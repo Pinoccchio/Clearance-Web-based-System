@@ -68,7 +68,12 @@ export default function StudentClubsSubmitPage() {
       const validClubs = clubsData.filter((c): c is Club => c !== null);
       setClubs(validClubs);
 
-      const active = requests.find((r) => r.status === "pending" || r.status === "in_progress") ?? null;
+      const active = requests.find(
+        (r) =>
+          (r.status === "pending" || r.status === "in_progress" || r.status === "completed") &&
+          r.academic_year === sys?.academic_year &&
+          r.semester === sys?.current_semester
+      ) ?? null;
       setActiveRequest(active);
 
       // Fetch requirements and clearance items for each club
