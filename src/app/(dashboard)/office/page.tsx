@@ -109,6 +109,13 @@ export default function OfficeDashboard() {
       // Fetch all clearance items for this office
       const items = await getAllClearanceItemsByOffice(officeData.id);
 
+      // Filter to current period only
+      const currentItems = items.filter(
+        (item) =>
+          item.request?.academic_year === settingsData?.academic_year &&
+          item.request?.semester === settingsData?.current_semester
+      );
+
       // Calculate stats
       let pending = 0;
       let submitted = 0;
@@ -120,7 +127,7 @@ export default function OfficeDashboard() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      for (const item of items) {
+      for (const item of currentItems) {
         switch (item.status) {
           case "pending":
             pending++;
@@ -161,7 +168,7 @@ export default function OfficeDashboard() {
       });
 
       // Get 5 most recent items with activity (non-pending)
-      const recentActivity = items
+      const recentActivity = currentItems
         .filter((item) => item.status !== "pending")
         .slice(0, 5);
 

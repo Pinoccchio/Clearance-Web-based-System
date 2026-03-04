@@ -30,6 +30,7 @@ import {
   MinusCircle,
   Eye,
   X,
+  Download,
 } from "lucide-react";
 import { StudentClearanceProgressModal } from "@/components/features/StudentClearanceProgressModal";
 import {
@@ -47,6 +48,7 @@ import {
   getDistinctPeriods,
 } from "@/lib/supabase";
 import { formatDate } from "@/lib/utils";
+import { exportToExcel } from "@/lib/export";
 
 type ClearanceStatus = "completed" | "in_progress" | "pending" | "none";
 type ItemStatus = "pending" | "submitted" | "approved" | "rejected" | "on_hold" | null;
@@ -157,6 +159,16 @@ const STATUS_OPTIONS = [
   { value: "none", label: "No Request" },
 ];
 
+const DEPT_STATUS_OPTIONS = [
+  { value: "", label: "All Dept Status" },
+  { value: "approved", label: "Approved" },
+  { value: "submitted", label: "Submitted" },
+  { value: "pending", label: "Not Started" },
+  { value: "rejected", label: "Rejected" },
+  { value: "on_hold", label: "On Hold" },
+  { value: "none", label: "No Item" },
+];
+
 export default function DepartmentStudentsPage() {
   const { profile } = useAuth();
   const { showToast } = useToast();
@@ -166,6 +178,7 @@ export default function DepartmentStudentsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [deptStatusFilter, setDeptStatusFilter] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedStudent, setSelectedStudent] = useState<StudentWithClearance | null>(null);
   const [systemSettings, setSystemSettings] = useState<SystemSettings | null>(null);
@@ -276,7 +289,9 @@ export default function DepartmentStudentsPage() {
       fullName.includes(searchQuery.toLowerCase()) ||
       studentId.includes(searchQuery.toLowerCase());
     const matchesStatus = !statusFilter || s.clearanceStatus === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesDeptStatus = !deptStatusFilter ||
+      (deptStatusFilter === "none" ? s.deptStatus === null : s.deptStatus === deptStatusFilter);
+    return matchesSearch && matchesStatus && matchesDeptStatus;
   });
 
   const typeLabel = (type: string | undefined) => {
@@ -365,9 +380,41 @@ export default function DepartmentStudentsPage() {
               onChange={(e) => setStatusFilter(e.target.value)}
             />
           </div>
+          <div className="w-48">
+            <Select
+              options={DEPT_STATUS_OPTIONS}
+              value={deptStatusFilter}
+              onChange={(e) => setDeptStatusFilter(e.target.value)}
+            />
+          </div>
           <Button variant="secondary" onClick={loadData} disabled={isLoading}>
             <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              const periodLabel = periodFilter.replace("|", "_") || "all";
+              exportToExcel(
+                filtered,
+                [
+                  { header: "Student ID", accessor: (s) => s.student_id ?? "—" },
+                  { header: "Name", accessor: (s) => `${s.first_name} ${s.last_name}` },
+                  { header: "Course", accessor: (s) => s.course ?? "—" },
+                  { header: "Year Level", accessor: (s) => s.year_level ?? "—" },
+                  { header: "Clearance Status", accessor: (s) => s.clearanceStatus },
+                  { header: "Dept Status", accessor: (s) => s.deptStatus ?? "—" },
+                  { header: "Type", accessor: (s) => typeLabel(s.latestRequest?.type) },
+                  { header: "Period", accessor: (s) => s.latestRequest ? `${s.latestRequest.academic_year} — ${s.latestRequest.semester}` : "—" },
+                  { header: "Since", accessor: (s) => s.latestRequest ? formatDate(s.latestRequest.created_at) : "—" },
+                ],
+                `${department?.name ?? "department"}_students_${periodLabel}`
+              );
+            }}
+            disabled={isLoading || filtered.length === 0}
+          >
+            <Download className="w-4 h-4" />
+            Export
           </Button>
         </div>
 

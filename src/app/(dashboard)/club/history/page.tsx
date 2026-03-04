@@ -29,6 +29,7 @@ import {
   XCircle,
   PauseCircle,
   ExternalLink,
+  Download,
 } from "lucide-react";
 import {
   Club,
@@ -40,6 +41,7 @@ import {
 } from "@/lib/supabase";
 import ClearanceItemHistoryTimeline from "@/components/shared/ClearanceItemHistoryTimeline";
 import { formatDate } from "@/lib/utils";
+import { exportToExcel } from "@/lib/export";
 
 const STATUS_OPTIONS = [
   { value: "all", label: "All Status" },
@@ -257,6 +259,29 @@ export default function ClubHistoryPage() {
           <Button variant="secondary" onClick={loadData} disabled={isLoading}>
             <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              exportToExcel(
+                filtered,
+                [
+                  { header: "Student ID", accessor: (i) => i.request?.student?.student_id ?? "—" },
+                  { header: "Name", accessor: (i) => { const s = i.request?.student; return s ? `${s.first_name} ${s.last_name}` : "Unknown"; } },
+                  { header: "Department", accessor: (i) => i.request?.student?.department ?? "—" },
+                  { header: "Course & Year", accessor: (i) => { const s = i.request?.student; return `${s?.course ?? "—"} · Year ${s?.year_level ?? "—"}`; } },
+                  { header: "Type", accessor: (i) => { const t = i.request?.type ?? "semester"; return t.charAt(0).toUpperCase() + t.slice(1); } },
+                  { header: "Period", accessor: (i) => i.request ? `${i.request.academic_year} — ${i.request.semester}` : "—" },
+                  { header: "Status", accessor: (i) => i.status },
+                  { header: "Reviewed Date", accessor: (i) => i.reviewed_at ? formatDate(i.reviewed_at) : "—" },
+                ],
+                `${club?.name ?? "club"}_clearance_history`
+              );
+            }}
+            disabled={isLoading || filtered.length === 0}
+          >
+            <Download className="w-4 h-4" />
+            Export
           </Button>
         </div>
 

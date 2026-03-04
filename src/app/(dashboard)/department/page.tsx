@@ -105,16 +105,23 @@ export default function DepartmentDashboard() {
       const studentIds = students.map((s) => s.id);
       const requests = await getClearanceRequestsByStudentIds(studentIds);
 
+      // Filter to current period only
+      const currentRequests = requests.filter(
+        (req) =>
+          req.academic_year === settingsData?.academic_year &&
+          req.semester === settingsData?.current_semester
+      );
+
       // Build map of latest request per student (requests are ordered DESC)
       const latestByStudent = new Map<string, ClearanceRequest>();
-      for (const req of requests) {
+      for (const req of currentRequests) {
         if (!latestByStudent.has(req.student_id)) {
           latestByStudent.set(req.student_id, req);
         }
       }
 
       // Fetch department-specific clearance items for these requests
-      const requestIds = requests.map((r) => r.id);
+      const requestIds = currentRequests.map((r) => r.id);
       const deptItems = await getClearanceItemsBySourceAndRequests('department', dept.id, requestIds);
 
       // Map items by request_id for quick lookup

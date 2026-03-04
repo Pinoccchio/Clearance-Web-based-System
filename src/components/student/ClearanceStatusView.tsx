@@ -182,7 +182,7 @@ export default function ClearanceStatusView({
                 </div>
               )}
 
-              {/* On Hold - requires office visit */}
+              {/* On Hold - student can resubmit */}
               {item?.status === "on_hold" && (
                 <div className="mt-2 space-y-2">
                   {item.remarks && (
@@ -192,7 +192,7 @@ export default function ClearanceStatusView({
                   )}
                   <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg text-xs text-amber-700">
                     <span className="font-semibold">Action Required: </span>
-                    Please visit the office to resolve this item. Online resubmission is not available.
+                    Please review the remarks above and resubmit from the Submit tab.
                   </div>
                 </div>
               )}

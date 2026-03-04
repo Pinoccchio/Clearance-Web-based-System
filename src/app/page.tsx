@@ -364,13 +364,12 @@ export default function LandingPage() {
                 {/* Stats Bar */}
                 <div
                   ref={statsRef}
-                  className="grid grid-cols-4 gap-4 lg:gap-10 pt-8 border-t border-border-warm"
+                  className="grid grid-cols-3 gap-4 lg:gap-10 pt-8 border-t border-border-warm"
                 >
                   {[
                     { value: stats.departments, label: "Departments" },
                     { value: stats.offices, label: "Offices" },
                     { value: stats.clubs, label: "Clubs" },
-                    { value: 0, label: "Paper Forms" },
                   ].map((stat) => (
                     <div key={stat.label} className="text-center lg:text-left">
                       <p className="text-3xl sm:text-4xl font-bold text-ccis-blue-primary font-display">

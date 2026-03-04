@@ -30,6 +30,7 @@ import {
   MinusCircle,
   Eye,
   X,
+  Download,
 } from "lucide-react";
 import { StudentClearanceProgressModal } from "@/components/features/StudentClearanceProgressModal";
 import {
@@ -47,6 +48,7 @@ import {
   getDistinctPeriods,
 } from "@/lib/supabase";
 import { formatDate } from "@/lib/utils";
+import { exportToExcel } from "@/lib/export";
 
 type ClearanceStatus = "completed" | "in_progress" | "pending" | "none";
 type ItemStatus = "pending" | "submitted" | "approved" | "rejected" | "on_hold" | null;
@@ -157,6 +159,16 @@ const STATUS_OPTIONS = [
   { value: "none", label: "No Request" },
 ];
 
+const CLUB_STATUS_OPTIONS = [
+  { value: "", label: "All Club Status" },
+  { value: "approved", label: "Approved" },
+  { value: "submitted", label: "Submitted" },
+  { value: "pending", label: "Not Started" },
+  { value: "rejected", label: "Rejected" },
+  { value: "on_hold", label: "On Hold" },
+  { value: "none", label: "No Item" },
+];
+
 export default function ClubMembersPage() {
   const { profile } = useAuth();
   const { showToast } = useToast();
@@ -166,6 +178,7 @@ export default function ClubMembersPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [clubStatusFilter, setClubStatusFilter] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [selectedMember, setSelectedMember] = useState<MemberWithClearance | null>(null);
   const [systemSettings, setSystemSettings] = useState<SystemSettings | null>(null);
@@ -275,7 +288,9 @@ export default function ClubMembersPage() {
       fullName.includes(searchQuery.toLowerCase()) ||
       studentId.includes(searchQuery.toLowerCase());
     const matchesStatus = !statusFilter || m.clearanceStatus === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesClubStatus = !clubStatusFilter ||
+      (clubStatusFilter === "none" ? m.clubStatus === null : m.clubStatus === clubStatusFilter);
+    return matchesSearch && matchesStatus && matchesClubStatus;
   });
 
   const typeLabel = (type: string | undefined) => {
@@ -369,9 +384,42 @@ export default function ClubMembersPage() {
               onChange={(e) => setStatusFilter(e.target.value)}
             />
           </div>
+          <div className="w-48">
+            <Select
+              options={CLUB_STATUS_OPTIONS}
+              value={clubStatusFilter}
+              onChange={(e) => setClubStatusFilter(e.target.value)}
+            />
+          </div>
           <Button variant="secondary" onClick={loadData} disabled={isLoading}>
             <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
+          </Button>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              const periodLabel = periodFilter.replace("|", "_") || "all";
+              exportToExcel(
+                filtered,
+                [
+                  { header: "Student ID", accessor: (m) => m.student_id ?? "—" },
+                  { header: "Name", accessor: (m) => `${m.first_name} ${m.last_name}` },
+                  { header: "Department", accessor: (m) => m.department ?? "—" },
+                  { header: "Course", accessor: (m) => m.course ?? "—" },
+                  { header: "Year Level", accessor: (m) => m.year_level ?? "—" },
+                  { header: "Clearance Status", accessor: (m) => m.clearanceStatus },
+                  { header: "Club Status", accessor: (m) => m.clubStatus ?? "—" },
+                  { header: "Type", accessor: (m) => typeLabel(m.latestRequest?.type) },
+                  { header: "Period", accessor: (m) => m.latestRequest ? `${m.latestRequest.academic_year} — ${m.latestRequest.semester}` : "—" },
+                  { header: "Since", accessor: (m) => m.latestRequest ? formatDate(m.latestRequest.created_at) : "—" },
+                ],
+                `${club?.name ?? "club"}_members_${periodLabel}`
+              );
+            }}
+            disabled={isLoading || filtered.length === 0}
+          >
+            <Download className="w-4 h-4" />
+            Export
           </Button>
         </div>
 
