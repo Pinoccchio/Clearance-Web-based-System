@@ -27,7 +27,7 @@ import {
   UserCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { UserRole } from "@/lib/types";
+import { UserRole } from "@/lib/supabase";
 import { Avatar } from "@/components/ui/Avatar";
 
 interface NavItem {

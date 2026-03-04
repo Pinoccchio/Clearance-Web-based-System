@@ -12,6 +12,7 @@ import {
   Clock,
   Globe,
   BookOpen,
+  Building2,
   Users,
 } from "lucide-react";
 import { AnnouncementWithRelations, getActiveAnnouncements } from "@/lib/supabase";
@@ -49,6 +50,7 @@ export default function StudentAnnouncementsPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("all");
+  const [scopeFilter, setScopeFilter] = useState<"all" | "system" | "department" | "office" | "club">("all");
 
   // Detail modal state
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -69,6 +71,7 @@ export default function StudentAnnouncementsPage() {
         (a) =>
           a.is_system_wide ||
           (a.department_id && a.department?.code === profile.department) ||
+          (a.office_id) ||
           (a.club_id && enrolledClubIds.includes(a.club_id))
       );
       // Sort by priority then date
@@ -92,12 +95,21 @@ export default function StudentAnnouncementsPage() {
 
   useRealtimeRefresh('announcements', loadData);
 
+  const getAnnouncementScope = (a: AnnouncementWithRelations): "system" | "department" | "office" | "club" => {
+    if (a.is_system_wide) return "system";
+    if (a.department_id) return "department";
+    if (a.office_id) return "office";
+    if (a.club_id) return "club";
+    return "system";
+  };
+
   const filtered = announcements.filter((a) => {
     const matchesSearch =
       a.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       a.content.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesPriority = priorityFilter === "all" || a.priority === priorityFilter;
-    return matchesSearch && matchesPriority;
+    const matchesScope = scopeFilter === "all" || getAnnouncementScope(a) === scopeFilter;
+    return matchesSearch && matchesPriority && matchesScope;
   });
 
   const stats = {
@@ -105,6 +117,7 @@ export default function StudentAnnouncementsPage() {
     urgent: announcements.filter((a) => a.priority === "urgent").length,
     systemWide: announcements.filter((a) => a.is_system_wide).length,
     deptSpecific: announcements.filter((a) => !a.is_system_wide && a.department_id).length,
+    officeSpecific: announcements.filter((a) => !a.is_system_wide && a.office_id).length,
     clubSpecific: announcements.filter((a) => !a.is_system_wide && a.club_id).length,
   };
 
@@ -166,7 +179,7 @@ export default function StudentAnnouncementsPage() {
         )}
 
         {/* Stats Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
           <div className="card p-4 text-center">
             <p className="text-2xl font-bold text-cjc-navy">{stats.total}</p>
             <p className="text-sm text-warm-muted">Total</p>
@@ -184,9 +197,41 @@ export default function StudentAnnouncementsPage() {
             <p className="text-sm text-warm-muted">Department</p>
           </div>
           <div className="card p-4 text-center">
+            <p className="text-2xl font-bold text-green-500">{stats.officeSpecific}</p>
+            <p className="text-sm text-warm-muted">Offices</p>
+          </div>
+          <div className="card p-4 text-center">
             <p className="text-2xl font-bold text-purple-500">{stats.clubSpecific}</p>
             <p className="text-sm text-warm-muted">Clubs</p>
           </div>
+        </div>
+
+        {/* Scope Filter Tabs */}
+        <div className="flex flex-wrap gap-2">
+          {[
+            { value: "all" as const, label: "All", count: announcements.length },
+            { value: "system" as const, label: "System", count: stats.systemWide },
+            { value: "department" as const, label: "Department", count: stats.deptSpecific },
+            { value: "office" as const, label: "Offices", count: stats.officeSpecific },
+            { value: "club" as const, label: "Clubs", count: stats.clubSpecific },
+          ].map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => setScopeFilter(tab.value)}
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
+                scopeFilter === tab.value
+                  ? "bg-cjc-blue text-white"
+                  : "bg-white text-warm-muted hover:bg-gray-50 border border-border-warm"
+              }`}
+            >
+              {tab.label}
+              <span className={`ml-1.5 text-xs ${
+                scopeFilter === tab.value ? "text-white/70" : "text-warm-muted"
+              }`}>
+                {tab.count}
+              </span>
+            </button>
+          ))}
         </div>
 
         {/* Toolbar */}
@@ -249,6 +294,11 @@ export default function StudentAnnouncementsPage() {
                           <Globe className="w-3 h-3" />
                           System-wide
                         </span>
+                      ) : a.office_id ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                          <Building2 className="w-3 h-3" />
+                          {a.office?.name ?? "Office"}
+                        </span>
                       ) : a.club_id ? (
                         <span className="inline-flex items-center gap-1 text-xs text-purple-600 bg-purple-50 px-2 py-0.5 rounded-full">
                           <Users className="w-3 h-3" />
@@ -306,7 +356,7 @@ export default function StudentAnnouncementsPage() {
                 <p className="text-warm-muted">There are no active announcements for you right now.</p>
               </>
             ) : (
-              <p className="text-warm-muted">No announcements match your search.</p>
+              <p className="text-warm-muted">No announcements match your filters.</p>
             )}
           </div>
         )}

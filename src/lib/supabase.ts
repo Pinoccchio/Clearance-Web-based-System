@@ -1448,7 +1448,7 @@ export interface ClearanceRequest {
   type: 'semester';
   academic_year: string;
   semester: string;
-  status: 'pending' | 'in_progress' | 'approved' | 'rejected' | 'completed';
+  status: 'pending' | 'in_progress' | 'completed';
   created_at: string;
   updated_at: string;
 }

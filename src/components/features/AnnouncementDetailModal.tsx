@@ -77,13 +77,13 @@ export function AnnouncementDetailModal({
   const PriorityIcon = priority.icon;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} className="max-w-2xl overflow-hidden">
+    <Modal isOpen={isOpen} onClose={onClose} className="max-w-2xl overflow-hidden" showCloseButton={false}>
       {/* Priority Header Band - Full width gradient */}
       <div className={`${priority.headerClass} px-6 py-5 relative`}>
         {/* Close button - positioned in header */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+          className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
           aria-label="Close"
         >
           <X className={`w-4 h-4 ${priority.textColor}`} />

@@ -8,6 +8,9 @@ export type ClearanceStatus =
   | "in_progress"
   | "completed";
 
+// Note: These interfaces use camelCase and are only used by mock-data.ts.
+// The real DB types come from supabase.ts with snake_case fields.
+
 export interface User {
   id: string;
   email: string;
@@ -47,7 +50,7 @@ export interface AcademicOrganization {
   code: string;
   description: string;
   adviser?: string;
-  department?: string; // Which department it belongs to (e.g., CCIS)
+  department?: string;
 }
 
 export interface NonAcademicOrganization {
@@ -116,39 +119,4 @@ export interface ActivityLog {
   targetType?: string;
   targetId?: string;
   createdAt: string;
-}
-
-export interface DashboardStats {
-  totalStudents: number;
-  pendingRequests: number;
-  approvedToday: number;
-  completionRate: number;
-}
-
-export type ClearanceSourceType = "department" | "office" | "club";
-
-export type RequirementSubmissionStatus = "pending" | "submitted" | "verified" | "rejected";
-
-export interface Requirement {
-  id: string;
-  sourceType: ClearanceSourceType;
-  sourceId: string;
-  name: string;
-  description?: string;
-  isRequired: boolean;
-  order: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface RequirementSubmission {
-  id: string;
-  clearanceItemId: string;
-  requirementId: string;
-  studentId: string;
-  fileUrl?: string;
-  status: RequirementSubmissionStatus;
-  remarks?: string;
-  submittedAt?: string;
-  reviewedAt?: string;
 }

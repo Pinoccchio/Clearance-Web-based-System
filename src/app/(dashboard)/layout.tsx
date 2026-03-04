@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import Sidebar from "@/components/layout/sidebar";
 import { useAuth } from "@/contexts/auth-context";
-import { UserRole } from "@/lib/types";
+import { UserRole } from "@/lib/supabase";
 import { cn } from "@/lib/utils";
 
 export default function DashboardLayout({
