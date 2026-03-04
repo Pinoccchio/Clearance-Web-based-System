@@ -426,7 +426,7 @@ export default function SubmitView({
         if (reqs.length === 0) { badgeVariant = "neutral"; badgeLabel = "No Requirements"; }
         else if (item?.status === "pending") { badgeVariant = "neutral"; badgeLabel = "Not Submitted"; }
         else if (item?.status === "submitted") { badgeVariant = "warning"; badgeLabel = "Submitted"; }
-        else if (item?.status === "approved") { badgeVariant = "success"; badgeLabel = "Cleared"; }
+        else if (item?.status === "approved") { badgeVariant = "success"; badgeLabel = "Approved"; }
         else if (item?.status === "rejected") { badgeVariant = "danger"; badgeLabel = "Rejected"; }
         else if (item?.status === "on_hold") { badgeVariant = "onHold"; badgeLabel = "On Hold"; }
 
@@ -815,7 +815,7 @@ export default function SubmitView({
                         <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
                         <span className="text-sm font-medium text-green-700">
                           {item.status === 'approved'
-                            ? `Cleared by ${sourceType}`
+                            ? `Approved by ${sourceType}`
                             : 'Submitted for review'}
                         </span>
                       </div>

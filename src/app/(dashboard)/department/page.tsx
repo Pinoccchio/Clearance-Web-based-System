@@ -11,9 +11,6 @@ import {
   RefreshCw,
   AlertCircle,
   ArrowRight,
-  FileText,
-  BookOpen,
-  ClipboardList,
   AlertTriangle,
   XCircle,
 } from "lucide-react";
@@ -27,18 +24,23 @@ import {
   Department,
   Profile,
   ClearanceRequest,
+  ClearanceItem,
   getDepartmentByHeadId,
   getStudentsByDepartment,
   getClearanceRequestsByStudentIds,
+  getClearanceItemsBySourceAndRequests,
   getSystemSettings,
   SystemSettings,
 } from "@/lib/supabase";
 
+type ClearanceStatus = "approved" | "pending" | "submitted" | "rejected" | "on_hold" | "none";
+
 interface DashboardStats {
   total: number;
+  approved: number;
+  submitted: number;
   pending: number;
-  inProgress: number;
-  cleared: number;
+  onHold: number;
   rejected: number;
   noRequest: number;
   rate: number;
@@ -46,21 +48,23 @@ interface DashboardStats {
 
 interface StudentWithStatus extends Profile {
   latestRequest: ClearanceRequest | null;
-  status: "cleared" | "pending" | "in_progress" | "rejected" | "none";
+  deptItem: ClearanceItem | null;
+  status: ClearanceStatus;
 }
 
-function deriveStatus(request: ClearanceRequest | null): StudentWithStatus["status"] {
-  if (!request) return "none";
-  switch (request.status) {
+function deriveStatusFromItem(item: ClearanceItem | null): ClearanceStatus {
+  if (!item) return "none";
+  switch (item.status) {
     case "approved":
-    case "completed":
-      return "cleared";
+      return "approved";
+    case "submitted":
+      return "submitted";
     case "pending":
       return "pending";
-    case "in_progress":
-      return "in_progress";
     case "rejected":
       return "rejected";
+    case "on_hold":
+      return "on_hold";
     default:
       return "none";
   }
@@ -72,9 +76,10 @@ export default function DepartmentDashboard() {
   const [settings, setSettings] = useState<SystemSettings | null>(null);
   const [stats, setStats] = useState<DashboardStats>({
     total: 0,
+    approved: 0,
+    submitted: 0,
     pending: 0,
-    inProgress: 0,
-    cleared: 0,
+    onHold: 0,
     rejected: 0,
     noRequest: 0,
     rate: 0,
@@ -96,9 +101,11 @@ export default function DepartmentDashboard() {
         getSystemSettings(),
       ]);
 
+      const emptyStats: DashboardStats = { total: 0, approved: 0, submitted: 0, pending: 0, onHold: 0, rejected: 0, noRequest: 0, rate: 0 };
+
       if (!dept) {
         setDepartment(null);
-        setStats({ total: 0, pending: 0, inProgress: 0, cleared: 0, rejected: 0, noRequest: 0, rate: 0 });
+        setStats(emptyStats);
         setRecentStudents([]);
         return;
       }
@@ -108,7 +115,7 @@ export default function DepartmentDashboard() {
       // Fetch students in this department
       const students = await getStudentsByDepartment(dept.code);
       if (students.length === 0) {
-        setStats({ total: 0, pending: 0, inProgress: 0, cleared: 0, rejected: 0, noRequest: 0, rate: 0 });
+        setStats(emptyStats);
         setRecentStudents([]);
         return;
       }
@@ -125,26 +132,41 @@ export default function DepartmentDashboard() {
         }
       }
 
-      // Calculate stats and enrich students
-      let cleared = 0;
+      // Fetch department-specific clearance items for these requests
+      const requestIds = requests.map((r) => r.id);
+      const deptItems = await getClearanceItemsBySourceAndRequests('department', dept.id, requestIds);
+
+      // Map items by request_id for quick lookup
+      const itemByRequest = new Map<string, ClearanceItem>();
+      for (const item of deptItems) {
+        itemByRequest.set(item.request_id, item);
+      }
+
+      // Calculate stats and enrich students using item-level status
+      let approved = 0;
+      let submitted = 0;
       let pending = 0;
-      let inProgress = 0;
+      let onHold = 0;
       let rejected = 0;
       let noRequest = 0;
 
       const enrichedStudents: StudentWithStatus[] = students.map((student) => {
         const req = latestByStudent.get(student.id) ?? null;
-        const status = deriveStatus(req);
+        const deptItem = req ? itemByRequest.get(req.id) ?? null : null;
+        const status = deriveStatusFromItem(deptItem);
 
         switch (status) {
-          case "cleared":
-            cleared++;
+          case "approved":
+            approved++;
+            break;
+          case "submitted":
+            submitted++;
             break;
           case "pending":
             pending++;
             break;
-          case "in_progress":
-            inProgress++;
+          case "on_hold":
+            onHold++;
             break;
           case "rejected":
             rejected++;
@@ -153,13 +175,13 @@ export default function DepartmentDashboard() {
             noRequest++;
         }
 
-        return { ...student, latestRequest: req, status };
+        return { ...student, latestRequest: req, deptItem, status };
       });
 
       const total = students.length;
-      const rate = total > 0 ? (cleared / total) * 100 : 0;
+      const rate = total > 0 ? (approved / total) * 100 : 0;
 
-      setStats({ total, pending, inProgress, cleared, rejected, noRequest, rate });
+      setStats({ total, approved, submitted, pending, onHold, rejected, noRequest, rate });
 
       // Get recent students with activity (sorted by latest request date)
       const studentsWithRequests = enrichedStudents
@@ -198,16 +220,18 @@ export default function DepartmentDashboard() {
     await loadStats();
   };
 
-  const progressPercent = stats.total > 0 ? Math.round((stats.cleared / stats.total) * 100) : 0;
+  const progressPercent = stats.total > 0 ? Math.round((stats.approved / stats.total) * 100) : 0;
 
   const getStatusBadge = (status: StudentWithStatus["status"]) => {
     switch (status) {
-      case "cleared":
-        return <Badge variant="success" size="sm"><CheckCircle2 className="w-3 h-3" /> Cleared</Badge>;
+      case "approved":
+        return <Badge variant="success" size="sm"><CheckCircle2 className="w-3 h-3" /> Approved</Badge>;
+      case "submitted":
+        return <Badge variant="warning" size="sm"><Clock className="w-3 h-3" /> Submitted</Badge>;
       case "pending":
         return <Badge variant="neutral" size="sm"><Clock className="w-3 h-3" /> Not Started</Badge>;
-      case "in_progress":
-        return <Badge variant="warning" size="sm"><Clock className="w-3 h-3" /> In Progress</Badge>;
+      case "on_hold":
+        return <Badge variant="warning" size="sm"><Clock className="w-3 h-3" /> On Hold</Badge>;
       case "rejected":
         return <Badge variant="danger" size="sm"><XCircle className="w-3 h-3" /> Rejected</Badge>;
       default:
@@ -303,13 +327,13 @@ export default function DepartmentDashboard() {
           </div>
           <div className="card p-4 text-center">
             <Clock className="w-8 h-8 text-amber-500 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-cjc-navy">{stats.inProgress}</p>
-            <p className="text-sm text-warm-muted">In Progress</p>
+            <p className="text-2xl font-bold text-cjc-navy">{stats.submitted}</p>
+            <p className="text-sm text-warm-muted">Submitted</p>
           </div>
           <div className="card p-4 text-center">
             <CheckCircle2 className="w-8 h-8 text-success mx-auto mb-2" />
-            <p className="text-2xl font-bold text-cjc-navy">{stats.cleared}/{stats.total}</p>
-            <p className="text-sm text-warm-muted">Cleared</p>
+            <p className="text-2xl font-bold text-cjc-navy">{stats.approved}/{stats.total}</p>
+            <p className="text-sm text-warm-muted">Approved</p>
             {stats.total > 0 && (
               <div className="mt-2 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                 <div
@@ -335,8 +359,8 @@ export default function DepartmentDashboard() {
             <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
               <CheckCircle2 className="w-5 h-5 text-green-600" />
               <div>
-                <p className="text-lg font-bold text-green-700">{stats.cleared}</p>
-                <p className="text-xs text-green-600">Cleared</p>
+                <p className="text-lg font-bold text-green-700">{stats.approved}</p>
+                <p className="text-xs text-green-600">Approved</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
@@ -349,8 +373,8 @@ export default function DepartmentDashboard() {
             <div className="flex items-center gap-3 p-3 bg-amber-50 rounded-lg">
               <Clock className="w-5 h-5 text-amber-600" />
               <div>
-                <p className="text-lg font-bold text-amber-700">{stats.inProgress}</p>
-                <p className="text-xs text-amber-600">In Progress</p>
+                <p className="text-lg font-bold text-amber-700">{stats.submitted}</p>
+                <p className="text-xs text-amber-600">Submitted</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 bg-red-50 rounded-lg">
