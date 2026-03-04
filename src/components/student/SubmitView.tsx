@@ -308,57 +308,65 @@ export default function SubmitView({
   if (!clearanceRequest) {
     if (!systemSettings || !clearanceOpen) {
       return (
-        <Card padding="lg" className="text-center max-w-sm mx-auto">
-          <Info className="w-10 h-10 text-gray-400 mx-auto mb-3" />
-          <h3 className="text-base font-semibold text-cjc-navy mb-1">Submissions Closed</h3>
-          <p className="text-sm text-gray-500">
-            Clearance submissions are not currently open. Check back later.
-          </p>
-        </Card>
+        <div className="flex items-center justify-center">
+          <Card padding="lg" className="text-center max-w-sm w-full">
+            <Info className="w-10 h-10 text-gray-400 mx-auto mb-3" />
+            <h3 className="text-base font-semibold text-cjc-navy mb-1">Submissions Closed</h3>
+            <p className="text-sm text-gray-500">
+              Clearance submissions are not currently open. Check back later.
+            </p>
+          </Card>
+        </div>
       );
     }
 
     return (
-      <Card padding="lg" className="max-w-lg mx-auto space-y-5">
-        <div>
-          <h3 className="text-base font-semibold text-cjc-navy mb-1">Start Your Clearance</h3>
-          <p className="text-sm text-gray-500">
-            Starting clearance will initialize your submission with all departments, offices, and enrolled clubs at once.
-          </p>
-        </div>
-
-        {/* Academic period */}
-        <div className="flex gap-6 text-sm text-gray-600">
+      <div className="flex items-center justify-center">
+        <Card padding="lg" className="max-w-lg w-full space-y-5">
           <div>
-            <span className="font-medium text-gray-700">Academic Year:</span>{" "}
-            {systemSettings.academic_year}
+            <h3 className="text-base font-semibold text-cjc-navy mb-1">Start Your Clearance</h3>
+            <p className="text-sm text-gray-500">
+              Starting clearance will initialize your submission with all departments, offices, and enrolled clubs at once.
+            </p>
           </div>
-          <div>
-            <span className="font-medium text-gray-700">Semester:</span>{" "}
-            {systemSettings.current_semester}
-          </div>
-        </div>
 
-        <Button
-          variant="gold"
-          size="md"
-          disabled={isStarting}
-          isLoading={isStarting}
-          onClick={handleStartClearance}
-        >
-          {isStarting ? "Starting..." : "Start Clearance"}
-        </Button>
-      </Card>
+          {/* Academic period */}
+          <div className="flex gap-6 text-sm text-gray-600">
+            <div>
+              <span className="font-medium text-gray-700">Academic Year:</span>{" "}
+              {systemSettings.academic_year}
+            </div>
+            <div>
+              <span className="font-medium text-gray-700">Semester:</span>{" "}
+              {systemSettings.current_semester}
+            </div>
+          </div>
+
+          <div className="text-center">
+            <Button
+              variant="gold"
+              size="md"
+              disabled={isStarting}
+              isLoading={isStarting}
+              onClick={handleStartClearance}
+            >
+              {isStarting ? "Starting..." : "Start Clearance"}
+            </Button>
+          </div>
+        </Card>
+      </div>
     );
   }
 
   // Phase 2: Request exists — show accordion per source
   if (sources.length === 0) {
     return (
-      <Card padding="lg" className="text-center max-w-sm mx-auto">
-        <Info className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-        <p className="text-sm text-gray-500">No sources found for this section.</p>
-      </Card>
+      <div className="flex items-center justify-center">
+        <Card padding="lg" className="text-center max-w-sm w-full">
+          <Info className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+          <p className="text-sm text-gray-500">No sources found for this section.</p>
+        </Card>
+      </div>
     );
   }
 

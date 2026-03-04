@@ -69,26 +69,30 @@ export default function ClearanceStatusView({
 
   if (clearanceRequest === null) {
     return (
-      <Card padding="lg" className="text-center max-w-md mx-auto">
-        <Info className="w-10 h-10 text-blue-400 mx-auto mb-3" />
-        <h3 className="text-base font-semibold text-cjc-navy mb-1">No Active Clearance Request</h3>
-        <p className="text-sm text-gray-500 mb-4">
-          You have not started a clearance request yet. Submit one to begin tracking your clearance status.
-        </p>
-        <Link href={submitHref}>
-          <Button variant="gold" size="md">Start Clearance</Button>
-        </Link>
-      </Card>
+      <div className="flex items-center justify-center">
+        <Card padding="lg" className="text-center max-w-md w-full">
+          <Info className="w-10 h-10 text-blue-400 mx-auto mb-3" />
+          <h3 className="text-base font-semibold text-cjc-navy mb-1">No Active Clearance Request</h3>
+          <p className="text-sm text-gray-500 mb-4">
+            You have not started a clearance request yet. Submit one to begin tracking your clearance status.
+          </p>
+          <Link href={submitHref}>
+            <Button variant="gold" size="md">Start Clearance</Button>
+          </Link>
+        </Card>
+      </div>
     );
   }
 
   if (sources.length === 0) {
     return (
-      <Card padding="lg" className="text-center max-w-md mx-auto">
-        <MinusCircle className="w-10 h-10 text-gray-300 mx-auto mb-3" />
-        <h3 className="text-base font-semibold text-cjc-navy mb-1">No Sources Found</h3>
-        <p className="text-sm text-gray-500">No {sourceType} sources are registered.</p>
-      </Card>
+      <div className="flex items-center justify-center">
+        <Card padding="lg" className="text-center max-w-md w-full">
+          <MinusCircle className="w-10 h-10 text-gray-300 mx-auto mb-3" />
+          <h3 className="text-base font-semibold text-cjc-navy mb-1">No Sources Found</h3>
+          <p className="text-sm text-gray-500">No {sourceType} sources are registered.</p>
+        </Card>
+      </div>
     );
   }
 
