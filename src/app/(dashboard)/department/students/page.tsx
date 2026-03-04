@@ -28,8 +28,10 @@ import {
   Clock,
   XCircle,
   MinusCircle,
+  Eye,
   X,
 } from "lucide-react";
+import { StudentClearanceProgressModal } from "@/components/features/StudentClearanceProgressModal";
 import {
   Department,
   Profile,
@@ -42,37 +44,66 @@ import {
 } from "@/lib/supabase";
 import { formatDate } from "@/lib/utils";
 
-type ClearanceStatus = "approved" | "pending" | "submitted" | "in_progress" | "rejected" | "on_hold" | "none";
+type ClearanceStatus = "completed" | "in_progress" | "pending" | "none";
+type ItemStatus = "pending" | "submitted" | "approved" | "rejected" | "on_hold" | null;
 
 interface StudentWithClearance extends Profile {
   latestRequest: ClearanceRequest | null;
   deptItem: ClearanceItem | null;
   clearanceStatus: ClearanceStatus;
+  deptStatus: ItemStatus;
 }
 
 /**
- * Derive status from the department's clearance item (not the overall request).
- * This shows whether THIS department has approved the student's item.
+ * Derive overall clearance status from the request (not the department item).
  */
-function deriveStatusFromItem(item: ClearanceItem | null): ClearanceStatus {
-  if (!item) return "none";
-  switch (item.status) {
-    case "approved":
-      return "approved";
-    case "submitted":
-      return "submitted";
-    case "pending":
-      return "pending";
-    case "rejected":
-      return "rejected";
-    case "on_hold":
-      return "on_hold";
-    default:
-      return "none";
-  }
+function deriveOverallStatus(request: ClearanceRequest | null): ClearanceStatus {
+  if (!request) return "none";
+  return request.status as ClearanceStatus;
+}
+
+/**
+ * Derive department-specific item status.
+ */
+function deriveDeptStatus(item: ClearanceItem | null): ItemStatus {
+  if (!item) return null;
+  return item.status as ItemStatus;
 }
 
 function ClearanceBadge({ status }: { status: ClearanceStatus }) {
+  switch (status) {
+    case "completed":
+      return (
+        <Badge variant="approved" size="sm">
+          <CheckCircle className="w-3 h-3" />
+          Completed
+        </Badge>
+      );
+    case "in_progress":
+      return (
+        <Badge variant="pending" size="sm">
+          <Clock className="w-3 h-3" />
+          In Progress
+        </Badge>
+      );
+    case "pending":
+      return (
+        <Badge variant="neutral" size="sm">
+          <Clock className="w-3 h-3" />
+          Pending
+        </Badge>
+      );
+    default:
+      return (
+        <Badge variant="neutral" size="sm">
+          <MinusCircle className="w-3 h-3" />
+          No Request
+        </Badge>
+      );
+  }
+}
+
+function DeptStatusBadge({ status }: { status: ItemStatus }) {
   switch (status) {
     case "approved":
       return (
@@ -95,13 +126,6 @@ function ClearanceBadge({ status }: { status: ClearanceStatus }) {
           Not Started
         </Badge>
       );
-    case "on_hold":
-      return (
-        <Badge variant="warning" size="sm">
-          <Clock className="w-3 h-3" />
-          On Hold
-        </Badge>
-      );
     case "rejected":
       return (
         <Badge variant="rejected" size="sm">
@@ -109,23 +133,23 @@ function ClearanceBadge({ status }: { status: ClearanceStatus }) {
           Rejected
         </Badge>
       );
-    default:
+    case "on_hold":
       return (
-        <Badge variant="neutral" size="sm">
-          <MinusCircle className="w-3 h-3" />
-          No Request
+        <Badge variant="warning" size="sm">
+          <Clock className="w-3 h-3" />
+          On Hold
         </Badge>
       );
+    default:
+      return <span className="text-sm text-gray-400">—</span>;
   }
 }
 
 const STATUS_OPTIONS = [
   { value: "", label: "All Status" },
-  { value: "approved", label: "Approved" },
-  { value: "submitted", label: "Submitted" },
-  { value: "pending", label: "Not Started" },
-  { value: "on_hold", label: "On Hold" },
-  { value: "rejected", label: "Rejected" },
+  { value: "completed", label: "Completed" },
+  { value: "in_progress", label: "In Progress" },
+  { value: "pending", label: "Pending" },
   { value: "none", label: "No Request" },
 ];
 
@@ -139,6 +163,7 @@ export default function DepartmentStudentsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<StudentWithClearance | null>(null);
 
   const loadData = useCallback(async () => {
     if (!profile?.id) return;
@@ -185,7 +210,7 @@ export default function DepartmentStudentsPage() {
         itemByRequest.set(item.request_id, item);
       }
 
-      // 6. Build StudentWithClearance[] using department item status
+      // 6. Build StudentWithClearance[] using overall request status + dept item status
       const enriched: StudentWithClearance[] = studentProfiles.map((s) => {
         const latestRequest = latestByStudent.get(s.id) ?? null;
         const deptItem = latestRequest ? itemByRequest.get(latestRequest.id) ?? null : null;
@@ -193,7 +218,8 @@ export default function DepartmentStudentsPage() {
           ...s,
           latestRequest,
           deptItem,
-          clearanceStatus: deriveStatusFromItem(deptItem),
+          clearanceStatus: deriveOverallStatus(latestRequest),
+          deptStatus: deriveDeptStatus(deptItem),
         };
       });
 
@@ -214,9 +240,9 @@ export default function DepartmentStudentsPage() {
 
   // --- Computed stats ---
   const totalCount = students.length;
-  const approvedCount = students.filter((s) => s.clearanceStatus === "approved").length;
-  const submittedCount = students.filter((s) => s.clearanceStatus === "submitted").length;
-  const notStartedCount = students.filter((s) => s.clearanceStatus === "pending").length;
+  const completedCount = students.filter((s) => s.clearanceStatus === "completed").length;
+  const inProgressCount = students.filter((s) => s.clearanceStatus === "in_progress").length;
+  const pendingCount = students.filter((s) => s.clearanceStatus === "pending").length;
   const noRequestCount = students.filter((s) => s.clearanceStatus === "none").length;
 
   // --- Filtered list ---
@@ -257,21 +283,21 @@ export default function DepartmentStudentsPage() {
           </Card>
           <Card padding="sm" className="text-center">
             <p className="text-2xl font-bold text-green-600">
-              {isLoading ? "..." : approvedCount}
+              {isLoading ? "..." : completedCount}
             </p>
-            <p className="text-sm text-gray-500">Approved</p>
+            <p className="text-sm text-gray-500">Completed</p>
           </Card>
           <Card padding="sm" className="text-center">
             <p className="text-2xl font-bold text-blue-600">
-              {isLoading ? "..." : submittedCount}
+              {isLoading ? "..." : inProgressCount}
             </p>
-            <p className="text-sm text-gray-500">Submitted</p>
+            <p className="text-sm text-gray-500">In Progress</p>
           </Card>
           <Card padding="sm" className="text-center">
             <p className="text-2xl font-bold text-gray-600">
-              {isLoading ? "..." : notStartedCount}
+              {isLoading ? "..." : pendingCount}
             </p>
-            <p className="text-sm text-gray-500">Not Started</p>
+            <p className="text-sm text-gray-500">Pending</p>
           </Card>
           <Card padding="sm" className="text-center">
             <p className="text-2xl font-bold text-gray-500">
@@ -335,6 +361,8 @@ export default function DepartmentStudentsPage() {
                   <TableHead>Course</TableHead>
                   <TableHead>Year Level</TableHead>
                   <TableHead>Clearance Status</TableHead>
+                  <TableHead>Dept Status</TableHead>
+                  <TableHead>Progress</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Period</TableHead>
                   <TableHead>Since</TableHead>
@@ -375,6 +403,20 @@ export default function DepartmentStudentsPage() {
                       </TableCell>
                       <TableCell>
                         <ClearanceBadge status={student.clearanceStatus} />
+                      </TableCell>
+                      <TableCell>
+                        <DeptStatusBadge status={student.deptStatus} />
+                      </TableCell>
+                      <TableCell>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedStudent(student)}
+                          className="text-xs gap-1"
+                        >
+                          <Eye className="w-3.5 h-3.5" />
+                          View
+                        </Button>
                       </TableCell>
                       <TableCell>
                         <span className="text-sm text-gray-600">
@@ -432,6 +474,14 @@ export default function DepartmentStudentsPage() {
           </div>
         </div>
       )}
+
+      {/* Overall clearance progress modal */}
+      <StudentClearanceProgressModal
+        isOpen={!!selectedStudent}
+        onClose={() => setSelectedStudent(null)}
+        student={selectedStudent}
+        latestRequest={selectedStudent?.latestRequest ?? null}
+      />
     </div>
   );
 }

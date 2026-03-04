@@ -11,8 +11,6 @@ import {
   RefreshCw,
   AlertCircle,
   ArrowRight,
-  AlertTriangle,
-  XCircle,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
@@ -33,15 +31,13 @@ import {
   SystemSettings,
 } from "@/lib/supabase";
 
-type ClearanceStatus = "approved" | "pending" | "submitted" | "rejected" | "on_hold" | "none";
+type ClearanceStatus = "completed" | "in_progress" | "pending" | "none";
 
 interface DashboardStats {
   total: number;
-  approved: number;
-  submitted: number;
+  completed: number;
+  inProgress: number;
   pending: number;
-  onHold: number;
-  rejected: number;
   noRequest: number;
   rate: number;
 }
@@ -52,22 +48,9 @@ interface StudentWithStatus extends Profile {
   status: ClearanceStatus;
 }
 
-function deriveStatusFromItem(item: ClearanceItem | null): ClearanceStatus {
-  if (!item) return "none";
-  switch (item.status) {
-    case "approved":
-      return "approved";
-    case "submitted":
-      return "submitted";
-    case "pending":
-      return "pending";
-    case "rejected":
-      return "rejected";
-    case "on_hold":
-      return "on_hold";
-    default:
-      return "none";
-  }
+function deriveOverallStatus(request: ClearanceRequest | null): ClearanceStatus {
+  if (!request) return "none";
+  return request.status as ClearanceStatus;
 }
 
 export default function DepartmentDashboard() {
@@ -76,11 +59,9 @@ export default function DepartmentDashboard() {
   const [settings, setSettings] = useState<SystemSettings | null>(null);
   const [stats, setStats] = useState<DashboardStats>({
     total: 0,
-    approved: 0,
-    submitted: 0,
+    completed: 0,
+    inProgress: 0,
     pending: 0,
-    onHold: 0,
-    rejected: 0,
     noRequest: 0,
     rate: 0,
   });
@@ -101,7 +82,7 @@ export default function DepartmentDashboard() {
         getSystemSettings(),
       ]);
 
-      const emptyStats: DashboardStats = { total: 0, approved: 0, submitted: 0, pending: 0, onHold: 0, rejected: 0, noRequest: 0, rate: 0 };
+      const emptyStats: DashboardStats = { total: 0, completed: 0, inProgress: 0, pending: 0, noRequest: 0, rate: 0 };
 
       if (!dept) {
         setDepartment(null);
@@ -142,34 +123,26 @@ export default function DepartmentDashboard() {
         itemByRequest.set(item.request_id, item);
       }
 
-      // Calculate stats and enrich students using item-level status
-      let approved = 0;
-      let submitted = 0;
+      // Calculate stats and enrich students using overall request status
+      let completed = 0;
+      let inProgress = 0;
       let pending = 0;
-      let onHold = 0;
-      let rejected = 0;
       let noRequest = 0;
 
       const enrichedStudents: StudentWithStatus[] = students.map((student) => {
         const req = latestByStudent.get(student.id) ?? null;
         const deptItem = req ? itemByRequest.get(req.id) ?? null : null;
-        const status = deriveStatusFromItem(deptItem);
+        const status = deriveOverallStatus(req);
 
         switch (status) {
-          case "approved":
-            approved++;
+          case "completed":
+            completed++;
             break;
-          case "submitted":
-            submitted++;
+          case "in_progress":
+            inProgress++;
             break;
           case "pending":
             pending++;
-            break;
-          case "on_hold":
-            onHold++;
-            break;
-          case "rejected":
-            rejected++;
             break;
           default:
             noRequest++;
@@ -179,9 +152,9 @@ export default function DepartmentDashboard() {
       });
 
       const total = students.length;
-      const rate = total > 0 ? (approved / total) * 100 : 0;
+      const rate = total > 0 ? (completed / total) * 100 : 0;
 
-      setStats({ total, approved, submitted, pending, onHold, rejected, noRequest, rate });
+      setStats({ total, completed, inProgress, pending, noRequest, rate });
 
       // Get recent students with activity (sorted by latest request date)
       const studentsWithRequests = enrichedStudents
@@ -220,20 +193,16 @@ export default function DepartmentDashboard() {
     await loadStats();
   };
 
-  const progressPercent = stats.total > 0 ? Math.round((stats.approved / stats.total) * 100) : 0;
+  const progressPercent = stats.total > 0 ? Math.round((stats.completed / stats.total) * 100) : 0;
 
   const getStatusBadge = (status: StudentWithStatus["status"]) => {
     switch (status) {
-      case "approved":
-        return <Badge variant="success" size="sm"><CheckCircle2 className="w-3 h-3" /> Approved</Badge>;
-      case "submitted":
-        return <Badge variant="warning" size="sm"><Clock className="w-3 h-3" /> Submitted</Badge>;
+      case "completed":
+        return <Badge variant="success" size="sm"><CheckCircle2 className="w-3 h-3" /> Completed</Badge>;
+      case "in_progress":
+        return <Badge variant="warning" size="sm"><Clock className="w-3 h-3" /> In Progress</Badge>;
       case "pending":
-        return <Badge variant="neutral" size="sm"><Clock className="w-3 h-3" /> Not Started</Badge>;
-      case "on_hold":
-        return <Badge variant="warning" size="sm"><Clock className="w-3 h-3" /> On Hold</Badge>;
-      case "rejected":
-        return <Badge variant="danger" size="sm"><XCircle className="w-3 h-3" /> Rejected</Badge>;
+        return <Badge variant="neutral" size="sm"><Clock className="w-3 h-3" /> Pending</Badge>;
       default:
         return <Badge variant="neutral" size="sm">No Request</Badge>;
     }
@@ -323,17 +292,17 @@ export default function DepartmentDashboard() {
           <div className="card p-4 text-center">
             <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
             <p className="text-2xl font-bold text-cjc-navy">{stats.pending}</p>
-            <p className="text-sm text-warm-muted">Not Started</p>
+            <p className="text-sm text-warm-muted">Pending</p>
           </div>
           <div className="card p-4 text-center">
             <Clock className="w-8 h-8 text-amber-500 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-cjc-navy">{stats.submitted}</p>
-            <p className="text-sm text-warm-muted">Submitted</p>
+            <p className="text-2xl font-bold text-cjc-navy">{stats.inProgress}</p>
+            <p className="text-sm text-warm-muted">In Progress</p>
           </div>
           <div className="card p-4 text-center">
             <CheckCircle2 className="w-8 h-8 text-success mx-auto mb-2" />
-            <p className="text-2xl font-bold text-cjc-navy">{stats.approved}/{stats.total}</p>
-            <p className="text-sm text-warm-muted">Approved</p>
+            <p className="text-2xl font-bold text-cjc-navy">{stats.completed}/{stats.total}</p>
+            <p className="text-sm text-warm-muted">Completed</p>
             {stats.total > 0 && (
               <div className="mt-2 h-1.5 bg-gray-200 rounded-full overflow-hidden">
                 <div
@@ -346,7 +315,7 @@ export default function DepartmentDashboard() {
           <div className="card p-4 text-center">
             <TrendingUp className="w-8 h-8 text-ccis-blue-primary mx-auto mb-2" />
             <p className="text-2xl font-bold text-cjc-navy">{stats.rate.toFixed(1)}%</p>
-            <p className="text-sm text-warm-muted">Clearance Rate</p>
+            <p className="text-sm text-warm-muted">Completion Rate</p>
           </div>
         </div>
 
@@ -355,33 +324,26 @@ export default function DepartmentDashboard() {
           <CardHeader>
             <CardTitle>Student Clearance Overview</CardTitle>
           </CardHeader>
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
               <CheckCircle2 className="w-5 h-5 text-green-600" />
               <div>
-                <p className="text-lg font-bold text-green-700">{stats.approved}</p>
-                <p className="text-xs text-green-600">Approved</p>
+                <p className="text-lg font-bold text-green-700">{stats.completed}</p>
+                <p className="text-xs text-green-600">Completed</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+              <Clock className="w-5 h-5 text-blue-600" />
+              <div>
+                <p className="text-lg font-bold text-blue-700">{stats.inProgress}</p>
+                <p className="text-xs text-blue-600">In Progress</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
               <Clock className="w-5 h-5 text-gray-500" />
               <div>
                 <p className="text-lg font-bold text-gray-700">{stats.pending}</p>
-                <p className="text-xs text-gray-500">Not Started</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-amber-50 rounded-lg">
-              <Clock className="w-5 h-5 text-amber-600" />
-              <div>
-                <p className="text-lg font-bold text-amber-700">{stats.submitted}</p>
-                <p className="text-xs text-amber-600">Submitted</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 p-3 bg-red-50 rounded-lg">
-              <AlertTriangle className="w-5 h-5 text-red-600" />
-              <div>
-                <p className="text-lg font-bold text-red-700">{stats.rejected}</p>
-                <p className="text-xs text-red-600">Rejected</p>
+                <p className="text-xs text-gray-500">Pending</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 bg-gray-100 rounded-lg">
