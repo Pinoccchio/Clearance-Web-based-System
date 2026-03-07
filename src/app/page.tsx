@@ -13,6 +13,7 @@ import { HeroSection } from "@/components/landing/HeroSection";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
 import { AnnouncementsSection } from "@/components/landing/AnnouncementsSection";
 import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
+import { VideoSection } from "@/components/landing/VideoSection";
 import { CTASection } from "@/components/landing/CTASection";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 
@@ -118,6 +119,7 @@ export default function LandingPage() {
           onSignIn={openAuthModal}
         />
         <HowItWorksSection />
+        <VideoSection />
         <CampusMapSection />
         <CTASection onSignIn={openAuthModal} />
         <LandingFooter />
