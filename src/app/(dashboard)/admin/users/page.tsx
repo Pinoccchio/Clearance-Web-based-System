@@ -249,7 +249,7 @@ export default function AdminUsersPage() {
             <p className="text-sm text-gray-500">Total Users</p>
           </Card>
           <Card padding="sm" className="text-center">
-            <p className="text-2xl font-bold text-blue-600">
+            <p className="text-2xl font-bold text-cjc-blue">
               {isLoading
                 ? "..."
                 : users.filter((u) => u.role === "student").length}

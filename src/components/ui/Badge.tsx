@@ -10,16 +10,16 @@ const badgeVariants = cva(
     variants: {
       variant: {
         default: "bg-gray-100 text-gray-700",
-        pending: "bg-indigo-50 text-indigo-600",
+        pending: "bg-cjc-gold/10 text-cjc-gold",
         approved: "bg-green-50 text-green-600",
         rejected: "bg-red-50 text-red-600",
         onHold: "bg-amber-50 text-amber-600",
-        info: "bg-blue-50 text-blue-600",
+        info: "bg-cjc-blue/5 text-cjc-blue",
         success: "bg-green-50 text-green-600",
         warning: "bg-amber-50 text-amber-600",
         danger: "bg-red-50 text-red-600",
         neutral: "bg-gray-100 text-gray-600",
-        gold: "bg-blue-100 text-blue-700",
+        gold: "bg-cjc-gold/10 text-cjc-gold",
       },
       size: {
         sm: "px-2 py-0.5 text-xs",

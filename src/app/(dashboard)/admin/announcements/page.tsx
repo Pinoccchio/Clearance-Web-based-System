@@ -33,7 +33,7 @@ type FilterType = "all" | "system" | "department" | "office" | "club";
 
 const priorityColors = {
   low: "bg-gray-100 text-gray-600",
-  normal: "bg-blue-100 text-blue-600",
+  normal: "bg-cjc-blue/10 text-cjc-blue",
   high: "bg-amber-100 text-amber-600",
   urgent: "bg-red-100 text-red-600",
 };
@@ -108,7 +108,7 @@ export default function AdminAnnouncementsPage() {
       return { label: "System-wide", icon: Globe, color: "text-purple-600 bg-purple-100" };
     }
     if (announcement.department) {
-      return { label: announcement.department.name, icon: Building2, color: "text-blue-600 bg-blue-100" };
+      return { label: announcement.department.name, icon: Building2, color: "text-cjc-blue bg-cjc-blue/10" };
     }
     if (announcement.office) {
       return { label: announcement.office.name, icon: Building2, color: "text-green-600 bg-green-100" };

@@ -640,7 +640,7 @@ export default function DepartmentClearancePage() {
                                       key={idx}
                                       type="button"
                                       onClick={() => setLightboxUrl(fileUrl)}
-                                      className="relative w-12 h-12 rounded-lg overflow-hidden border border-gray-200 hover:border-blue-400 transition-colors flex-shrink-0 group"
+                                      className="relative w-12 h-12 rounded-lg overflow-hidden border border-gray-200 hover:border-cjc-blue/40 transition-colors flex-shrink-0 group"
                                       title={`View image ${idx + 1}`}
                                     >
                                       {/* eslint-disable-next-line @next/next/no-img-element */}

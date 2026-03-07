@@ -30,7 +30,7 @@ function StatusIcon({ status }: { status: string }) {
     case "on_hold":
       return <PauseCircle className="w-4 h-4 text-amber-500" />;
     case "submitted":
-      return <Upload className="w-4 h-4 text-blue-500" />;
+      return <Upload className="w-4 h-4 text-cjc-blue" />;
     default:
       return <Clock className="w-4 h-4 text-gray-400" />;
   }
@@ -52,7 +52,7 @@ function statusColor(status: string): string {
     case "approved": return "text-green-700 bg-green-50 border-green-200";
     case "rejected": return "text-red-700 bg-red-50 border-red-200";
     case "on_hold": return "text-amber-700 bg-amber-50 border-amber-200";
-    case "submitted": return "text-blue-700 bg-blue-50 border-blue-200";
+    case "submitted": return "text-cjc-navy bg-cjc-blue/5 border-cjc-blue/20";
     default: return "text-gray-600 bg-gray-50 border-gray-200";
   }
 }
@@ -62,7 +62,7 @@ function dotColor(status: string): string {
     case "approved": return "bg-green-500";
     case "rejected": return "bg-red-500";
     case "on_hold": return "bg-amber-400";
-    case "submitted": return "bg-blue-500";
+    case "submitted": return "bg-cjc-blue";
     default: return "bg-gray-400";
   }
 }

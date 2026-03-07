@@ -419,7 +419,7 @@ export default function ClubRequirementsPage() {
                         </td>
                         <td className="px-4 py-4">
                           {req.requires_upload ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cjc-blue/10 text-cjc-navy">
                               Required
                             </span>
                           ) : (
@@ -433,7 +433,7 @@ export default function ClubRequirementsPage() {
                             <div className="flex flex-col gap-1">
                               {(req.links ?? []).map(link => (
                                 <a key={link.id || link.url} href={link.url} target="_blank" rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors">
+                                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-cjc-blue/10 text-cjc-navy hover:bg-cjc-blue/15 transition-colors">
                                   <ExternalLink className="w-3 h-3" />
                                   {link.label || "Link"}
                                 </a>

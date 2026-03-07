@@ -499,7 +499,7 @@ export default function OfficeHistoryPage() {
                             href={fileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-blue-600 hover:text-blue-800"
+                            className="text-cjc-blue hover:text-cjc-navy"
                             title={`View file ${idx + 1}`}
                           >
                             <ExternalLink className="w-4 h-4" />

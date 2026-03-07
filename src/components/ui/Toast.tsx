@@ -102,11 +102,11 @@ function ToastItem({ toast, onClose }: { toast: Toast; onClose: () => void }) {
     },
     info: {
       icon: Info,
-      bgColor: "bg-blue-50",
-      borderColor: "border-blue-200",
-      iconColor: "text-blue-500",
-      titleColor: "text-blue-800",
-      messageColor: "text-blue-600",
+      bgColor: "bg-cjc-blue/5",
+      borderColor: "border-cjc-blue/20",
+      iconColor: "text-cjc-blue",
+      titleColor: "text-cjc-navy",
+      messageColor: "text-cjc-blue",
     },
   };
 

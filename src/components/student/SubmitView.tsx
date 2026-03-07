@@ -424,9 +424,9 @@ export default function SubmitView({
     )}
     <div className="space-y-4">
       {/* Info banner */}
-      <div className="flex items-start gap-3 px-4 py-3 bg-blue-50 border border-blue-200 rounded-lg">
-        <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
-        <p className="text-sm text-blue-700">
+      <div className="flex items-start gap-3 px-4 py-3 bg-cjc-blue/5 border border-cjc-blue/20 rounded-lg">
+        <Info className="w-4 h-4 text-cjc-blue flex-shrink-0 mt-0.5" />
+        <p className="text-sm text-cjc-navy">
           Upload a file for requirements marked with &ldquo;Upload Required&rdquo;. Other requirements need no file.
         </p>
       </div>
@@ -563,7 +563,7 @@ export default function SubmitView({
                                   </span>
                                   {(req.links ?? []).map(link => (
                                     <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer"
-                                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700 hover:bg-blue-200 transition-colors">
+                                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-cjc-blue/10 text-cjc-navy hover:bg-cjc-blue/15 transition-colors">
                                       <ExternalLink className="w-3 h-3" />
                                       {link.label || "Open Link"}
                                     </a>
@@ -660,16 +660,16 @@ export default function SubmitView({
 
                                   {/* Add-file dropzone (always shown unless locked) */}
                                   {isUploading ? (
-                                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-blue-50 border border-blue-200">
-                                      <Loader2 className="w-4 h-4 text-blue-500 animate-spin flex-shrink-0" />
-                                      <p className="text-xs text-blue-700">Uploading...</p>
+                                    <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-cjc-blue/5 border border-cjc-blue/20">
+                                      <Loader2 className="w-4 h-4 text-cjc-blue animate-spin flex-shrink-0" />
+                                      <p className="text-xs text-cjc-navy">Uploading...</p>
                                     </div>
                                   ) : item && !isLocked ? (
                                     <div
                                       className={`relative border-2 border-dashed rounded-lg px-3 py-3 text-center cursor-pointer transition-colors ${
                                         error
                                           ? "border-red-300 bg-red-50"
-                                          : "border-gray-300 bg-gray-50 hover:border-blue-400 hover:bg-blue-50"
+                                          : "border-gray-300 bg-gray-50 hover:border-cjc-blue/40 hover:bg-cjc-blue/5"
                                       }`}
                                       onDragOver={handleDragOver}
                                       onDrop={(e) => item && handleDrop(req.id, item.id, e)}
@@ -721,7 +721,7 @@ export default function SubmitView({
                                           : "border-gray-200 bg-gray-50 cursor-default opacity-60"
                                         : isChecked
                                           ? "border-green-300 bg-green-50 hover:border-red-300 hover:bg-red-50 cursor-pointer"
-                                          : "border-dashed border-gray-300 bg-gray-50 hover:border-blue-400 hover:bg-blue-50"
+                                          : "border-dashed border-gray-300 bg-gray-50 hover:border-cjc-blue/40 hover:bg-cjc-blue/5"
                                     }`}
                                   >
                                     {isToggling ? (

@@ -49,6 +49,7 @@ export function AnnouncementDetailModal({
       iconBg: "bg-white/20",
       label: "Urgent Notice",
       textColor: "text-white",
+      closeBtnClass: "bg-cjc-red text-white hover:bg-cjc-red-dark",
     },
     high: {
       headerClass: "modal-header-high",
@@ -56,6 +57,7 @@ export function AnnouncementDetailModal({
       iconBg: "bg-cjc-navy/10",
       label: "High Priority",
       textColor: "text-cjc-navy",
+      closeBtnClass: "bg-cjc-gold text-cjc-navy hover:bg-cjc-gold/80",
     },
     normal: {
       headerClass: "modal-header-normal",
@@ -63,6 +65,7 @@ export function AnnouncementDetailModal({
       iconBg: "bg-white/20",
       label: "Announcement",
       textColor: "text-white",
+      closeBtnClass: "bg-cjc-red text-white hover:bg-cjc-red-dark",
     },
     low: {
       headerClass: "modal-header-low",
@@ -70,6 +73,7 @@ export function AnnouncementDetailModal({
       iconBg: "bg-white/20",
       label: "Notice",
       textColor: "text-white",
+      closeBtnClass: "bg-gray-600 text-white hover:bg-gray-700",
     },
   };
 
@@ -176,7 +180,7 @@ export function AnnouncementDetailModal({
         <div className="mt-8 flex justify-end modal-fade-up modal-fade-up-delay-4">
           <button
             onClick={onClose}
-            className="modal-close-btn"
+            className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm transition-colors duration-200 ${priority.closeBtnClass}`}
           >
             Close Announcement
           </button>

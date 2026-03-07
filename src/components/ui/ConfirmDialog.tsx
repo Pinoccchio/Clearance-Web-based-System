@@ -79,8 +79,8 @@ export function ConfirmDialog({
     },
     info: {
       icon: Info,
-      bgColor: "bg-blue-100",
-      iconColor: "text-blue-600",
+      bgColor: "bg-cjc-blue/10",
+      iconColor: "text-cjc-blue",
       buttonVariant: "primary" as const,
     },
   };

@@ -274,11 +274,11 @@ export default function StudentDashboardPage() {
 
         {/* Old period notice */}
         {hasOldIncomplete && (
-          <div className="flex items-start gap-3 p-4 rounded-lg bg-blue-50 border border-blue-200">
-            <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
-            <p className="text-sm text-blue-700">
+          <div className="flex items-start gap-3 p-4 rounded-lg bg-cjc-blue/5 border border-cjc-blue/20">
+            <Info className="w-4 h-4 text-cjc-blue flex-shrink-0 mt-0.5" />
+            <p className="text-sm text-cjc-navy">
               You have incomplete clearance from a previous period.{" "}
-              <Link href="/student/history" className="font-medium underline hover:text-blue-900">
+              <Link href="/student/history" className="font-medium underline hover:text-cjc-navy">
                 Check your history for details
               </Link>.
             </p>

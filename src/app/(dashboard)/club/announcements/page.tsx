@@ -32,7 +32,7 @@ import { Avatar } from "@/components/ui/Avatar";
 
 const priorityColors = {
   low: "bg-gray-100 text-gray-600",
-  normal: "bg-blue-100 text-blue-600",
+  normal: "bg-cjc-blue/10 text-cjc-blue",
   high: "bg-amber-100 text-amber-600",
   urgent: "bg-red-100 text-red-600",
 };
@@ -46,7 +46,7 @@ const priorityLabels = {
 
 const priorityCardBorder = {
   low: "border-l-4 border-l-gray-400",
-  normal: "border-l-4 border-l-blue-400",
+  normal: "border-l-4 border-l-cjc-blue",
   high: "border-l-4 border-l-amber-400",
   urgent: "border-l-4 border-l-red-500",
 };

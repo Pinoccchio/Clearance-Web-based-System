@@ -296,11 +296,11 @@ export default function AdminDashboard() {
                 <p className="text-xs text-green-600">Students</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-              <Building2 className="w-5 h-5 text-blue-600" />
+            <div className="flex items-center gap-3 p-3 bg-cjc-blue/5 rounded-lg">
+              <Building2 className="w-5 h-5 text-cjc-blue" />
               <div>
-                <p className="text-lg font-bold text-blue-700">{stats.departmentHeads}</p>
-                <p className="text-xs text-blue-600">Dept Heads</p>
+                <p className="text-lg font-bold text-cjc-navy">{stats.departmentHeads}</p>
+                <p className="text-xs text-cjc-blue">Dept Heads</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 bg-amber-50 rounded-lg">

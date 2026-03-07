@@ -90,12 +90,12 @@ const USER_ICON = L.divIcon({
   ">
     <div style="
       width: 18px; height: 18px; border-radius: 50%;
-      background: #2563eb; border: 3px solid white;
-      box-shadow: 0 0 0 2px rgba(37,99,235,0.3), 0 2px 8px rgba(0,0,0,0.3);
+      background: #c41e2a; border: 3px solid white;
+      box-shadow: 0 0 0 2px rgba(196,30,42,0.3), 0 2px 8px rgba(0,0,0,0.3);
     "></div>
     <div style="
       position: absolute; inset: -6px; border-radius: 50%;
-      background: rgba(37,99,235,0.15);
+      background: rgba(196,30,42,0.15);
       animation: userPulse 2s ease-in-out infinite;
     "></div>
   </div>
@@ -316,7 +316,7 @@ export function GoogleMapView({ viewMode }: GoogleMapViewProps) {
 
         userMarker.bindPopup(
           `<div style="text-align:center;font-family:system-ui,sans-serif;padding:4px 0;min-width:220px;">
-            <strong style="color:#2563eb;font-size:13px;">Your Location</strong>
+            <strong style="color:#c41e2a;font-size:13px;">Your Location</strong>
             <div style="margin-top:8px;padding:6px;background:#fef7f7;border-radius:8px;border:1px solid #f0d0d0;">
               <strong style="color:#c41e2a;font-size:12px;">Main Campus</strong><br/>
               <span style="color:#64605a;font-size:11px;">

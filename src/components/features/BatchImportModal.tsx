@@ -235,12 +235,12 @@ export function BatchImportModal({
   const renderUploadStep = () => (
     <div className="space-y-6">
       {/* Download Template */}
-      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+      <div className="p-4 bg-cjc-blue/5 border border-cjc-blue/20 rounded-lg">
         <div className="flex items-start gap-3">
-          <FileSpreadsheet className="w-5 h-5 text-blue-600 mt-0.5" />
+          <FileSpreadsheet className="w-5 h-5 text-cjc-blue mt-0.5" />
           <div className="flex-1">
-            <h3 className="font-medium text-blue-900">Download Template First</h3>
-            <p className="text-sm text-blue-700 mt-1">
+            <h3 className="font-medium text-cjc-navy">Download Template First</h3>
+            <p className="text-sm text-cjc-navy mt-1">
               Download our Excel template with the correct format and sample data.
               The template includes a reference sheet with all valid values.
             </p>
@@ -533,9 +533,9 @@ export function BatchImportModal({
         )}
 
         {/* Next Steps */}
-        <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-          <h4 className="font-medium text-blue-900 mb-2">Next Steps</h4>
-          <ul className="text-sm text-blue-800 space-y-1">
+        <div className="p-4 bg-cjc-blue/5 border border-cjc-blue/20 rounded-lg">
+          <h4 className="font-medium text-cjc-navy mb-2">Next Steps</h4>
+          <ul className="text-sm text-cjc-navy space-y-1">
             <li>1. Inform students that their accounts have been created</li>
             <li>2. Students should go to the login page and click &quot;Forgot Password&quot;</li>
             <li>3. They will receive an email to set their initial password</li>

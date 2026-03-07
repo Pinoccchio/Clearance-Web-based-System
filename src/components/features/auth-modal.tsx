@@ -202,8 +202,8 @@ function LoginForm({ onClose, onForgotPassword }: { onClose: () => void; onForgo
       </form>
 
       {/* Info notice */}
-      <div className="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-        <p className="text-xs text-blue-800 text-center">
+      <div className="mt-6 p-3 bg-cjc-blue/5 border border-cjc-blue/20 rounded-lg">
+        <p className="text-xs text-cjc-navy text-center">
           New student? Contact your administrator to get your account set up, then use &quot;Forgot Password&quot; to set your password.
         </p>
       </div>
@@ -340,8 +340,8 @@ function ForgotPasswordForm({ onBack }: { onBack: () => void }) {
       </form>
 
       {/* Info notice */}
-      <div className="mt-6 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-        <p className="text-xs text-blue-800 text-center">
+      <div className="mt-6 p-3 bg-cjc-blue/5 border border-cjc-blue/20 rounded-lg">
+        <p className="text-xs text-cjc-navy text-center">
           If you don&apos;t have an account yet, please contact your administrator to have your account created first.
         </p>
       </div>

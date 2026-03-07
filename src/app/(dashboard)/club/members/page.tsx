@@ -330,7 +330,7 @@ export default function ClubMembersPage() {
             <p className="text-sm text-gray-500">Completed</p>
           </Card>
           <Card padding="sm" className="text-center">
-            <p className="text-2xl font-bold text-blue-600">
+            <p className="text-2xl font-bold text-cjc-blue">
               {isLoading ? "..." : inProgressCount}
             </p>
             <p className="text-sm text-gray-500">In Progress</p>

@@ -328,11 +328,11 @@ export default function ClubDashboard() {
                 <p className="text-xs text-amber-600">Pending</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-              <Send className="w-5 h-5 text-blue-600" />
+            <div className="flex items-center gap-3 p-3 bg-cjc-blue/5 rounded-lg">
+              <Send className="w-5 h-5 text-cjc-blue" />
               <div>
-                <p className="text-lg font-bold text-blue-700">{stats.submitted}</p>
-                <p className="text-xs text-blue-600">Submitted</p>
+                <p className="text-lg font-bold text-cjc-navy">{stats.submitted}</p>
+                <p className="text-xs text-cjc-blue">Submitted</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">

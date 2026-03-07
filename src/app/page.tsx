@@ -16,6 +16,7 @@ import { HowItWorksSection } from "@/components/landing/HowItWorksSection";
 import { VideoSection } from "@/components/landing/VideoSection";
 import { CTASection } from "@/components/landing/CTASection";
 import { LandingFooter } from "@/components/landing/LandingFooter";
+import { DeveloperStickers } from "@/components/landing/DeveloperStickers";
 
 const CampusMapSection = dynamic(
   () => import("@/components/landing/CampusMapSection").then((mod) => ({ default: mod.CampusMapSection })),
@@ -122,6 +123,7 @@ export default function LandingPage() {
         <VideoSection />
         <CampusMapSection />
         <CTASection onSignIn={openAuthModal} />
+        <DeveloperStickers />
         <LandingFooter />
       </div>
 

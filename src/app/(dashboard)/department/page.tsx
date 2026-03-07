@@ -339,11 +339,11 @@ export default function DepartmentDashboard() {
                 <p className="text-xs text-green-600">Completed</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-              <Clock className="w-5 h-5 text-blue-600" />
+            <div className="flex items-center gap-3 p-3 bg-cjc-blue/5 rounded-lg">
+              <Clock className="w-5 h-5 text-cjc-blue" />
               <div>
-                <p className="text-lg font-bold text-blue-700">{stats.inProgress}</p>
-                <p className="text-xs text-blue-600">In Progress</p>
+                <p className="text-lg font-bold text-cjc-navy">{stats.inProgress}</p>
+                <p className="text-xs text-cjc-blue">In Progress</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">

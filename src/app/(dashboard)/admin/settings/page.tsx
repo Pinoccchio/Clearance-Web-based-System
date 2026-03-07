@@ -289,9 +289,9 @@ export default function AdminSettingsPage() {
               </div>
 
               {/* Info banner */}
-              <div className="flex items-start gap-3 p-4 rounded-lg bg-blue-50 border border-blue-200">
-                <Info className="w-4 h-4 text-blue-500 flex-shrink-0 mt-0.5" />
-                <p className="text-sm text-blue-700">
+              <div className="flex items-start gap-3 p-4 rounded-lg bg-cjc-blue/5 border border-cjc-blue/20">
+                <Info className="w-4 h-4 text-cjc-blue flex-shrink-0 mt-0.5" />
+                <p className="text-sm text-cjc-navy">
                   Changing the academic period affects all <strong>new</strong> clearance requests.
                   Existing requests keep their original period and are not touched.
                   {activeRequestCount > 0 && (
