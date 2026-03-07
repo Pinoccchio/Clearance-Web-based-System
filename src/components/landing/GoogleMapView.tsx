@@ -4,10 +4,18 @@ import { useEffect, useRef, useState } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
-// Cor Jesu College coordinates (Sacred Heart Avenue, Digos City)
-const CJC_LAT = 6.7513;
-const CJC_LNG = 125.3522;
-const DEFAULT_ZOOM = 17;
+// CJC Main Campus coordinates (Sacred Heart Avenue, Digos City)
+const CJC_MAIN_LAT = 6.7513;
+const CJC_MAIN_LNG = 125.3522;
+
+// CJC Power Campus coordinates
+const CJC_POWER_LAT = 6.769284;
+const CJC_POWER_LNG = 125.344434;
+
+// Center between both campuses
+const CENTER_LAT = (CJC_MAIN_LAT + CJC_POWER_LAT) / 2;
+const CENTER_LNG = (CJC_MAIN_LNG + CJC_POWER_LNG) / 2;
+const DEFAULT_ZOOM = 14;
 
 // Free tile layer providers (no API key needed)
 const TILE_LAYERS = {
@@ -45,9 +53,11 @@ const SAT_LABELS = {
   maxZoom: 18,
 };
 
-// Google Street View embed of CJC (no API key needed for embeds)
-const STREET_VIEW_EMBED =
+// Google Street View embeds (no API key needed for embeds)
+const STREET_VIEW_MAIN =
   "https://www.google.com/maps/embed?pb=!4v1770544849870!6m8!1m7!1s7K5_Hij-aeCuMCWjed1bEg!2m2!1d6.751921732698407!2d125.3521803818293!3f186.74515020771304!4f-17.028356242093196!5f1.385255237394996";
+const STREET_VIEW_POWER =
+  "https://www.google.com/maps/embed?pb=!4v1772890359389!6m8!1m7!1sFCTEPDYMDoFoReHgncn6_g!2m2!1d6.768340802347779!2d125.3445518851647!3f30.53006577958371!4f-33.06060145308918!5f0.7820865974627469";
 
 export type ViewMode = "map" | "street" | "satellite" | "terrain" | "dark" | "humanitarian";
 
@@ -62,9 +72,9 @@ const CJC_ICON = L.divIcon({
     width: 32px; height: 42px; position: relative;
   ">
     <svg viewBox="0 0 32 42" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:32px;height:42px;">
-      <path d="M16 0C7.16 0 0 7.16 0 16c0 12 16 26 16 26s16-14 16-26C32 7.16 24.84 0 16 0z" fill="#1E40AF"/>
+      <path d="M16 0C7.16 0 0 7.16 0 16c0 12 16 26 16 26s16-14 16-26C32 7.16 24.84 0 16 0z" fill="#c41e2a"/>
       <circle cx="16" cy="16" r="8" fill="white"/>
-      <circle cx="16" cy="16" r="5" fill="#1E40AF"/>
+      <circle cx="16" cy="16" r="5" fill="#c41e2a"/>
     </svg>
   </div>`,
   iconSize: [32, 42],
@@ -134,6 +144,7 @@ export function GoogleMapView({ viewMode }: GoogleMapViewProps) {
   const [locating, setLocating] = useState(false);
   const [locationActive, setLocationActive] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [streetCampus, setStreetCampus] = useState<"main" | "power">("main");
 
   // Initialize the Leaflet map once
   useEffect(() => {
@@ -142,7 +153,7 @@ export function GoogleMapView({ viewMode }: GoogleMapViewProps) {
     fixLeafletIcons();
 
     const map = L.map(mapContainerRef.current, {
-      center: [CJC_LAT, CJC_LNG],
+      center: [CENTER_LAT, CENTER_LNG],
       zoom: DEFAULT_ZOOM,
       zoomControl: true,
       scrollWheelZoom: true,
@@ -157,18 +168,35 @@ export function GoogleMapView({ viewMode }: GoogleMapViewProps) {
 
     tileLayerRef.current = tileLayer;
 
-    // Add CJC marker with custom icon
-    const marker = L.marker([CJC_LAT, CJC_LNG], { icon: CJC_ICON }).addTo(map);
-    marker.bindPopup(
+    // Add CJC Main Campus marker
+    const mainMarker = L.marker([CJC_MAIN_LAT, CJC_MAIN_LNG], { icon: CJC_ICON }).addTo(map);
+    mainMarker.bindPopup(
       `<div style="text-align:center;font-family:system-ui,sans-serif;padding:4px 0;">
-        <strong style="color:#0f2744;font-size:14px;">Cor Jesu College</strong><br/>
+        <strong style="color:#0f2744;font-size:14px;">CJC Main Campus</strong><br/>
         <span style="color:#64605a;font-size:12px;">Sacred Heart Avenue, Digos City<br/>Davao del Sur 8002</span>
       </div>`,
       { maxWidth: 220 }
     );
 
-    // Open popup by default so users see the label
-    marker.openPopup();
+    // Add CJC Power Campus marker
+    const powerMarker = L.marker([CJC_POWER_LAT, CJC_POWER_LNG], { icon: CJC_ICON }).addTo(map);
+    powerMarker.bindPopup(
+      `<div style="text-align:center;font-family:system-ui,sans-serif;padding:4px 0;">
+        <strong style="color:#0f2744;font-size:14px;">CJC Power Campus</strong><br/>
+        <span style="color:#64605a;font-size:12px;">Power, Digos City<br/>Davao del Sur 8002</span>
+      </div>`,
+      { maxWidth: 220 }
+    );
+
+    // Fit map to show both campuses
+    const campusBounds = L.latLngBounds(
+      [CJC_MAIN_LAT, CJC_MAIN_LNG],
+      [CJC_POWER_LAT, CJC_POWER_LNG]
+    );
+    map.fitBounds(campusBounds, { padding: [50, 50] });
+
+    // Open main campus popup by default
+    mainMarker.openPopup();
 
     mapInstanceRef.current = map;
     setMapReady(true);
@@ -239,7 +267,7 @@ export function GoogleMapView({ viewMode }: GoogleMapViewProps) {
     }
 
     // Reset view back to CJC
-    map.setView([CJC_LAT, CJC_LNG], DEFAULT_ZOOM);
+    map.setView([CENTER_LAT, CENTER_LNG], DEFAULT_ZOOM);
     setLocationActive(false);
   };
 
@@ -276,52 +304,67 @@ export function GoogleMapView({ viewMode }: GoogleMapViewProps) {
         // Add user location marker
         const userMarker = L.marker([latitude, longitude], { icon: USER_ICON }).addTo(map);
 
-        // Calculate distance
-        const distKm = getDistance(latitude, longitude, CJC_LAT, CJC_LNG);
-        const distText = distKm < 1
-          ? `${Math.round(distKm * 1000)}m`
-          : `${distKm.toFixed(1)}km`;
+        // Calculate distance to both campuses
+        const distMain = getDistance(latitude, longitude, CJC_MAIN_LAT, CJC_MAIN_LNG);
+        const distPower = getDistance(latitude, longitude, CJC_POWER_LAT, CJC_POWER_LNG);
 
-        // Estimate walking time (~5km/h) and driving time (~30km/h)
-        const walkMin = Math.round((distKm / 5) * 60);
-        const driveMin = Math.max(1, Math.round((distKm / 30) * 60));
+        const fmtDist = (km: number) => km < 1 ? `${Math.round(km * 1000)}m` : `${km.toFixed(1)}km`;
+        const fmtWalk = (km: number) => Math.round((km / 5) * 60);
+        const fmtDrive = (km: number) => Math.max(1, Math.round((km / 30) * 60));
+
+        const btnStyle = "display:inline-block;margin-top:4px;padding:5px 10px;color:white;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none;";
 
         userMarker.bindPopup(
-          `<div style="text-align:center;font-family:system-ui,sans-serif;padding:4px 0;">
-            <strong style="color:#2563eb;font-size:13px;">Your Location</strong><br/>
-            <span style="color:#64605a;font-size:12px;line-height:1.5;">
-              ${distText} to CJC<br/>
-              ~${walkMin} min walk &middot; ~${driveMin} min drive
-            </span><br/>
-            <a href="https://www.google.com/maps/dir/${latitude},${longitude}/${CJC_LAT},${CJC_LNG}"
-               target="_blank" rel="noopener noreferrer"
-               style="display:inline-block;margin-top:6px;padding:4px 12px;background:#1E40AF;color:white;border-radius:6px;font-size:12px;font-weight:600;text-decoration:none;">
-              Open in Google Maps
-            </a>
+          `<div style="text-align:center;font-family:system-ui,sans-serif;padding:4px 0;min-width:220px;">
+            <strong style="color:#2563eb;font-size:13px;">Your Location</strong>
+            <div style="margin-top:8px;padding:6px;background:#fef7f7;border-radius:8px;border:1px solid #f0d0d0;">
+              <strong style="color:#c41e2a;font-size:12px;">Main Campus</strong><br/>
+              <span style="color:#64605a;font-size:11px;">
+                ${fmtDist(distMain)} &middot; ~${fmtWalk(distMain)} min walk &middot; ~${fmtDrive(distMain)} min drive
+              </span><br/>
+              <a href="https://www.google.com/maps/dir/${latitude},${longitude}/${CJC_MAIN_LAT},${CJC_MAIN_LNG}"
+                 target="_blank" rel="noopener noreferrer"
+                 style="${btnStyle}background:#c41e2a;">
+                Directions to Main
+              </a>
+            </div>
+            <div style="margin-top:6px;padding:6px;background:#fef7f7;border-radius:8px;border:1px solid #f0d0d0;">
+              <strong style="color:#c41e2a;font-size:12px;">Power Campus</strong><br/>
+              <span style="color:#64605a;font-size:11px;">
+                ${fmtDist(distPower)} &middot; ~${fmtWalk(distPower)} min walk &middot; ~${fmtDrive(distPower)} min drive
+              </span><br/>
+              <a href="https://www.google.com/maps/dir/${latitude},${longitude}/${CJC_POWER_LAT},${CJC_POWER_LNG}"
+                 target="_blank" rel="noopener noreferrer"
+                 style="${btnStyle}background:#c41e2a;">
+                Directions to Power
+              </a>
+            </div>
           </div>`,
-          { maxWidth: 240 }
+          { maxWidth: 280 }
         ).openPopup();
 
         userMarkerRef.current = userMarker;
 
-        // Draw dashed line from user to CJC
-        const routeLine = L.polyline(
-          [[latitude, longitude], [CJC_LAT, CJC_LNG]],
-          {
-            color: "#1E40AF",
-            weight: 3,
-            opacity: 0.6,
-            dashArray: "8, 8",
-          }
-        ).addTo(map);
+        // Draw dashed lines from user to both campuses
+        const routeLines = L.layerGroup([
+          L.polyline(
+            [[latitude, longitude], [CJC_MAIN_LAT, CJC_MAIN_LNG]],
+            { color: "#c41e2a", weight: 3, opacity: 0.6, dashArray: "8, 8" }
+          ),
+          L.polyline(
+            [[latitude, longitude], [CJC_POWER_LAT, CJC_POWER_LNG]],
+            { color: "#c41e2a", weight: 3, opacity: 0.6, dashArray: "8, 8" }
+          ),
+        ]).addTo(map);
 
-        routeLineRef.current = routeLine;
+        routeLineRef.current = routeLines as unknown as L.Polyline;
 
-        // Fit map to show both points
-        const bounds = L.latLngBounds(
+        // Fit map to show user + both campuses
+        const bounds = L.latLngBounds([
           [latitude, longitude],
-          [CJC_LAT, CJC_LNG]
-        );
+          [CJC_MAIN_LAT, CJC_MAIN_LNG],
+          [CJC_POWER_LAT, CJC_POWER_LNG],
+        ]);
         map.fitBounds(bounds, { padding: [50, 50] });
 
         setLocating(false);
@@ -371,15 +414,15 @@ export function GoogleMapView({ viewMode }: GoogleMapViewProps) {
           aria-label={locationActive ? "Hide my location" : "Show my location"}
         >
           {locating ? (
-            <div className="w-4 h-4 border-2 border-ccis-blue-primary/30 border-t-ccis-blue-primary rounded-full animate-spin" />
+            <div className="w-4 h-4 border-2 border-cjc-red/30 border-t-cjc-red rounded-full animate-spin" />
           ) : (
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <circle cx="8" cy="8" r="3" fill="#1E40AF" />
-              <circle cx="8" cy="8" r="6.5" stroke="#1E40AF" strokeWidth="1.5" fill="none" />
-              <line x1="8" y1="0" x2="8" y2="3" stroke="#1E40AF" strokeWidth="1.5" strokeLinecap="round" />
-              <line x1="8" y1="13" x2="8" y2="16" stroke="#1E40AF" strokeWidth="1.5" strokeLinecap="round" />
-              <line x1="0" y1="8" x2="3" y2="8" stroke="#1E40AF" strokeWidth="1.5" strokeLinecap="round" />
-              <line x1="13" y1="8" x2="16" y2="8" stroke="#1E40AF" strokeWidth="1.5" strokeLinecap="round" />
+              <circle cx="8" cy="8" r="3" fill="#c41e2a" />
+              <circle cx="8" cy="8" r="6.5" stroke="#c41e2a" strokeWidth="1.5" fill="none" />
+              <line x1="8" y1="0" x2="8" y2="3" stroke="#c41e2a" strokeWidth="1.5" strokeLinecap="round" />
+              <line x1="8" y1="13" x2="8" y2="16" stroke="#c41e2a" strokeWidth="1.5" strokeLinecap="round" />
+              <line x1="0" y1="8" x2="3" y2="8" stroke="#c41e2a" strokeWidth="1.5" strokeLinecap="round" />
+              <line x1="13" y1="8" x2="16" y2="8" stroke="#c41e2a" strokeWidth="1.5" strokeLinecap="round" />
             </svg>
           )}
         </button>
@@ -394,19 +437,68 @@ export function GoogleMapView({ viewMode }: GoogleMapViewProps) {
 
       {/* Google Maps iframe (visible for street mode) */}
       {viewMode === "street" && (
-        <iframe
-          src={STREET_VIEW_EMBED}
-          className="map-street-iframe"
-          style={{
-            width: "100%",
-            height: "100%",
-            border: "none",
-          }}
-          allowFullScreen
-          loading="lazy"
-          referrerPolicy="no-referrer-when-downgrade"
-          title="CJC Street View - Cor Jesu College, Digos City"
-        />
+        <div style={{ width: "100%", height: "100%", position: "relative" }}>
+          <iframe
+            src={streetCampus === "main" ? STREET_VIEW_MAIN : STREET_VIEW_POWER}
+            className="map-street-iframe"
+            style={{
+              width: "100%",
+              height: "100%",
+              border: "none",
+            }}
+            allowFullScreen
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+            title={`CJC Street View - ${streetCampus === "main" ? "Main Campus" : "Power Campus"}`}
+          />
+          {/* Campus switcher for street view */}
+          <div style={{
+            position: "absolute",
+            top: 12,
+            left: "50%",
+            transform: "translateX(-50%)",
+            display: "flex",
+            gap: 4,
+            background: "rgba(255,255,255,0.95)",
+            borderRadius: 10,
+            padding: 4,
+            boxShadow: "0 2px 12px rgba(0,0,0,0.15)",
+            zIndex: 10,
+          }}>
+            <button
+              onClick={() => setStreetCampus("main")}
+              style={{
+                padding: "6px 14px",
+                borderRadius: 8,
+                border: "none",
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "all 0.2s",
+                background: streetCampus === "main" ? "#c41e2a" : "transparent",
+                color: streetCampus === "main" ? "white" : "#64605a",
+              }}
+            >
+              Main Campus
+            </button>
+            <button
+              onClick={() => setStreetCampus("power")}
+              style={{
+                padding: "6px 14px",
+                borderRadius: 8,
+                border: "none",
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: "pointer",
+                transition: "all 0.2s",
+                background: streetCampus === "power" ? "#c41e2a" : "transparent",
+                color: streetCampus === "power" ? "white" : "#64605a",
+              }}
+            >
+              Power Campus
+            </button>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -320,7 +320,7 @@ export default function DepartmentDashboard() {
             )}
           </div>
           <div className="card p-4 text-center">
-            <TrendingUp className="w-8 h-8 text-ccis-blue-primary mx-auto mb-2" />
+            <TrendingUp className="w-8 h-8 text-cjc-red mx-auto mb-2" />
             <p className="text-2xl font-bold text-cjc-navy">{stats.rate.toFixed(1)}%</p>
             <p className="text-sm text-warm-muted">Completion Rate</p>
           </div>

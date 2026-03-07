@@ -13,32 +13,21 @@ export function LandingHeader({ onSignIn }: LandingHeaderProps) {
         <div className="flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-full overflow-hidden border border-border-warm shadow-sm bg-white">
-                <Image
-                  src="/images/logos/cjc-logo.jpeg"
-                  alt="CJC Logo"
-                  width={40}
-                  height={40}
-                  className="w-full h-full object-cover"
-                />
-              </div>
-              <div className="w-10 h-10 rounded-full overflow-hidden border border-border-warm shadow-sm bg-white">
-                <Image
-                  src="/images/logos/ccis-logo.jpg"
-                  alt="CCIS Logo"
-                  width={40}
-                  height={40}
-                  className="w-full h-full object-cover"
-                />
-              </div>
+            <div className="w-10 h-10 rounded-full overflow-hidden border border-border-warm shadow-sm bg-white">
+              <Image
+                src="/images/logos/cjc-logo.jpeg"
+                alt="CJC Logo"
+                width={40}
+                height={40}
+                className="w-full h-full object-cover"
+              />
             </div>
             <div className="hidden sm:block">
               <p className="font-semibold text-foreground text-sm tracking-wide uppercase">
                 Cor Jesu College
               </p>
               <p className="text-xs text-muted-foreground">
-                <span className="ccis-braces">{"{"}</span> College of Computing and Information Sciences <span className="ccis-braces">{"}"}</span>
+                Student Clearance System
               </p>
             </div>
           </div>
@@ -47,7 +36,7 @@ export function LandingHeader({ onSignIn }: LandingHeaderProps) {
           <div className="flex items-center gap-3">
             <button
               onClick={onSignIn}
-              className="btn btn-ccis-blue text-sm"
+              className="btn btn-cjc-red text-sm"
             >
               Sign In
             </button>

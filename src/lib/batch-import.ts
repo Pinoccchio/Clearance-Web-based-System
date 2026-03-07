@@ -346,8 +346,8 @@ export function generateExcelTemplate(
     EXPECTED_HEADERS,
     // Sample rows - using DD/MM/YYYY format for dates
     ['2021-0001-5', 'Juan', 'Santos', 'Dela Cruz', 'juan.delacruz@g.cjc.edu.ph', '15/01/2003', 'CCIS', 'BSCS', '3', ''],
-    ['2021-0002-3', 'Maria', 'Clara', 'Santos', 'maria.santos@g.cjc.edu.ph', '20/05/2003', 'CCIS', 'BSIT', '2', ''],
-    ['2022-0015-7', 'Pedro', 'Jose', 'Reyes', 'pedro.reyes@g.cjc.edu.ph', '10/03/2004', 'CCIS', 'BSCS', '1', ''],
+    ['2021-0002-3', 'Maria', 'Clara', 'Santos', 'maria.santos@g.cjc.edu.ph', '20/05/2003', 'CABE', 'BSA', '2', ''],
+    ['2022-0015-7', 'Pedro', 'Jose', 'Reyes', 'pedro.reyes@g.cjc.edu.ph', '10/03/2004', 'CHS', 'BSN', '1', ''],
     ['2020-0088-2', 'Ana', '', 'Garcia', 'ana.garcia@g.cjc.edu.ph', '25/11/2002', 'CCIS', 'BSLIS', '4', ''],
     ['2021-0099-1', 'Jose', 'Miguel', 'Cruz', 'jose.cruz@g.cjc.edu.ph', '08/07/2003', 'CCIS', 'BSIT', '3', ''],
   ];

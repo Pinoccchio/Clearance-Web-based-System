@@ -188,7 +188,7 @@ export default function AdminOfficesPage() {
                 className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
               />
             </button>
-            <button onClick={handleAddOffice} className="btn btn-ccis-blue">
+            <button onClick={handleAddOffice} className="btn btn-cjc-red">
               <Plus className="w-4 h-4" />
               Add Office
             </button>
@@ -342,7 +342,7 @@ export default function AdminOfficesPage() {
             {!searchQuery && (
               <button
                 onClick={handleAddOffice}
-                className="btn btn-ccis-blue mt-4"
+                className="btn btn-cjc-red mt-4"
               >
                 <Plus className="w-4 h-4" />
                 Add Office

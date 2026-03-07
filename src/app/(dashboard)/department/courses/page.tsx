@@ -183,7 +183,7 @@ export default function DepartmentCoursesPage() {
           </div>
         </header>
         <div className="p-6 flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-ccis-blue-primary/30 border-t-ccis-blue-primary rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-cjc-red/30 border-t-cjc-red rounded-full animate-spin" />
         </div>
       </div>
     );
@@ -218,7 +218,7 @@ export default function DepartmentCoursesPage() {
           </div>
           <button
             onClick={() => { setShowAddForm(true); setAddErrors({}); setAddForm(emptyCourseForm); }}
-            className="flex items-center gap-2 px-4 py-2 bg-ccis-blue-primary text-white rounded-lg hover:bg-ccis-blue transition-colors text-sm font-medium"
+            className="flex items-center gap-2 px-4 py-2 bg-cjc-red text-white rounded-lg hover:bg-cjc-red-light transition-colors text-sm font-medium"
           >
             <Plus className="w-4 h-4" />
             Add Course
@@ -267,7 +267,7 @@ export default function DepartmentCoursesPage() {
               <button
                 onClick={handleAdd}
                 disabled={isAdding}
-                className="flex items-center gap-2 px-4 py-2 bg-ccis-blue-primary text-white rounded-lg hover:bg-ccis-blue transition-colors text-sm font-medium disabled:opacity-50"
+                className="flex items-center gap-2 px-4 py-2 bg-cjc-red text-white rounded-lg hover:bg-cjc-red-light transition-colors text-sm font-medium disabled:opacity-50"
               >
                 {isAdding ? (
                   <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -291,8 +291,8 @@ export default function DepartmentCoursesPage() {
         <div className="card overflow-hidden">
           {courses.length === 0 ? (
             <div className="p-8 text-center">
-              <div className="w-16 h-16 rounded-full bg-ccis-blue-primary/10 flex items-center justify-center mx-auto mb-4">
-                <GraduationCap className="w-8 h-8 text-ccis-blue-primary" />
+              <div className="w-16 h-16 rounded-full bg-cjc-red/10 flex items-center justify-center mx-auto mb-4">
+                <GraduationCap className="w-8 h-8 text-cjc-red" />
               </div>
               <h2 className="text-xl font-display font-bold text-cjc-navy mb-2">No Courses Yet</h2>
               <p className="text-warm-muted max-w-md mx-auto">

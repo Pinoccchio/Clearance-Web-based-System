@@ -260,7 +260,7 @@ export function BatchImportModal({
 
       {/* Upload Area */}
       <div
-        className="relative border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-ccis-blue-primary transition-colors cursor-pointer"
+        className="relative border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-cjc-red transition-colors cursor-pointer"
         onClick={() => fileInputRef.current?.click()}
       >
         <input
@@ -279,7 +279,7 @@ export function BatchImportModal({
         </p>
         {isLoading && (
           <div className="absolute inset-0 bg-white/80 flex items-center justify-center rounded-xl">
-            <Loader2 className="w-8 h-8 text-ccis-blue-primary animate-spin" />
+            <Loader2 className="w-8 h-8 text-cjc-red animate-spin" />
           </div>
         )}
       </div>
@@ -434,11 +434,11 @@ export function BatchImportModal({
       <div className="relative w-24 h-24 mx-auto">
         <div className="absolute inset-0 rounded-full border-4 border-gray-200" />
         <div
-          className="absolute inset-0 rounded-full border-4 border-ccis-blue-primary border-t-transparent animate-spin"
+          className="absolute inset-0 rounded-full border-4 border-cjc-red border-t-transparent animate-spin"
           style={{ animationDuration: "1s" }}
         />
         <div className="absolute inset-0 flex items-center justify-center">
-          <Upload className="w-8 h-8 text-ccis-blue-primary" />
+          <Upload className="w-8 h-8 text-cjc-red" />
         </div>
       </div>
       <div>
@@ -448,7 +448,7 @@ export function BatchImportModal({
       <div className="max-w-xs mx-auto">
         <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
           <div
-            className="h-full bg-ccis-blue-primary transition-all duration-300"
+            className="h-full bg-cjc-red transition-all duration-300"
             style={{ width: `${importProgress}%` }}
           />
         </div>
@@ -571,7 +571,7 @@ export function BatchImportModal({
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-colors ${
                     step === s || ["upload", "preview", "importing", "results"].indexOf(step) > i
-                      ? "bg-ccis-blue-primary text-white"
+                      ? "bg-cjc-red text-white"
                       : "bg-gray-200 text-gray-500"
                   }`}
                 >
@@ -581,7 +581,7 @@ export function BatchImportModal({
                   <div
                     className={`w-12 h-1 transition-colors ${
                       ["upload", "preview", "importing", "results"].indexOf(step) > i
-                        ? "bg-ccis-blue-primary"
+                        ? "bg-cjc-red"
                         : "bg-gray-200"
                     }`}
                   />

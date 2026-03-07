@@ -32,11 +32,11 @@ const playfairDisplay = Playfair_Display({
 
 export const metadata: Metadata = {
   title: "CJC Clearance System | Cor Jesu College",
-  description: "Official Student Clearance Management System for Cor Jesu College - College of Computing and Information Sciences",
-  keywords: ["CJC", "Cor Jesu College", "Clearance", "CCIS", "Student Portal"],
+  description: "Official Student Clearance Management System for Cor Jesu College",
+  keywords: ["CJC", "Cor Jesu College", "Clearance", "Digos City", "Student Portal"],
   icons: {
-    icon: "/images/logos/ccis-logo.jpg",
-    apple: "/images/logos/ccis-logo.jpg",
+    icon: "/images/logos/cjc-logo.jpeg",
+    apple: "/images/logos/cjc-logo.jpeg",
   },
 };
 

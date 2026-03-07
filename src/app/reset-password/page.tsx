@@ -74,7 +74,7 @@ export default function ResetPasswordPage() {
   if (isValidSession === null) {
     return (
       <div className="min-h-screen bg-[#fefcf8] flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-ccis-blue-primary/30 border-t-ccis-blue-primary rounded-full animate-spin" />
+        <div className="w-8 h-8 border-4 border-cjc-red/30 border-t-cjc-red rounded-full animate-spin" />
       </div>
     );
   }
@@ -93,7 +93,7 @@ export default function ResetPasswordPage() {
           </p>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-ccis-blue-primary hover:underline font-medium"
+            className="inline-flex items-center gap-2 text-cjc-red hover:underline font-medium"
           >
             <ArrowLeft className="w-4 h-4" />
             Return to Home
@@ -120,7 +120,7 @@ export default function ResetPasswordPage() {
           </p>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 text-ccis-blue-primary hover:underline font-medium"
+            className="inline-flex items-center gap-2 text-cjc-red hover:underline font-medium"
           >
             <ArrowLeft className="w-4 h-4" />
             Return to Home Now
@@ -144,22 +144,13 @@ export default function ResetPasswordPage() {
               className="w-full h-full object-cover"
             />
           </div>
-          <div className="w-12 h-12 rounded-full overflow-hidden border border-border-warm shadow-sm">
-            <Image
-              src="/images/logos/ccis-logo.jpg"
-              alt="CCIS Logo"
-              width={48}
-              height={48}
-              className="w-full h-full object-cover"
-            />
-          </div>
         </div>
 
         {/* Reset Password Card */}
         <div className="bg-white rounded-2xl shadow-lg border border-border-warm p-8">
           <div className="text-center mb-8">
-            <div className="w-14 h-14 rounded-full bg-ccis-blue-primary/10 flex items-center justify-center mx-auto mb-4">
-              <Lock className="w-7 h-7 text-ccis-blue-primary" />
+            <div className="w-14 h-14 rounded-full bg-cjc-red/10 flex items-center justify-center mx-auto mb-4">
+              <Lock className="w-7 h-7 text-cjc-red" />
             </div>
             <h1 className="text-2xl font-bold text-cjc-navy mb-2">Set Your Password</h1>
             <p className="text-warm-muted text-sm">
@@ -186,7 +177,7 @@ export default function ResetPasswordPage() {
                   id="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-ccis-blue-primary focus:ring-2 focus:ring-ccis-blue-primary/20 outline-none transition-all pr-12"
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-cjc-red focus:ring-2 focus:ring-cjc-red/20 outline-none transition-all pr-12"
                   placeholder="Min. 8 characters"
                   required
                 />
@@ -211,7 +202,7 @@ export default function ResetPasswordPage() {
                   id="confirmPassword"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-ccis-blue-primary focus:ring-2 focus:ring-ccis-blue-primary/20 outline-none transition-all pr-12"
+                  className="w-full px-4 py-3 rounded-lg border border-gray-200 focus:border-cjc-red focus:ring-2 focus:ring-cjc-red/20 outline-none transition-all pr-12"
                   placeholder="Confirm your password"
                   required
                 />
@@ -242,7 +233,7 @@ export default function ResetPasswordPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 bg-ccis-blue-primary text-white rounded-lg font-medium hover:bg-ccis-blue transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+              className="w-full py-3 bg-cjc-red text-white rounded-lg font-medium hover:bg-cjc-red-light transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <>
@@ -258,7 +249,7 @@ export default function ResetPasswordPage() {
           <div className="mt-6 text-center">
             <Link
               href="/"
-              className="text-sm text-warm-muted hover:text-ccis-blue-primary transition-colors"
+              className="text-sm text-warm-muted hover:text-cjc-red transition-colors"
             >
               Return to Home
             </Link>

@@ -87,7 +87,7 @@ export function CampusMapSection() {
       <div className="relative max-w-6xl mx-auto px-6">
         {/* Section Header */}
         <div className="mb-12 text-center lg:text-left fade-in-up">
-          <p className="text-sm font-semibold text-ccis-blue-primary uppercase tracking-wider mb-3">
+          <p className="text-sm font-semibold text-cjc-red uppercase tracking-wider mb-3">
             Find Us
           </p>
           <h2 className="font-display text-3xl sm:text-4xl font-bold text-foreground">
@@ -130,26 +130,26 @@ export function CampusMapSection() {
             {/* Contact Info */}
             <div className="space-y-4 mb-8">
               <h4 className="text-sm font-semibold text-foreground uppercase tracking-wider">
-                Contact CCIS
+                Contact Information
               </h4>
 
               <div className="flex items-center gap-3">
-                <Mail className="w-4 h-4 text-ccis-blue-primary flex-shrink-0" />
+                <Mail className="w-4 h-4 text-cjc-red flex-shrink-0" />
                 <a
-                  href="mailto:computerstudies@g.cjc.edu.ph"
-                  className="text-sm text-muted-foreground hover:text-ccis-blue-primary transition-colors duration-200"
+                  href="mailto:customerservice@cjc.edu.ph"
+                  className="text-sm text-muted-foreground hover:text-cjc-red transition-colors duration-200"
                 >
-                  computerstudies@g.cjc.edu.ph
+                  customerservice@cjc.edu.ph
                 </a>
               </div>
 
               <div className="flex items-center gap-3">
-                <Phone className="w-4 h-4 text-ccis-blue-primary flex-shrink-0" />
-                <span className="text-sm text-muted-foreground">09082191651</span>
+                <Phone className="w-4 h-4 text-cjc-red flex-shrink-0" />
+                <span className="text-sm text-muted-foreground">(082) 553-2433</span>
               </div>
 
               <div className="flex items-center gap-3">
-                <Clock className="w-4 h-4 text-ccis-blue-primary flex-shrink-0" />
+                <Clock className="w-4 h-4 text-cjc-red flex-shrink-0" />
                 <span className="text-sm text-muted-foreground">Mon - Fri: 8:00 AM - 5:00 PM</span>
               </div>
             </div>
@@ -159,7 +159,7 @@ export function CampusMapSection() {
               href={`https://www.google.com/maps/dir/?api=1&destination=6.7513,125.3522&destination_place_id=Cor+Jesu+College+Digos+City`}
               target="_blank"
               rel="noopener noreferrer"
-              className="btn btn-ccis-blue w-full justify-center text-sm py-3"
+              className="btn btn-cjc-red w-full justify-center text-sm py-3"
             >
               Get Directions
               <ExternalLink className="w-4 h-4 arrow-slide-right" />

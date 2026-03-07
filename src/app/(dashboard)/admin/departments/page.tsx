@@ -188,7 +188,7 @@ export default function AdminDepartmentsPage() {
                 className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`}
               />
             </button>
-            <button onClick={handleAddDepartment} className="btn btn-ccis-blue">
+            <button onClick={handleAddDepartment} className="btn btn-cjc-red">
               <Plus className="w-4 h-4" />
               Add Department
             </button>
@@ -246,8 +246,8 @@ export default function AdminDepartmentsPage() {
                             />
                           </button>
                         ) : (
-                          <div className="w-10 h-10 rounded-lg bg-ccis-blue-primary/10 flex items-center justify-center flex-shrink-0">
-                            <GraduationCap className="w-5 h-5 text-ccis-blue-primary" />
+                          <div className="w-10 h-10 rounded-lg bg-cjc-red/10 flex items-center justify-center flex-shrink-0">
+                            <GraduationCap className="w-5 h-5 text-cjc-red" />
                           </div>
                         )}
                         <div>
@@ -342,7 +342,7 @@ export default function AdminDepartmentsPage() {
             {!searchQuery && (
               <button
                 onClick={handleAddDepartment}
-                className="btn btn-ccis-blue mt-4"
+                className="btn btn-cjc-red mt-4"
               >
                 <Plus className="w-4 h-4" />
                 Add Department

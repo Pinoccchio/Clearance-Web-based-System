@@ -190,7 +190,7 @@ export default function DepartmentRequirementsPage() {
           </div>
         </header>
         <div className="p-6 flex items-center justify-center">
-          <div className="w-8 h-8 border-2 border-ccis-blue-primary/30 border-t-ccis-blue-primary rounded-full animate-spin" />
+          <div className="w-8 h-8 border-2 border-cjc-red/30 border-t-cjc-red rounded-full animate-spin" />
         </div>
       </div>
     );
@@ -229,16 +229,16 @@ export default function DepartmentRequirementsPage() {
           <div className="flex items-center gap-2">
             {requirements.some(r => !r.is_published) && (
               <button onClick={handleBulkPublish} disabled={isBulkPublishing}
-                className="flex items-center gap-2 px-4 py-2 border border-ccis-blue-primary text-ccis-blue-primary rounded-lg hover:bg-ccis-blue-primary/5 transition-colors text-sm font-medium disabled:opacity-50">
+                className="flex items-center gap-2 px-4 py-2 border border-cjc-red text-cjc-red rounded-lg hover:bg-cjc-red-light-primary/5 transition-colors text-sm font-medium disabled:opacity-50">
                 {isBulkPublishing
-                  ? <div className="w-4 h-4 border-2 border-ccis-blue-primary/30 border-t-ccis-blue-primary rounded-full animate-spin" />
+                  ? <div className="w-4 h-4 border-2 border-cjc-red/30 border-t-cjc-red rounded-full animate-spin" />
                   : <Eye className="w-4 h-4" />}
                 Publish All
               </button>
             )}
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-ccis-blue-primary text-white rounded-lg hover:bg-ccis-blue transition-colors text-sm font-medium"
+              className="flex items-center gap-2 px-4 py-2 bg-cjc-red text-white rounded-lg hover:bg-cjc-red-light transition-colors text-sm font-medium"
             >
               <Plus className="w-4 h-4" />
               Add Requirement
@@ -252,8 +252,8 @@ export default function DepartmentRequirementsPage() {
         <div className="card overflow-hidden">
           {requirements.length === 0 ? (
             <div className="p-8 text-center">
-              <div className="w-16 h-16 rounded-full bg-ccis-blue-primary/10 flex items-center justify-center mx-auto mb-4">
-                <CheckSquare className="w-8 h-8 text-ccis-blue-primary" />
+              <div className="w-16 h-16 rounded-full bg-cjc-red/10 flex items-center justify-center mx-auto mb-4">
+                <CheckSquare className="w-8 h-8 text-cjc-red" />
               </div>
               <h2 className="text-xl font-display font-bold text-cjc-navy mb-2">No Requirements Yet</h2>
               <p className="text-warm-muted max-w-md mx-auto mb-4">
@@ -261,7 +261,7 @@ export default function DepartmentRequirementsPage() {
               </p>
               <button
                 onClick={() => setIsAddModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-ccis-blue-primary text-white rounded-lg hover:bg-ccis-blue transition-colors text-sm font-medium mx-auto"
+                className="flex items-center gap-2 px-4 py-2 bg-cjc-red text-white rounded-lg hover:bg-cjc-red-light transition-colors text-sm font-medium mx-auto"
               >
                 <Plus className="w-4 h-4" />
                 Add Requirement
@@ -324,7 +324,7 @@ export default function DepartmentRequirementsPage() {
                                   type="checkbox"
                                   checked={editForm.is_required}
                                   onChange={e => setEditForm(prev => ({ ...prev, is_required: e.target.checked }))}
-                                  className="w-4 h-4 rounded border-gray-300 text-ccis-blue-primary focus:ring-ccis-blue-primary"
+                                  className="w-4 h-4 rounded border-gray-300 text-cjc-red focus:ring-cjc-red"
                                 />
                                 <span className="text-xs text-cjc-navy">Required</span>
                               </label>
@@ -333,7 +333,7 @@ export default function DepartmentRequirementsPage() {
                                   type="checkbox"
                                   checked={editForm.requires_upload}
                                   onChange={e => setEditForm(prev => ({ ...prev, requires_upload: e.target.checked }))}
-                                  className="w-4 h-4 rounded border-gray-300 text-ccis-blue-primary focus:ring-ccis-blue-primary"
+                                  className="w-4 h-4 rounded border-gray-300 text-cjc-red focus:ring-cjc-red"
                                 />
                                 <span className="text-xs text-cjc-navy">Requires upload</span>
                               </label>
@@ -358,7 +358,7 @@ export default function DepartmentRequirementsPage() {
                               ))}
                               <button type="button"
                                 onClick={() => setEditForm(prev => ({ ...prev, links: [...prev.links, { url: "", label: "" }] }))}
-                                className="flex items-center gap-1.5 text-xs text-ccis-blue-primary hover:text-ccis-blue font-medium transition-colors">
+                                className="flex items-center gap-1.5 text-xs text-cjc-red hover:text-cjc-red-light font-medium transition-colors">
                                 <Plus className="w-3.5 h-3.5" />
                                 Add Link
                               </button>

@@ -294,7 +294,7 @@ export function DepartmentFormModal({
             value={formData.code}
             onChange={handleChange}
             error={errors.code}
-            placeholder="e.g., CCIS"
+            placeholder="e.g., CABE"
             required
             helperText="Short code used for identification (auto-uppercase)"
           />

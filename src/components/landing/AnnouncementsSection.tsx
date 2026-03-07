@@ -38,7 +38,7 @@ export function AnnouncementsSection({ announcements, onSelectAnnouncement, onSi
       <div className="max-w-6xl mx-auto px-6">
         {/* Section Header */}
         <div className="mb-12 text-center lg:text-left fade-in-up">
-          <p className="text-sm font-semibold text-ccis-blue-primary uppercase tracking-wider mb-3">
+          <p className="text-sm font-semibold text-cjc-red uppercase tracking-wider mb-3">
             Announcements
           </p>
           <h2 className="font-display text-3xl sm:text-4xl font-bold text-foreground">
@@ -146,7 +146,7 @@ export function AnnouncementsSection({ announcements, onSelectAnnouncement, onSi
                 </div>
 
                 {/* Title */}
-                <h3 className="announcement-card-title font-display font-bold text-lg text-foreground mb-3 line-clamp-2 group-hover:text-ccis-blue-primary transition-colors duration-200">
+                <h3 className="announcement-card-title font-display font-bold text-lg text-foreground mb-3 line-clamp-2 group-hover:text-cjc-red transition-colors duration-200">
                   {announcement.title}
                 </h3>
 
@@ -181,7 +181,7 @@ export function AnnouncementsSection({ announcements, onSelectAnnouncement, onSi
         <div className="mt-16 text-center fade-in-up fade-in-up-delay-4">
           <button
             onClick={onSignIn}
-            className="btn btn-ccis-blue text-base px-8 py-4 rounded-lg"
+            className="btn btn-cjc-red text-base px-8 py-4 rounded-lg"
           >
             Sign in to view all announcements
             <ArrowRight className="w-5 h-5 arrow-slide-right" />

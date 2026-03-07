@@ -27,20 +27,20 @@ export function HeroSection({ stats, clearanceSources, onSignIn }: HeroSectionPr
           <div className="lg:col-span-3 text-center lg:text-left fade-in-up">
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-surface-cream border border-border-warm text-sm text-muted-foreground mb-8">
-              <span className="w-2 h-2 rounded-full bg-ccis-blue-primary"></span>
+              <span className="w-2 h-2 rounded-full bg-cjc-red"></span>
               Academic Year 2025-2026
             </div>
 
             {/* Editorial Headline */}
             <div className="mb-8">
-              <h1 className="headline-editorial text-foreground">
+              <h1 className="headline-editorial text-cjc-red-dark">
                 <span className="block text-5xl sm:text-6xl lg:text-7xl">
                   YOUR
                 </span>
                 <span className="block text-5xl sm:text-6xl lg:text-7xl pb-3">
                   <span className="headline-underline">CLEARANCE.</span>
                 </span>
-                <span className="block text-5xl sm:text-6xl lg:text-7xl text-ccis-blue-primary">
+                <span className="block text-5xl sm:text-6xl lg:text-7xl text-cjc-red">
                   SIMPLIFIED.
                 </span>
               </h1>
@@ -53,7 +53,7 @@ export function HeroSection({ stats, clearanceSources, onSignIn }: HeroSectionPr
             <div className="flex flex-col sm:flex-row sm:justify-center lg:justify-start gap-4 mb-12">
               <button
                 onClick={onSignIn}
-                className="btn btn-ccis-blue text-base px-8 py-3.5"
+                className="btn btn-cjc-red text-base px-8 py-3.5"
               >
                 Access Portal
                 <ArrowRight className="w-4 h-4" />
@@ -68,7 +68,7 @@ export function HeroSection({ stats, clearanceSources, onSignIn }: HeroSectionPr
                 { value: stats.clubs, label: "Clubs" },
               ].map((stat, i) => (
                 <div key={stat.label} className={`text-center lg:text-left fade-in-up fade-in-up-delay-${i + 5}`}>
-                  <p className="text-3xl sm:text-4xl font-bold text-ccis-blue-primary font-display">
+                  <p className="text-3xl sm:text-4xl font-bold text-cjc-red font-display">
                     {stat.value}
                   </p>
                   <p className="text-xs sm:text-sm text-muted-foreground mt-1">{stat.label}</p>
@@ -89,7 +89,7 @@ export function HeroSection({ stats, clearanceSources, onSignIn }: HeroSectionPr
               </div>
               <div className="absolute -bottom-4 -right-4 z-10 bg-card rounded-lg shadow-lg px-3 py-2 animate-float" style={{ animationDelay: '0.5s' }}>
                 <div className="flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-ccis-blue-primary" />
+                  <Shield className="w-4 h-4 text-cjc-red" />
                   <span className="text-xs font-medium text-foreground">Secure</span>
                 </div>
               </div>
@@ -97,7 +97,7 @@ export function HeroSection({ stats, clearanceSources, onSignIn }: HeroSectionPr
               {/* Dashboard Preview Card */}
               <div className="relative bg-card rounded-2xl shadow-xl border border-border-warm p-6 fade-in-up fade-in-up-delay-2">
                 <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cjc-navy to-cjc-navy-light flex items-center justify-center">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cjc-red-dark to-cjc-red flex items-center justify-center">
                     <span className="text-white font-bold text-sm">JD</span>
                   </div>
                   <div>
@@ -125,7 +125,7 @@ export function HeroSection({ stats, clearanceSources, onSignIn }: HeroSectionPr
                                 className="w-6 h-6 rounded-full object-cover flex-shrink-0"
                               />
                             ) : (
-                              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cjc-navy/20 to-ccis-blue/20 flex-shrink-0" />
+                              <div className="w-6 h-6 rounded-full bg-gradient-to-br from-cjc-red-dark/20 to-cjc-red/20 flex-shrink-0" />
                             )}
                             <span className="text-sm text-foreground truncate font-medium">{source.name}</span>
                           </div>
@@ -133,7 +133,7 @@ export function HeroSection({ stats, clearanceSources, onSignIn }: HeroSectionPr
                             className={`text-xs px-2.5 py-1 rounded-full font-semibold flex-shrink-0 ml-2 ${
                               isCleared
                                 ? "bg-green-600 text-white"
-                                : "bg-ccis-blue-primary text-white"
+                                : "bg-cjc-red text-white"
                             }`}
                           >
                             {isCleared ? "Cleared" : "Pending"}
@@ -160,7 +160,7 @@ export function HeroSection({ stats, clearanceSources, onSignIn }: HeroSectionPr
                 <div className="mt-6 pt-4 border-t border-border-warm">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-sm text-muted-foreground">Overall Progress</span>
-                    <span className="text-sm font-semibold text-ccis-blue-primary">
+                    <span className="text-sm font-semibold text-cjc-red">
                       {clearanceSources.length > 0
                         ? `${Math.round((Math.ceil(Math.min(clearanceSources.length, 5) * 0.6) / Math.min(clearanceSources.length, 5)) * 100)}%`
                         : "60%"}
@@ -168,7 +168,7 @@ export function HeroSection({ stats, clearanceSources, onSignIn }: HeroSectionPr
                   </div>
                   <div className="progress-bar">
                     <div
-                      className="progress-bar-fill bg-ccis-blue-primary"
+                      className="progress-bar-fill bg-cjc-red"
                       style={{
                         width: clearanceSources.length > 0
                           ? `${Math.round((Math.ceil(Math.min(clearanceSources.length, 5) * 0.6) / Math.min(clearanceSources.length, 5)) * 100)}%`

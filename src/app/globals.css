@@ -13,12 +13,10 @@
   --cjc-blue-soft: #3b82f6;
   --cjc-sky: #7dd3fc;
 
-  /* CCIS Blue Color System */
-  --ccis-blue-primary: #1E40AF;
-  --ccis-blue: #2563EB;
-  --ccis-blue-light: #3B82F6;
-  --ccis-blue-dark: #1E3A8A;
-  --ccis-sky: #60A5FA;
+  /* CJC Red Color System (Primary Action) */
+  --cjc-red: #c41e2a;
+  --cjc-red-light: #d63637;
+  --cjc-red-dark: #9a1820;
 
   /* Accent Colors (CJC Brand) */
   --cjc-gold: #d4a418;
@@ -146,11 +144,9 @@
   --font-display: var(--font-fraunces);
   --font-body: var(--font-inter);
   --font-mono: var(--font-jetbrains);
-  --color-ccis-blue-primary: var(--ccis-blue-primary);
-  --color-ccis-blue: var(--ccis-blue);
-  --color-ccis-blue-light: var(--ccis-blue-light);
-  --color-ccis-blue-dark: var(--ccis-blue-dark);
-  --color-ccis-sky: var(--ccis-sky);
+  --color-cjc-red: var(--cjc-red);
+  --color-cjc-red-light: var(--cjc-red-light);
+  --color-cjc-red-dark: var(--cjc-red-dark);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -202,7 +198,7 @@ body {
 .card-accent {
   background: var(--surface-primary);
   border: 1px solid var(--border-light);
-  border-left: 3px solid var(--ccis-blue-primary);
+  border-left: 3px solid var(--cjc-red);
   border-radius: var(--radius-lg);
 }
 
@@ -269,14 +265,14 @@ body {
 }
 
 .btn-gold {
-  background: var(--ccis-blue-primary);
+  background: var(--cjc-red);
   color: white;
   border: none;
   font-weight: 600;
 }
 
 .btn-gold:hover {
-  background: var(--ccis-blue);
+  background: var(--cjc-red-light);
 }
 
 .btn-ghost {
@@ -311,16 +307,16 @@ body {
   border-color: rgba(255, 255, 255, 0.6);
 }
 
-.btn-ccis-blue {
-  background: var(--ccis-blue-primary);
+.btn-cjc-red {
+  background: var(--cjc-red);
   color: white;
   border: none;
   font-weight: 600;
   transition: background-color 200ms ease;
 }
 
-.btn-ccis-blue:hover {
-  background: var(--ccis-blue);
+.btn-cjc-red:hover {
+  background: var(--cjc-red-light);
 }
 
 /* ============================================
@@ -688,7 +684,7 @@ body {
   left: 0;
   width: 100%;
   height: 3px;
-  background: var(--ccis-blue-primary);
+  background: var(--cjc-red);
   border-radius: 2px;
 }
 
@@ -714,7 +710,7 @@ body {
   top: 0;
   bottom: 0;
   width: 4px;
-  background: var(--ccis-blue-primary);
+  background: var(--cjc-red);
   border-radius: 2px;
 }
 
@@ -759,7 +755,7 @@ body {
   width: 56px;
   height: 56px;
   border-radius: 50%;
-  background: var(--ccis-blue-primary);
+  background: var(--cjc-red);
   color: white;
   display: flex;
   align-items: center;
@@ -829,7 +825,7 @@ body {
 
 .progress-bar-fill {
   height: 100%;
-  background: var(--ccis-blue-primary);
+  background: var(--cjc-red);
   border-radius: 3px;
   transition: width 300ms ease;
 }
@@ -866,19 +862,9 @@ body {
   border-bottom-color: var(--foreground);
 }
 
-/* ============================================
-   CCIS BRANDING
-   ============================================ */
-
-.ccis-braces {
-  color: var(--cjc-blue-soft);
-  font-weight: 300;
-  opacity: 0.7;
-}
-
-/* CCIS CTA Background Gradient */
-.bg-ccis-cta {
-  background: linear-gradient(135deg, var(--ccis-blue-primary) 0%, var(--ccis-blue-dark) 100%);
+/* CJC CTA Background Gradient */
+.bg-cjc-cta {
+  background: linear-gradient(135deg, var(--cjc-red) 0%, var(--cjc-red-dark) 100%);
 }
 
 /* ============================================
@@ -898,7 +884,7 @@ body {
 }
 
 .announcement-featured {
-  background: var(--cjc-navy);
+  background: var(--cjc-red-dark);
   color: white;
   border-radius: var(--radius-lg);
   overflow: hidden;
@@ -913,7 +899,7 @@ body {
 }
 
 .announcement-featured:hover {
-  box-shadow: 0 20px 40px rgba(15, 39, 68, 0.3);
+  box-shadow: 0 20px 40px rgba(154, 24, 32, 0.3);
 }
 
 .announcement-featured::before {
@@ -944,16 +930,16 @@ body {
 
 .announcement-card:hover {
   box-shadow: var(--shadow-md);
-  border-color: var(--ccis-blue-light);
+  border-color: var(--cjc-red-light);
 }
 
 .announcement-card:hover .announcement-card-title {
-  color: var(--ccis-blue-primary);
+  color: var(--cjc-red);
 }
 
 .announcement-card-urgent { border-left: 4px solid var(--cjc-crimson); }
 .announcement-card-high { border-left: 4px solid var(--cjc-gold); }
-.announcement-card-normal { border-left: 4px solid var(--ccis-blue); }
+.announcement-card-normal { border-left: 4px solid var(--cjc-red); }
 .announcement-card-low { border-left: 4px solid var(--border-medium); }
 
 /* Dark mode announcements */
@@ -990,7 +976,7 @@ body {
 }
 
 .priority-badge-normal {
-  background: var(--ccis-blue-primary);
+  background: var(--cjc-red);
   color: white;
 }
 
@@ -1022,7 +1008,7 @@ body {
 }
 
 .modal-header-normal {
-  background: linear-gradient(135deg, var(--ccis-blue-primary) 0%, var(--ccis-blue-dark) 100%);
+  background: linear-gradient(135deg, var(--cjc-red) 0%, var(--cjc-red-dark) 100%);
 }
 
 .modal-header-low {
@@ -1044,7 +1030,7 @@ body {
 }
 
 .event-pill:hover {
-  border-color: var(--ccis-blue-light);
+  border-color: var(--cjc-red-light);
 }
 
 .event-pill-icon {
@@ -1104,7 +1090,7 @@ body {
   left: 0;
   right: 0;
   height: 3rem;
-  background: linear-gradient(transparent, var(--cjc-navy));
+  background: linear-gradient(transparent, var(--cjc-red-dark));
   pointer-events: none;
 }
 
@@ -1271,6 +1257,8 @@ body {
   width: 100%;
   aspect-ratio: 4 / 3;
   position: relative;
+  isolation: isolate;
+  z-index: 0;
 }
 
 @media (max-width: 1023px) {
@@ -1331,8 +1319,8 @@ body {
   left: 0;
   height: calc(100% - 0.5rem);
   border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--ccis-blue-primary), var(--ccis-blue));
-  box-shadow: 0 2px 8px rgba(30, 64, 175, 0.35);
+  background: linear-gradient(135deg, var(--cjc-red), var(--cjc-red));
+  box-shadow: 0 2px 8px rgba(196, 30, 42, 0.35);
   transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   z-index: 1;
   pointer-events: none;
@@ -1466,8 +1454,8 @@ body {
 }
 
 .map-locate-active {
-  background: var(--ccis-blue-primary);
-  border-color: var(--ccis-blue-primary);
+  background: var(--cjc-red);
+  border-color: var(--cjc-red);
 }
 
 .map-locate-active svg circle,
@@ -1481,7 +1469,7 @@ body {
 }
 
 .map-locate-active:hover {
-  background: var(--ccis-blue);
+  background: var(--cjc-red);
 }
 
 .map-location-toast {

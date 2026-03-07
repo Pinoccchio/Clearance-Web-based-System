@@ -301,7 +301,7 @@ export default function ClubDashboard() {
             <p className="text-sm text-warm-muted">Approved Today</p>
           </div>
           <div className="card p-4 text-center">
-            <FileText className="w-8 h-8 text-ccis-blue-primary mx-auto mb-2" />
+            <FileText className="w-8 h-8 text-cjc-red mx-auto mb-2" />
             <p className="text-2xl font-bold text-cjc-navy">{stats.totalProcessed}</p>
             <p className="text-sm text-warm-muted">Total Processed</p>
             {stats.totalProcessed > 0 && (

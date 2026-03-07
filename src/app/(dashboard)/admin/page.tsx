@@ -267,7 +267,7 @@ export default function AdminDashboard() {
             <p className="text-sm text-warm-muted">Total Users</p>
           </div>
           <div className="card p-4 text-center">
-            <GraduationCap className="w-8 h-8 text-ccis-blue-primary mx-auto mb-2" />
+            <GraduationCap className="w-8 h-8 text-cjc-red mx-auto mb-2" />
             <p className="text-2xl font-bold text-cjc-navy">{stats.departments}</p>
             <p className="text-sm text-warm-muted">Departments</p>
           </div>

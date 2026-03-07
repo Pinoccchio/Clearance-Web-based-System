@@ -258,7 +258,7 @@ export default function Sidebar({ role, userName, userEmail, userAvatar, isColla
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen bg-gradient-to-b from-cjc-navy to-cjc-navy-light transition-all duration-200 flex flex-col",
+        "fixed left-0 top-0 z-40 h-screen bg-gradient-to-b from-[#2d0a0d] to-cjc-red-dark transition-all duration-200 flex flex-col",
         isCollapsed ? "w-[72px]" : "w-64"
       )}
     >
@@ -270,7 +270,7 @@ export default function Sidebar({ role, userName, userEmail, userAvatar, isColla
               src={
                 (role === "office" || role === "department" || role === "club")
                   ? (orgLogo || "/images/logos/cjc-logo.jpeg")
-                  : "/images/logos/ccis-logo.jpg"
+                  : "/images/logos/cjc-logo.jpeg"
               }
               alt={orgName || "CJC Logo"}
               width={40}
@@ -284,7 +284,7 @@ export default function Sidebar({ role, userName, userEmail, userAvatar, isColla
               <p className="text-white/50 text-xs truncate max-w-[140px]">
                 {(role === "office" || role === "department" || role === "club") && orgName
                   ? orgName
-                  : "CCIS Portal"}
+                  : "Clearance System"}
               </p>
             </div>
           )}
@@ -294,8 +294,8 @@ export default function Sidebar({ role, userName, userEmail, userAvatar, isColla
       {/* Role Badge */}
       {!isCollapsed && (
         <div className="px-4 py-3">
-          <div className="px-3 py-1.5 bg-ccis-blue-primary/10 border border-ccis-blue-primary/20 rounded-lg">
-            <p className="text-ccis-blue-light text-xs font-medium text-center">
+          <div className="px-3 py-1.5 bg-cjc-red/10 border border-cjc-red/20 rounded-lg">
+            <p className="text-cjc-gold-light text-xs font-medium text-center">
               {roleLabels[role]}
             </p>
           </div>
@@ -334,14 +334,14 @@ export default function Sidebar({ role, userName, userEmail, userAvatar, isColla
                       <>
                         <span className="flex-1">{item.label}</span>
                         {item.badge && item.badge > 0 && (
-                          <span className="min-w-[20px] h-5 px-1.5 bg-ccis-blue-light text-white text-xs font-bold rounded-full flex items-center justify-center">
+                          <span className="min-w-[20px] h-5 px-1.5 bg-cjc-gold text-white text-xs font-bold rounded-full flex items-center justify-center">
                             {item.badge}
                           </span>
                         )}
                       </>
                     )}
                     {isCollapsed && item.badge && item.badge > 0 && (
-                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-ccis-blue-light text-white text-[10px] font-bold rounded-full flex items-center justify-center">
+                      <span className="absolute -top-1 -right-1 w-4 h-4 bg-cjc-gold text-white text-[10px] font-bold rounded-full flex items-center justify-center">
                         {item.badge > 9 ? "9+" : item.badge}
                       </span>
                     )}
@@ -391,7 +391,7 @@ export default function Sidebar({ role, userName, userEmail, userAvatar, isColla
       {/* Collapse Toggle */}
       <button
         onClick={onToggleCollapse}
-        className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-cjc-navy-light border border-white/20 flex items-center justify-center text-white/60 hover:text-white hover:bg-cjc-navy transition-colors shadow-lg"
+        className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-cjc-red-dark border border-white/20 flex items-center justify-center text-white/60 hover:text-white hover:bg-cjc-red-dark transition-colors shadow-lg"
       >
         {isCollapsed ? (
           <ChevronRight className="w-3.5 h-3.5" />

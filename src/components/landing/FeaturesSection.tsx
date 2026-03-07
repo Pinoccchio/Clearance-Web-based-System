@@ -18,7 +18,7 @@ export function FeaturesSection({ clearanceSources }: FeaturesSectionProps) {
     <section className="py-24 lg:py-32 bg-background">
       <div className="max-w-6xl mx-auto px-6">
         <div className="mb-16 text-center lg:text-left fade-in-up">
-          <p className="text-sm font-semibold text-ccis-blue-primary uppercase tracking-wider mb-3">
+          <p className="text-sm font-semibold text-cjc-red uppercase tracking-wider mb-3">
             Why Use This?
           </p>
           <h2 className="font-display text-3xl sm:text-4xl font-bold text-foreground">
@@ -26,8 +26,8 @@ export function FeaturesSection({ clearanceSources }: FeaturesSectionProps) {
           </h2>
         </div>
 
-        {/* Featured Block - Full Width Navy */}
-        <div className="bg-[#0f2744] text-white rounded-lg p-8 lg:p-12 mb-6 fade-in-up fade-in-up-delay-1">
+        {/* Featured Block - Full Width CJC Red */}
+        <div className="bg-cjc-red-dark text-white rounded-lg p-8 lg:p-12 mb-6 fade-in-up fade-in-up-delay-1">
           <div className="mb-8">
             <h3 className="text-2xl lg:text-3xl font-display font-bold mb-4">
               One portal. Every clearance source.
@@ -43,7 +43,7 @@ export function FeaturesSection({ clearanceSources }: FeaturesSectionProps) {
               clearanceSources.map((source) => (
                 <div
                   key={`${source.type}-${source.name}`}
-                  className="flex items-center gap-3 py-3 px-4 rounded-lg bg-white/10 hover:bg-white/15 transition-colors duration-200"
+                  className="flex items-center gap-3 py-3 px-4 rounded-lg bg-white/15 hover:bg-white/25 transition-colors duration-200"
                 >
                   {source.logo_url ? (
                     <Image
@@ -71,7 +71,7 @@ export function FeaturesSection({ clearanceSources }: FeaturesSectionProps) {
               Array.from({ length: 12 }).map((_, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-3 py-3 px-4 rounded-lg bg-white/10 animate-pulse"
+                  className="flex items-center gap-3 py-3 px-4 rounded-lg bg-white/15 animate-pulse"
                 >
                   <div className="w-6 h-6 rounded-full bg-white/20" />
                   <div className="h-4 w-20 bg-white/20 rounded" />
@@ -85,7 +85,7 @@ export function FeaturesSection({ clearanceSources }: FeaturesSectionProps) {
         <div className="grid md:grid-cols-2 gap-6">
           {/* Role-Based Access */}
           <div className="bg-card rounded-lg p-6 shadow-sm border border-border hover:shadow-md transition-shadow duration-200 text-center md:text-left fade-in-up fade-in-up-delay-2">
-            <div className="w-12 h-12 rounded-lg bg-cjc-navy flex items-center justify-center mb-5 mx-auto md:mx-0">
+            <div className="w-12 h-12 rounded-lg bg-cjc-red-dark flex items-center justify-center mb-5 mx-auto md:mx-0">
               <Users className="w-6 h-6 text-white" />
             </div>
             <h3 className="text-lg font-display font-bold text-foreground mb-2">
@@ -96,11 +96,11 @@ export function FeaturesSection({ clearanceSources }: FeaturesSectionProps) {
             </p>
             <div className="flex flex-wrap justify-center md:justify-start gap-2">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-warm text-sm text-foreground">
-                <CheckCircle2 className="w-4 h-4 text-ccis-blue" />
+                <CheckCircle2 className="w-4 h-4 text-cjc-red" />
                 5 user roles
               </span>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-warm text-sm text-foreground">
-                <CheckCircle2 className="w-4 h-4 text-ccis-blue" />
+                <CheckCircle2 className="w-4 h-4 text-cjc-red" />
                 Custom views
               </span>
             </div>
@@ -108,7 +108,7 @@ export function FeaturesSection({ clearanceSources }: FeaturesSectionProps) {
 
           {/* Digital Documents */}
           <div className="bg-card rounded-lg p-6 shadow-sm border border-border hover:shadow-md transition-shadow duration-200 text-center md:text-left fade-in-up fade-in-up-delay-3">
-            <div className="w-12 h-12 rounded-lg bg-ccis-blue-primary flex items-center justify-center mb-5 mx-auto md:mx-0">
+            <div className="w-12 h-12 rounded-lg bg-cjc-red flex items-center justify-center mb-5 mx-auto md:mx-0">
               <FileCheck className="w-6 h-6 text-white" />
             </div>
             <h3 className="text-lg font-display font-bold text-foreground mb-2">
@@ -119,11 +119,11 @@ export function FeaturesSection({ clearanceSources }: FeaturesSectionProps) {
             </p>
             <div className="flex flex-wrap justify-center md:justify-start gap-2">
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-warm text-sm text-foreground">
-                <CheckCircle2 className="w-4 h-4 text-ccis-blue" />
+                <CheckCircle2 className="w-4 h-4 text-cjc-red" />
                 Secure uploads
               </span>
               <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-warm text-sm text-foreground">
-                <CheckCircle2 className="w-4 h-4 text-ccis-blue" />
+                <CheckCircle2 className="w-4 h-4 text-cjc-red" />
                 Easy tracking
               </span>
             </div>

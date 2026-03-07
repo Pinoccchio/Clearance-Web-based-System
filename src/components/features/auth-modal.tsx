@@ -175,7 +175,7 @@ function LoginForm({ onClose, onForgotPassword }: { onClose: () => void; onForgo
           <button
             type="button"
             onClick={onForgotPassword}
-            className="text-sm text-ccis-blue-primary hover:underline"
+            className="text-sm text-cjc-red hover:underline"
           >
             Forgot password?
           </button>
@@ -185,7 +185,7 @@ function LoginForm({ onClose, onForgotPassword }: { onClose: () => void; onForgo
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full py-3 bg-ccis-blue-primary text-white rounded-lg font-medium hover:bg-ccis-blue transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+          className="w-full py-3 bg-cjc-red text-white rounded-lg font-medium hover:bg-cjc-red-light transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
         >
           {isLoading ? (
             <>
@@ -268,7 +268,7 @@ function ForgotPasswordForm({ onBack }: { onBack: () => void }) {
         </p>
         <button
           onClick={onBack}
-          className="text-ccis-blue-primary hover:underline font-medium flex items-center gap-2 mx-auto"
+          className="text-cjc-red hover:underline font-medium flex items-center gap-2 mx-auto"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Sign In
@@ -290,8 +290,8 @@ function ForgotPasswordForm({ onBack }: { onBack: () => void }) {
 
       {/* Header */}
       <div className="text-center mb-6">
-        <div className="w-14 h-14 rounded-full bg-ccis-blue-primary/10 flex items-center justify-center mx-auto mb-4">
-          <Mail className="w-7 h-7 text-ccis-blue-primary" />
+        <div className="w-14 h-14 rounded-full bg-cjc-red/10 flex items-center justify-center mx-auto mb-4">
+          <Mail className="w-7 h-7 text-cjc-red" />
         </div>
         <h2 className="text-2xl font-bold text-cjc-navy">Forgot Password?</h2>
         <p className="text-sm text-gray-500 mt-1">
@@ -326,7 +326,7 @@ function ForgotPasswordForm({ onBack }: { onBack: () => void }) {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full py-3 bg-ccis-blue-primary text-white rounded-lg font-medium hover:bg-ccis-blue transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
+          className="w-full py-3 bg-cjc-red text-white rounded-lg font-medium hover:bg-cjc-red-light transition-colors disabled:opacity-60 flex items-center justify-center gap-2"
         >
           {isLoading ? (
             <>
