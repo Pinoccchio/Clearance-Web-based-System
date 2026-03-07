@@ -13,9 +13,10 @@ interface HeroSectionProps {
   stats: { departments: number; offices: number; clubs: number };
   clearanceSources: ClearanceSource[];
   onSignIn: () => void;
+  academicYear?: string;
 }
 
-export function HeroSection({ stats, clearanceSources, onSignIn }: HeroSectionProps) {
+export function HeroSection({ stats, clearanceSources, onSignIn, academicYear }: HeroSectionProps) {
   return (
     <section className="relative bg-card overflow-hidden">
       {/* Subtle dot pattern */}
@@ -28,7 +29,7 @@ export function HeroSection({ stats, clearanceSources, onSignIn }: HeroSectionPr
             {/* Badge */}
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-surface-cream border border-border-warm text-sm text-muted-foreground mb-8">
               <span className="w-2 h-2 rounded-full bg-cjc-red"></span>
-              Academic Year 2025-2026
+              Academic Year {academicYear ?? "2025-2026"}
             </div>
 
             {/* Editorial Headline */}
@@ -136,7 +137,7 @@ export function HeroSection({ stats, clearanceSources, onSignIn }: HeroSectionPr
                                 : "bg-cjc-red text-white"
                             }`}
                           >
-                            {isCleared ? "Cleared" : "Pending"}
+                            {isCleared ? "Approved" : "Pending"}
                           </span>
                         </div>
                       );

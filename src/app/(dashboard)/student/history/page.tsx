@@ -268,7 +268,7 @@ export default function StudentHistoryPage() {
       <Modal
         isOpen={!!selectedItem}
         onClose={() => setSelectedItem(null)}
-        className="max-w-lg"
+        className="max-w-2xl"
       >
         {selectedItem && (
           <div className="p-6 space-y-4">

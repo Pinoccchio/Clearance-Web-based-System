@@ -169,7 +169,8 @@ export function CampusMapSection() {
           {/* Right Column - Map */}
           <div className="fade-in-up fade-in-up-delay-2">
             {/* Toggle Bar with Sliding Indicator */}
-            <div className="map-toggle-group mb-4" ref={toggleGroupRef}>
+            <div className="flex justify-center mb-4">
+            <div className="map-toggle-group" ref={toggleGroupRef}>
               {/* Sliding indicator */}
               <div
                 className="map-toggle-indicator"
@@ -190,6 +191,7 @@ export function CampusMapSection() {
                   <span className="hidden sm:inline">{mode.label}</span>
                 </button>
               ))}
+            </div>
             </div>
 
             {/* Map Container */}

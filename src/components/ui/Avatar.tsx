@@ -17,7 +17,7 @@ const avatarVariants = cva(
       },
       variant: {
         default: "bg-gray-200 text-gray-600",
-        primary: "bg-cjc-navy text-white",
+        primary: "bg-cjc-red text-white",
         secondary: "bg-cjc-blue/10 text-cjc-blue",
         gold: "bg-cjc-gold/20 text-cjc-gold",
         success: "bg-green-100 text-green-600",

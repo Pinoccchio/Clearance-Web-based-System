@@ -1,13 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import useEmblaCarousel from "embla-carousel-react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Play, X } from "lucide-react";
+import Image from "next/image";
 
 const VIDEOS = [
   {
     id: "oU1WSUY6_7E",
-    title: "Cor Jesu College",
+    title: "Cor Jesu College Corporate Video",
   },
   {
     id: "ha3-vd3zSzI",
@@ -22,39 +23,29 @@ const VIDEOS = [
 export function VideoSection() {
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
   const [selectedIndex, setSelectedIndex] = useState(0);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  const stopAllVideos = useCallback(() => {
-    if (!containerRef.current) return;
-    const iframes = containerRef.current.querySelectorAll("iframe");
-    iframes.forEach((iframe) => {
-      const src = iframe.src;
-      iframe.src = "";
-      iframe.src = src;
-    });
-  }, []);
+  const [activeVideoId, setActiveVideoId] = useState<string | null>(null);
 
   const scrollPrev = useCallback(() => {
-    stopAllVideos();
     emblaApi?.scrollPrev();
-  }, [emblaApi, stopAllVideos]);
+  }, [emblaApi]);
 
   const scrollNext = useCallback(() => {
-    stopAllVideos();
     emblaApi?.scrollNext();
-  }, [emblaApi, stopAllVideos]);
+  }, [emblaApi]);
 
   const scrollTo = useCallback(
     (index: number) => {
-      stopAllVideos();
       emblaApi?.scrollTo(index);
     },
-    [emblaApi, stopAllVideos]
+    [emblaApi]
   );
 
   useEffect(() => {
     if (!emblaApi) return;
-    const onSelect = () => setSelectedIndex(emblaApi.selectedScrollSnap());
+    const onSelect = () => {
+      setSelectedIndex(emblaApi.selectedScrollSnap());
+      setActiveVideoId(null);
+    };
     emblaApi.on("select", onSelect);
     onSelect();
     return () => {
@@ -74,45 +65,84 @@ export function VideoSection() {
           </h2>
         </div>
 
-        <div className="relative fade-in-up fade-in-up-delay-1" ref={containerRef}>
-          {/* Carousel viewport */}
-          <div className="overflow-hidden rounded-2xl" ref={emblaRef}>
+        <div className="relative fade-in-up fade-in-up-delay-1">
+          {/* Carousel viewport — disable pointer events when video is playing */}
+          <div
+            className={`overflow-hidden rounded-2xl ${activeVideoId ? "pointer-events-none" : ""}`}
+            ref={emblaRef}
+          >
             <div className="flex">
               {VIDEOS.map((video) => (
                 <div key={video.id} className="flex-[0_0_100%] min-w-0">
                   <div
-                    className="relative w-full overflow-hidden rounded-2xl shadow-lg border border-border"
-                    style={{ paddingBottom: "56.25%" }}
+                    className="relative w-full overflow-hidden rounded-2xl shadow-lg border border-border aspect-[4/3] sm:aspect-video"
                   >
-                    <iframe
-                      className="absolute inset-0 w-full h-full"
-                      src={`https://www.youtube.com/embed/${video.id}?enablejsapi=1`}
-                      title={video.title}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                      referrerPolicy="strict-origin-when-cross-origin"
-                      allowFullScreen
-                    />
+                    <button
+                      type="button"
+                      className="absolute inset-0 w-full h-full cursor-pointer group"
+                      onClick={() => setActiveVideoId(video.id)}
+                      aria-label={`Play ${video.title}`}
+                    >
+                      <Image
+                        src={`https://img.youtube.com/vi/${video.id}/maxresdefault.jpg`}
+                        alt={video.title}
+                        fill
+                        className="object-cover"
+                        sizes="(max-width: 768px) 100vw, 896px"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/30 transition-colors">
+                        <div className="flex h-16 w-16 sm:h-20 sm:w-20 items-center justify-center rounded-full bg-cjc-red text-white shadow-lg group-hover:scale-110 transition-transform">
+                          <Play className="h-7 w-7 sm:h-8 sm:w-8 ml-1" fill="currentColor" />
+                        </div>
+                      </div>
+                    </button>
                   </div>
                 </div>
               ))}
             </div>
           </div>
 
-          {/* Prev / Next arrows */}
-          <button
-            onClick={scrollPrev}
-            className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-background/80 shadow-md border border-border backdrop-blur-sm transition-colors hover:bg-background"
-            aria-label="Previous video"
-          >
-            <ChevronLeft className="h-5 w-5" />
-          </button>
-          <button
-            onClick={scrollNext}
-            className="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-background/80 shadow-md border border-border backdrop-blur-sm transition-colors hover:bg-background"
-            aria-label="Next video"
-          >
-            <ChevronRight className="h-5 w-5" />
-          </button>
+          {/* Video player overlay — completely above Embla, receives all touch events */}
+          {activeVideoId && (
+            <div className="absolute inset-0 z-30">
+              <iframe
+                className="absolute inset-0 w-full h-full rounded-2xl"
+                src={`https://www.youtube-nocookie.com/embed/${activeVideoId}?autoplay=1&rel=0&modestbranding=1&playsinline=1`}
+                title={VIDEOS.find((v) => v.id === activeVideoId)?.title || "Video"}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                referrerPolicy="strict-origin-when-cross-origin"
+                allowFullScreen
+              />
+              {/* Close button — positioned outside the video, above top-right */}
+              <button
+                onClick={() => setActiveVideoId(null)}
+                className="absolute -top-12 right-0 z-40 flex h-10 w-10 items-center justify-center rounded-full bg-foreground text-background shadow-lg hover:opacity-80 transition-opacity"
+                aria-label="Close video"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+          )}
+
+          {/* Prev / Next arrows — hidden when video is playing */}
+          {!activeVideoId && (
+            <>
+              <button
+                onClick={scrollPrev}
+                className="absolute left-3 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-background/80 shadow-md border border-border backdrop-blur-sm transition-colors hover:bg-background"
+                aria-label="Previous video"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+              <button
+                onClick={scrollNext}
+                className="absolute right-3 top-1/2 -translate-y-1/2 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-background/80 shadow-md border border-border backdrop-blur-sm transition-colors hover:bg-background"
+                aria-label="Next video"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </>
+          )}
         </div>
 
         {/* Dot indicators */}

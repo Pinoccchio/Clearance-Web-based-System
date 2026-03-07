@@ -120,7 +120,7 @@ export function StudentClearanceProgressModal({
   const fullName = student ? `${student.first_name} ${student.last_name}` : "";
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} className="max-w-lg">
+    <Modal isOpen={isOpen} onClose={onClose} className="max-w-2xl">
       <div className="p-6">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">

@@ -64,7 +64,7 @@ function SubmissionStatusBadge({
     // Only show "Submitted" when the clearance item is actually in the review queue
     if (itemStatus === "submitted") {
       return (
-        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-cjc-blue/10 text-cjc-navy">
+        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
           <Clock className="w-3 h-3" />
           Submitted
         </span>
@@ -107,7 +107,7 @@ function ItemStatusBadge({ item }: { item: ClearanceItem | undefined }) {
   }
   if (item.status === "submitted") {
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-cjc-blue/10 text-cjc-navy">
+      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-700">
         <Clock className="w-3 h-3" />
         Submitted
       </span>
@@ -263,7 +263,7 @@ export default function RequirementsView({
                               </td>
                               <td className="px-6 py-4">
                                 {req.requires_upload ? (
-                                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-cjc-blue/10 text-cjc-navy">
+                                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-cjc-red/10 text-cjc-red">
                                     <Upload className="w-3 h-3" />
                                     Required
                                   </span>
@@ -278,7 +278,7 @@ export default function RequirementsView({
                                   <div className="flex flex-col gap-1">
                                     {(req.links ?? []).map(link => (
                                       <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-cjc-blue/10 text-cjc-navy hover:bg-cjc-blue/15 transition-colors">
+                                        className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-cjc-gold/10 text-cjc-navy hover:bg-cjc-gold/20 transition-colors">
                                         <ExternalLink className="w-3 h-3" />
                                         {link.label || "Open Link"}
                                       </a>

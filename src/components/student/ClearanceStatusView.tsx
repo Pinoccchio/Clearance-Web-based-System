@@ -71,7 +71,7 @@ export default function ClearanceStatusView({
     return (
       <div className="flex items-center justify-center">
         <Card padding="lg" className="text-center max-w-md w-full">
-          <Info className="w-10 h-10 text-cjc-blue mx-auto mb-3" />
+          <Info className="w-10 h-10 text-cjc-red mx-auto mb-3" />
           <h3 className="text-base font-semibold text-cjc-navy mb-1">No Active Clearance Request</h3>
           <p className="text-sm text-gray-500 mb-4">
             You have not started a clearance request yet. Submit one to begin tracking your clearance status.
@@ -212,7 +212,7 @@ export default function ClearanceStatusView({
       <Modal
         isOpen={!!historyItem}
         onClose={() => setHistoryItem(null)}
-        className="max-w-lg"
+        className="max-w-2xl"
       >
         {historyItem && (
           <div className="p-6 space-y-4">

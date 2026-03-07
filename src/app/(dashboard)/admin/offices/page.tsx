@@ -273,6 +273,7 @@ export default function AdminOfficesPage() {
                           <Avatar
                             src={office.head.avatar_url || undefined}
                             name={getHeadDisplayName(office) || ""}
+                            variant="primary"
                             size="sm"
                             className={office.head.avatar_url ? "cursor-pointer" : ""}
                             onClick={() => office.head?.avatar_url && setPreviewUrl(office.head.avatar_url)}

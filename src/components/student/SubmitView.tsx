@@ -563,7 +563,7 @@ export default function SubmitView({
                                   </span>
                                   {(req.links ?? []).map(link => (
                                     <a key={link.id} href={link.url} target="_blank" rel="noopener noreferrer"
-                                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-cjc-blue/10 text-cjc-navy hover:bg-cjc-blue/15 transition-colors">
+                                      className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-cjc-gold/10 text-cjc-navy hover:bg-cjc-gold/20 transition-colors">
                                       <ExternalLink className="w-3 h-3" />
                                       {link.label || "Open Link"}
                                     </a>
@@ -669,7 +669,7 @@ export default function SubmitView({
                                       className={`relative border-2 border-dashed rounded-lg px-3 py-3 text-center cursor-pointer transition-colors ${
                                         error
                                           ? "border-red-300 bg-red-50"
-                                          : "border-gray-300 bg-gray-50 hover:border-cjc-blue/40 hover:bg-cjc-blue/5"
+                                          : "border-gray-300 bg-gray-50 hover:border-cjc-gold/60 hover:bg-cjc-gold/5"
                                       }`}
                                       onDragOver={handleDragOver}
                                       onDrop={(e) => item && handleDrop(req.id, item.id, e)}
@@ -721,7 +721,7 @@ export default function SubmitView({
                                           : "border-gray-200 bg-gray-50 cursor-default opacity-60"
                                         : isChecked
                                           ? "border-green-300 bg-green-50 hover:border-red-300 hover:bg-red-50 cursor-pointer"
-                                          : "border-dashed border-gray-300 bg-gray-50 hover:border-cjc-blue/40 hover:bg-cjc-blue/5"
+                                          : "border-dashed border-gray-300 bg-gray-50 hover:border-cjc-gold/60 hover:bg-cjc-gold/5"
                                     }`}
                                   >
                                     {isToggling ? (
@@ -917,7 +917,7 @@ export default function SubmitView({
     <Modal
       isOpen={!!historyItem}
       onClose={() => setHistoryItem(null)}
-      className="max-w-lg"
+      className="max-w-2xl"
     >
       {historyItem && (
         <div className="p-6 space-y-4">

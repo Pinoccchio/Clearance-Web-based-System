@@ -244,15 +244,15 @@ export function DepartmentFormModal({
   ];
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} className="max-w-lg">
+    <Modal isOpen={isOpen} onClose={onClose} className="max-w-2xl">
       <div className="p-6">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-full bg-cjc-gold/10 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-cjc-red/10 flex items-center justify-center">
             {mode === "add" ? (
-              <Building2 className="w-5 h-5 text-cjc-gold" />
+              <Building2 className="w-5 h-5 text-cjc-red" />
             ) : (
-              <GraduationCap className="w-5 h-5 text-cjc-gold" />
+              <GraduationCap className="w-5 h-5 text-cjc-red" />
             )}
           </div>
           <div>

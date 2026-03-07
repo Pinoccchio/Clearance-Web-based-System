@@ -21,7 +21,7 @@ import { AnnouncementDetailModal } from "@/components/features/AnnouncementDetai
 
 const priorityColors = {
   low: "bg-gray-100 text-gray-600",
-  normal: "bg-cjc-blue/10 text-cjc-blue",
+  normal: "bg-gray-100 text-gray-600",
   high: "bg-amber-100 text-amber-600",
   urgent: "bg-red-100 text-red-600",
 };
@@ -35,7 +35,7 @@ const priorityLabels = {
 
 const priorityCardBorder = {
   low: "border-l-4 border-l-gray-400",
-  normal: "border-l-4 border-l-cjc-blue",
+  normal: "border-l-4 border-l-gray-400",
   high: "border-l-4 border-l-amber-400",
   urgent: "border-l-4 border-l-red-500",
 };
@@ -220,7 +220,7 @@ export default function StudentAnnouncementsPage() {
               onClick={() => setScopeFilter(tab.value)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                 scopeFilter === tab.value
-                  ? "bg-cjc-blue text-white"
+                  ? "bg-cjc-red text-white"
                   : "bg-white text-warm-muted hover:bg-gray-50 border border-border-warm"
               }`}
             >

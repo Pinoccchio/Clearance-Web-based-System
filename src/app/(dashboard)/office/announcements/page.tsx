@@ -384,6 +384,7 @@ export default function OfficeAnnouncementsPage() {
                                 <Avatar
                                   src={announcement.posted_by?.avatar_url || undefined}
                                   name={getPostedByName(announcement)}
+                                  variant="primary"
                                   size="sm"
                                 />
                                 <div>

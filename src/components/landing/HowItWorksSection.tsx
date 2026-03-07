@@ -3,23 +3,23 @@
 const STEPS = [
   {
     step: "01",
-    title: "Create Your Account",
-    desc: "Register using your student ID and school email. Set up your profile and select the organizations you belong to.",
+    title: "Sign In to Your Account",
+    desc: "Your account is created by the school administrator. Use the Sign In button and select 'Forgot Password' to set your password for the first time before accessing your portal.",
   },
   {
     step: "02",
-    title: "Submit Clearance Request",
-    desc: "Start a clearance request for graduation, semester end, or transfer. The system will show all departments and organizations you need to clear.",
+    title: "Initiate Your Clearance Request",
+    desc: "Start a semester clearance request from your dashboard. The system automatically generates clearance items for your department, all school offices, and the clubs you are enrolled in.",
   },
   {
     step: "03",
-    title: "Check Status and Settle Requirements",
-    desc: "See which departments have approved you and which ones need action. Visit offices to settle any pending requirements like unpaid fees or unreturned books.",
+    title: "Submit Requirements Per Source",
+    desc: "For each department, office, or club, upload the required documents or attachments. Each source reviews your submission and will mark your item as Approved, Rejected, or On Hold.",
   },
   {
     step: "04",
-    title: "Get Your Clearance",
-    desc: "Once all departments and organizations have approved you, download or print your official clearance certificate.",
+    title: "View Your Completed Clearance",
+    desc: "Once every department, office, and club has approved your items, your overall clearance status becomes Completed. You are fully cleared for the semester.",
   },
 ];
 

@@ -1050,7 +1050,7 @@ body {
   justify-content: center;
   gap: 0.5rem;
   padding: 0.75rem 1.5rem;
-  background: var(--cjc-navy);
+  background: var(--cjc-red);
   color: white;
   border: none;
   border-radius: var(--radius-md);
@@ -1061,7 +1061,7 @@ body {
 }
 
 .modal-close-btn:hover {
-  background: var(--cjc-navy-light);
+  background: var(--cjc-red-dark);
 }
 
 /* Featured announcement typography */

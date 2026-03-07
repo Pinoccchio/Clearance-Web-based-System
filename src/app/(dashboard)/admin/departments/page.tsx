@@ -273,6 +273,7 @@ export default function AdminDepartmentsPage() {
                           <Avatar
                             src={dept.head.avatar_url || undefined}
                             name={getHeadDisplayName(dept) || ""}
+                            variant="primary"
                             size="sm"
                             className={dept.head.avatar_url ? "cursor-pointer" : ""}
                             onClick={() => dept.head?.avatar_url && setPreviewUrl(dept.head.avatar_url)}

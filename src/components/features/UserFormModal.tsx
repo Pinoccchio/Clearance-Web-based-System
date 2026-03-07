@@ -308,15 +308,15 @@ export function UserFormModal({
   const isStudent = formData.role === "student";
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} className="max-w-lg">
+    <Modal isOpen={isOpen} onClose={onClose} className="max-w-2xl">
       <div className="p-6">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-full bg-cjc-blue/10 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-full bg-cjc-red/10 flex items-center justify-center">
             {mode === "add" ? (
-              <UserPlus className="w-5 h-5 text-cjc-blue" />
+              <UserPlus className="w-5 h-5 text-cjc-red" />
             ) : (
-              <UserCog className="w-5 h-5 text-cjc-blue" />
+              <UserCog className="w-5 h-5 text-cjc-red" />
             )}
           </div>
           <div>

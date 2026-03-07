@@ -465,17 +465,17 @@ export default function DepartmentRequirementsPage() {
                           <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={() => startEdit(req)}
-                              className="p-1.5 text-gray-500 hover:text-cjc-navy hover:bg-gray-100 rounded-md transition-colors"
+                              className="p-2 hover:bg-surface-warm rounded-lg transition-colors"
                               title="Edit"
                             >
-                              <Pencil className="w-4 h-4" />
+                              <Pencil className="w-4 h-4 text-warm-muted" />
                             </button>
                             <button
                               onClick={() => setDeleteTarget(req)}
-                              className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                              className="p-2 hover:bg-danger/10 rounded-lg transition-colors"
                               title="Delete"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-4 h-4 text-danger" />
                             </button>
                           </div>
                         </td>

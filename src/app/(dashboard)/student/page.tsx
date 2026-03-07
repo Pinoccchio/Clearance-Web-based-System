@@ -266,7 +266,7 @@ export default function StudentDashboardPage() {
             <p className="text-sm text-warm-muted">Action Required</p>
           </div>
           <div className="card p-4 text-center">
-            <FileText className="w-8 h-8 text-cjc-blue mx-auto mb-2" />
+            <FileText className="w-8 h-8 text-cjc-navy mx-auto mb-2" />
             <p className="text-2xl font-bold text-cjc-navy">{totalSources}</p>
             <p className="text-sm text-warm-muted">Total Sources</p>
           </div>

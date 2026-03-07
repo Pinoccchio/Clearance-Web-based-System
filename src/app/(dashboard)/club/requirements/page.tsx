@@ -237,16 +237,16 @@ export default function ClubRequirementsPage() {
           <div className="flex items-center gap-2">
             {requirements.some(r => !r.is_published) && (
               <button onClick={handleBulkPublish} disabled={isBulkPublishing}
-                className="flex items-center gap-2 px-4 py-2 border border-cjc-blue text-cjc-blue rounded-lg hover:bg-cjc-blue/5 transition-colors text-sm font-medium disabled:opacity-50">
+                className="flex items-center gap-2 px-4 py-2 border border-cjc-red text-cjc-red rounded-lg hover:bg-cjc-red/5 transition-colors text-sm font-medium disabled:opacity-50">
                 {isBulkPublishing
-                  ? <div className="w-4 h-4 border-2 border-cjc-blue/30 border-t-cjc-blue rounded-full animate-spin" />
+                  ? <div className="w-4 h-4 border-2 border-cjc-red/30 border-t-cjc-red rounded-full animate-spin" />
                   : <Eye className="w-4 h-4" />}
                 Publish All
               </button>
             )}
             <button
               onClick={() => setIsAddModalOpen(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-cjc-blue text-white rounded-lg hover:bg-cjc-blue/90 transition-colors text-sm font-medium"
+              className="flex items-center gap-2 px-4 py-2 bg-cjc-red text-white rounded-lg hover:bg-cjc-red-light transition-colors text-sm font-medium"
             >
               <Plus className="w-4 h-4" />
               Add Requirement
@@ -260,8 +260,8 @@ export default function ClubRequirementsPage() {
         <div className="card overflow-hidden">
           {requirements.length === 0 ? (
             <div className="p-8 text-center">
-              <div className="w-16 h-16 rounded-full bg-cjc-blue/10 flex items-center justify-center mx-auto mb-4">
-                <CheckSquare className="w-8 h-8 text-cjc-blue" />
+              <div className="w-16 h-16 rounded-full bg-cjc-red/10 flex items-center justify-center mx-auto mb-4">
+                <CheckSquare className="w-8 h-8 text-cjc-red" />
               </div>
               <h2 className="text-xl font-display font-bold text-cjc-navy mb-2">No Requirements Yet</h2>
               <p className="text-warm-muted max-w-md mx-auto mb-4">
@@ -269,7 +269,7 @@ export default function ClubRequirementsPage() {
               </p>
               <button
                 onClick={() => setIsAddModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2 bg-cjc-blue text-white rounded-lg hover:bg-cjc-blue/90 transition-colors text-sm font-medium mx-auto"
+                className="flex items-center gap-2 px-4 py-2 bg-cjc-red text-white rounded-lg hover:bg-cjc-red-light transition-colors text-sm font-medium mx-auto"
               >
                 <Plus className="w-4 h-4" />
                 Add Requirement
@@ -473,17 +473,17 @@ export default function ClubRequirementsPage() {
                           <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={() => startEdit(req)}
-                              className="p-1.5 text-gray-500 hover:text-cjc-navy hover:bg-gray-100 rounded-md transition-colors"
+                              className="p-2 hover:bg-surface-warm rounded-lg transition-colors"
                               title="Edit"
                             >
-                              <Pencil className="w-4 h-4" />
+                              <Pencil className="w-4 h-4 text-warm-muted" />
                             </button>
                             <button
                               onClick={() => setDeleteTarget(req)}
-                              className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
+                              className="p-2 hover:bg-danger/10 rounded-lg transition-colors"
                               title="Delete"
                             >
-                              <Trash2 className="w-4 h-4" />
+                              <Trash2 className="w-4 h-4 text-danger" />
                             </button>
                           </div>
                         </td>

@@ -476,17 +476,17 @@ export default function AdminUsersPage() {
                           <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={() => handleEdit(user)}
-                              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                              className="p-2 hover:bg-surface-warm rounded-lg transition-colors"
                               title="Edit user"
                             >
-                              <Edit2 className="w-4 h-4 text-gray-500" />
+                              <Edit2 className="w-4 h-4 text-warm-muted" />
                             </button>
                             <button
                               onClick={() => handleDeleteClick(user)}
-                              className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                              className="p-2 hover:bg-danger/10 rounded-lg transition-colors"
                               title="Delete user"
                             >
-                              <Trash2 className="w-4 h-4 text-red-500" />
+                              <Trash2 className="w-4 h-4 text-danger" />
                             </button>
                           </div>
                         </TableCell>

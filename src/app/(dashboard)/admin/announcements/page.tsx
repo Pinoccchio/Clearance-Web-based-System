@@ -398,6 +398,7 @@ export default function AdminAnnouncementsPage() {
                             <Avatar
                               src={announcement.posted_by?.avatar_url || undefined}
                               name={getPostedByName(announcement)}
+                              variant="primary"
                               size="sm"
                               className={announcement.posted_by?.avatar_url ? "cursor-pointer" : ""}
                               onClick={() => announcement.posted_by?.avatar_url && setPreviewUrl(announcement.posted_by.avatar_url)}

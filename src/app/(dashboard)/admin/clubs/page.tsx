@@ -321,6 +321,7 @@ export default function AdminClubsPage() {
                           <Avatar
                             src={club.adviser.avatar_url || undefined}
                             name={getAdviserDisplayName(club) || ""}
+                            variant="primary"
                             size="sm"
                             className={club.adviser.avatar_url ? "cursor-pointer" : ""}
                             onClick={() => club.adviser?.avatar_url && setPreviewUrl(club.adviser.avatar_url)}
