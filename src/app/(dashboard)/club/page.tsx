@@ -292,7 +292,7 @@ export default function ClubDashboard() {
           </div>
           <div className="card p-4 text-center">
             <Clock className="w-8 h-8 text-pending mx-auto mb-2" />
-            <p className="text-2xl font-bold text-cjc-navy">{stats.pending + stats.submitted}</p>
+            <p className="text-2xl font-bold text-cjc-navy">{stats.submitted}</p>
             <p className="text-sm text-warm-muted">Pending Review</p>
           </div>
           <div className="card p-4 text-center">
@@ -325,7 +325,7 @@ export default function ClubDashboard() {
               <Clock className="w-5 h-5 text-amber-600" />
               <div>
                 <p className="text-lg font-bold text-amber-700">{stats.pending}</p>
-                <p className="text-xs text-amber-600">Pending</p>
+                <p className="text-xs text-amber-600">Not Yet Submitted</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-3 bg-cjc-blue/5 rounded-lg">
@@ -422,7 +422,7 @@ export default function ClubDashboard() {
             {profile?.role === "club" ? "Club Adviser" : "Staff"}
           </span>
           <span className="px-3 py-1 bg-white border border-gray-200 rounded-full">
-            {stats.pending + stats.submitted} Awaiting Review
+            {stats.submitted} Awaiting Review
           </span>
         </div>
       </div>
