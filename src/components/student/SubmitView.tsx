@@ -34,6 +34,7 @@ import {
   Trash2,
   History,
   ExternalLink,
+  ScanLine,
 } from "lucide-react";
 import { Badge } from "@/components/ui/Badge";
 import { Modal } from "@/components/ui/modal";
@@ -637,7 +638,27 @@ export default function SubmitView({
 
                             {/* Upload area */}
                             <div className="sm:w-72 flex-shrink-0">
-                              {req.requires_upload ? (
+                              {req.is_attendance ? (() => {
+                                // Attendance-only requirement — read-only, fulfilled by office scan
+                                const sub = existingSub;
+                                const isFulfilled = sub?.status === 'submitted' || sub?.status === 'verified';
+                                return (
+                                  <div className={`flex items-center gap-2 px-3 py-2.5 rounded-lg border-2 ${
+                                    isFulfilled
+                                      ? 'border-green-200 bg-green-50'
+                                      : 'border-blue-200 bg-blue-50'
+                                  }`}>
+                                    {isFulfilled ? (
+                                      <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
+                                    ) : (
+                                      <ScanLine className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                                    )}
+                                    <span className={`text-xs font-medium ${isFulfilled ? 'text-green-700' : 'text-blue-700'}`}>
+                                      {isFulfilled ? 'Fulfilled via office scan' : 'Fulfilled via office scan only'}
+                                    </span>
+                                  </div>
+                                );
+                              })() : req.requires_upload ? (
                                 <>
                                   {/* List of already-uploaded files */}
                                   {existingSub && (existingSub.file_urls?.length ?? 0) > 0 && (

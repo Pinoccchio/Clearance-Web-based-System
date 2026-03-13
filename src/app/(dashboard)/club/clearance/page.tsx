@@ -31,6 +31,7 @@ import {
   PauseCircle,
   ExternalLink,
   FileText,
+  ScanLine,
   X,
 } from "lucide-react";
 import {
@@ -672,6 +673,11 @@ export default function ClubClearancePage() {
                             ) : (
                               <Badge variant="neutral" size="sm">No file</Badge>
                             )
+                          ) : sub && req.is_attendance ? (
+                            <Badge variant="gold" size="sm" className="flex items-center gap-1">
+                              <ScanLine className="w-3 h-3" />
+                              Via Attendance Scan
+                            </Badge>
                           ) : (
                             <Badge variant={sub ? "info" : "neutral"} size="sm">
                               {sub ? "Acknowledged" : "Pending"}

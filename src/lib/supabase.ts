@@ -1573,6 +1573,7 @@ export interface Requirement {
   is_required: boolean;
   requires_upload: boolean;
   is_published: boolean;
+  is_attendance: boolean;
   first_published_at: string | null;
   order: number;
   created_at: string;
@@ -1688,6 +1689,7 @@ export async function createRequirement(data: {
   description?: string;
   is_required?: boolean;
   requires_upload?: boolean;
+  is_attendance?: boolean;
   order?: number;
 }): Promise<Requirement> {
   const { data: created, error } = await supabase
@@ -1703,7 +1705,7 @@ export async function createRequirement(data: {
 /** Update a requirement */
 export async function updateRequirement(
   id: string,
-  data: Partial<Pick<Requirement, 'name' | 'description' | 'is_required' | 'requires_upload' | 'order' | 'is_published'>>
+  data: Partial<Pick<Requirement, 'name' | 'description' | 'is_required' | 'requires_upload' | 'is_attendance' | 'order' | 'is_published'>>
 ): Promise<Requirement> {
   const { data: updated, error } = await supabase
     .from('requirements')

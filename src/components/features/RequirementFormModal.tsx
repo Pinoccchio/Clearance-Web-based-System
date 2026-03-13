@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/Button";
-import { CheckSquare, Plus, X } from "lucide-react";
+import { CheckSquare, Plus, X, ScanLine } from "lucide-react";
 import {
   createRequirement,
   replaceRequirementLinks,
@@ -21,6 +21,7 @@ interface RequirementFormData {
   description: string;
   is_required: boolean;
   requires_upload: boolean;
+  is_attendance: boolean;
   links: LinkEntry[];
 }
 
@@ -29,6 +30,7 @@ const emptyForm: RequirementFormData = {
   description: "",
   is_required: true,
   requires_upload: false,
+  is_attendance: false,
   links: [],
 };
 
@@ -86,6 +88,7 @@ export function RequirementFormModal({
         description: formData.description.trim() || undefined,
         is_required: formData.is_required,
         requires_upload: formData.requires_upload,
+        is_attendance: formData.is_attendance,
         order: nextOrder,
       });
 
@@ -227,22 +230,53 @@ export function RequirementFormModal({
                 id="modal-requires-upload"
                 type="checkbox"
                 checked={formData.requires_upload}
+                disabled={formData.is_attendance}
                 onChange={(e) =>
                   setFormData((prev) => ({
                     ...prev,
                     requires_upload: e.target.checked,
                   }))
                 }
-                className="w-4 h-4 rounded border-gray-300 text-cjc-blue focus:ring-cjc-blue"
+                className="w-4 h-4 rounded border-gray-300 text-cjc-blue focus:ring-cjc-blue disabled:opacity-40"
               />
               <label
                 htmlFor="modal-requires-upload"
-                className="text-sm font-medium text-cjc-navy"
+                className={`text-sm font-medium ${formData.is_attendance ? "text-gray-400" : "text-cjc-navy"}`}
               >
                 Requires file upload
               </label>
             </div>
+            <div className="flex items-center gap-3">
+              <input
+                id="modal-is-attendance"
+                type="checkbox"
+                checked={formData.is_attendance}
+                onChange={(e) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    is_attendance: e.target.checked,
+                    requires_upload: e.target.checked ? false : prev.requires_upload,
+                  }))
+                }
+                className="w-4 h-4 rounded border-gray-300 text-cjc-blue focus:ring-cjc-blue"
+              />
+              <label
+                htmlFor="modal-is-attendance"
+                className="text-sm font-medium text-cjc-navy flex items-center gap-1.5"
+              >
+                <ScanLine className="w-3.5 h-3.5 text-indigo-500" />
+                Fulfilled via attendance scan only
+              </label>
+            </div>
           </div>
+          {formData.is_attendance && (
+            <div className="flex items-start gap-2 px-3 py-2 bg-indigo-50 border border-indigo-200 rounded-lg">
+              <ScanLine className="w-4 h-4 text-indigo-500 flex-shrink-0 mt-0.5" />
+              <p className="text-xs text-indigo-700">
+                Students cannot manually submit this. Office staff must scan them at an attendance event.
+              </p>
+            </div>
+          )}
 
           {/* Links Section */}
           <div>
