@@ -25,6 +25,7 @@ import {
   PauseCircle,
   User,
   UserCheck,
+  Activity,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UserRole } from "@/lib/supabase";
@@ -63,6 +64,7 @@ const adminNavSections: NavSection[] = [
     title: "System",
     items: [
       { label: "Announcements", href: "/admin/announcements", icon: <Megaphone className="w-5 h-5" /> },
+      { label: "Logs", href: "/admin/logs", icon: <Activity className="w-5 h-5" /> },
       { label: "Settings", href: "/admin/settings", icon: <Settings className="w-5 h-5" /> },
     ],
   },
@@ -184,6 +186,7 @@ const studentNavSections: NavSection[] = [
     items: [
       { label: "Dashboard", href: "/student", icon: <LayoutDashboard className="w-5 h-5" /> },
       { label: "History", href: "/student/history", icon: <History className="w-5 h-5" /> },
+      { label: "Documents", href: "/student/documents", icon: <FolderOpen className="w-5 h-5" /> },
     ],
   },
   {

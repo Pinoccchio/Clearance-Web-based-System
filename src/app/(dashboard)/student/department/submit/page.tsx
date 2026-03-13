@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Header from "@/components/layout/header";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/components/ui/Toast";
@@ -19,7 +19,7 @@ import {
   getStudentClearanceRequests,
   getClearanceItemForRequest,
   getPublishedRequirementsBySource,
-  getSubmissionsByItem,
+  getSubmissionsByItems,
   getSystemSettings,
 } from "@/lib/supabase";
 
@@ -34,8 +34,11 @@ export default function DepartmentSubmitPage() {
   const [requirements, setRequirements] = useState<Requirement[]>([]);
   const [submissionsByItem, setSubmissionsByItem] = useState<Record<string, SubmissionWithRequirement[]>>({});
   const [isLoading, setIsLoading] = useState(true);
+  const isRefreshingRef = useRef(false);
+  const pendingRefreshRef = useRef(false);
+  const refreshDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const loadData = useCallback(async (cancelled: { value: boolean }) => {
+  const loadData = useCallback(async (cancelled: { value: boolean }, silent = false) => {
     if (!profile?.department) return;
 
     try {
@@ -69,15 +72,15 @@ export default function DepartmentSubmitPage() {
           setClearanceItem(item);
 
           if (item) {
-            const subs = await getSubmissionsByItem(item.id);
+            const subsByItem = await getSubmissionsByItems([item.id]);
             if (!cancelled.value) {
-              setSubmissionsByItem({ [item.id]: subs });
+              setSubmissionsByItem(subsByItem);
             }
           }
         }
       }
     } catch (err) {
-      if (!cancelled.value) showToast("error", "Load failed", "Failed to load submission data.");
+      if (!cancelled.value && !silent) showToast("error", "Load failed", "Failed to load submission data.");
     } finally {
       if (!cancelled.value) setIsLoading(false);
     }
@@ -95,6 +98,27 @@ export default function DepartmentSubmitPage() {
   const refreshData = useCallback(() => {
     const cancelled = { value: false };
     loadData(cancelled);
+  }, [loadData]);
+
+  const debouncedRefresh = useCallback(() => {
+    if (refreshDebounceRef.current) clearTimeout(refreshDebounceRef.current);
+    refreshDebounceRef.current = setTimeout(async () => {
+      if (isRefreshingRef.current) {
+        pendingRefreshRef.current = true;
+        return;
+      }
+      isRefreshingRef.current = true;
+      const cancelled = { value: false };
+      await loadData(cancelled, true);
+      isRefreshingRef.current = false;
+      if (pendingRefreshRef.current) {
+        pendingRefreshRef.current = false;
+        const c = { value: false };
+        isRefreshingRef.current = true;
+        await loadData(c, true);
+        isRefreshingRef.current = false;
+      }
+    }, 300);
   }, [loadData]);
 
   useRealtimeRefresh('clearance_items', refreshData);
@@ -167,7 +191,7 @@ export default function DepartmentSubmitPage() {
           clearanceItems={clearanceItems}
           submissionsByItem={submissionsByItem}
           onRequestCreated={handleRequestCreated}
-          onUploadComplete={() => { const c = { value: false }; loadData(c); }}
+          onUploadComplete={debouncedRefresh}
           loading={false}
         />
       </div>

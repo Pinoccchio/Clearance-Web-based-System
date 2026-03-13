@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Header from "@/components/layout/header";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/components/ui/Toast";
@@ -19,7 +19,7 @@ import {
   getStudentClearanceRequests,
   getClearanceItemForRequest,
   getPublishedRequirementsByMultipleSources,
-  getSubmissionsByItem,
+  getSubmissionsByItems,
   getSystemSettings,
 } from "@/lib/supabase";
 
@@ -34,8 +34,11 @@ export default function OfficesSubmitPage() {
   const [requirementsBySource, setRequirementsBySource] = useState<Record<string, Requirement[]>>({});
   const [submissionsByItem, setSubmissionsByItem] = useState<Record<string, SubmissionWithRequirement[]>>({});
   const [isLoading, setIsLoading] = useState(true);
+  const isRefreshingRef = useRef(false);
+  const pendingRefreshRef = useRef(false);
+  const refreshDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const loadData = useCallback(async (cancelled: { value: boolean }) => {
+  const loadData = useCallback(async (cancelled: { value: boolean }, silent = false) => {
     if (!profile) return;
 
     try {
@@ -78,19 +81,14 @@ export default function OfficesSubmitPage() {
         if (cancelled.value) return;
         setClearanceItems(validItems);
 
-        // Fetch submissions for all items
-        const subsEntries = await Promise.all(
-          validItems.map(async (item) => {
-            const subs = await getSubmissionsByItem(item.id);
-            return [item.id, subs] as [string, SubmissionWithRequirement[]];
-          })
-        );
+        // Fetch submissions for all items in a single bulk query
+        const subsByItem = await getSubmissionsByItems(validItems.map((i) => i.id));
         if (!cancelled.value) {
-          setSubmissionsByItem(Object.fromEntries(subsEntries));
+          setSubmissionsByItem(subsByItem);
         }
       }
     } catch (err) {
-      if (!cancelled.value) showToast("error", "Load failed", "Failed to load submission data.");
+      if (!cancelled.value && !silent) showToast("error", "Load failed", "Failed to load submission data.");
     } finally {
       if (!cancelled.value) setIsLoading(false);
     }
@@ -108,6 +106,27 @@ export default function OfficesSubmitPage() {
   const refreshData = useCallback(() => {
     const cancelled = { value: false };
     loadData(cancelled);
+  }, [loadData]);
+
+  const debouncedRefresh = useCallback(() => {
+    if (refreshDebounceRef.current) clearTimeout(refreshDebounceRef.current);
+    refreshDebounceRef.current = setTimeout(async () => {
+      if (isRefreshingRef.current) {
+        pendingRefreshRef.current = true;
+        return;
+      }
+      isRefreshingRef.current = true;
+      const cancelled = { value: false };
+      await loadData(cancelled, true);
+      isRefreshingRef.current = false;
+      if (pendingRefreshRef.current) {
+        pendingRefreshRef.current = false;
+        const c = { value: false };
+        isRefreshingRef.current = true;
+        await loadData(c, true);
+        isRefreshingRef.current = false;
+      }
+    }, 300);
   }, [loadData]);
 
   useRealtimeRefresh('clearance_items', refreshData);
@@ -160,7 +179,7 @@ export default function OfficesSubmitPage() {
           clearanceItems={clearanceItems}
           submissionsByItem={submissionsByItem}
           onRequestCreated={handleRequestCreated}
-          onUploadComplete={() => { const c = { value: false }; loadData(c); }}
+          onUploadComplete={debouncedRefresh}
           loading={false}
         />
       </div>

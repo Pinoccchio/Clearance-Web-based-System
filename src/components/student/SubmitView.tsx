@@ -111,14 +111,27 @@ export default function SubmitView({
   const [submittingSource, setSubmittingSource] = useState<string | null>(null);
   const [submittedSources, setSubmittedSources] = useState<Set<string>>(new Set());
   const [togglingReqs, setTogglingReqs] = useState<Set<string>>(new Set());
+  const togglingReqsRef = useRef<Set<string>>(new Set());
+  // Batch flush: collect pending toggles and send as one DB call
+  const pendingTogglesRef = useRef<Map<string, { reqId: string; clearanceItemId: string; acknowledged: boolean }>>(new Map());
+  const batchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [pendingSubmit, setPendingSubmit] = useState<{ sourceId: string; item: ClearanceItem } | null>(null);
   const [pendingDelete, setPendingDelete] = useState<{ reqId: string; clearanceItemId: string; fileUrl: string } | null>(null);
   const [historyItem, setHistoryItem] = useState<{ item: ClearanceItem; sourceName: string } | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
-  // Clear optimistic overrides once parent re-syncs the prop
+  // Clear optimistic overrides once parent re-syncs the prop,
+  // but keep overrides for reqs that are still in-flight (being toggled)
   useEffect(() => {
-    setLocalSubOverrides({});
+    setLocalSubOverrides((prev) => {
+      const next: typeof prev = {};
+      for (const reqId of Object.keys(prev)) {
+        if (togglingReqsRef.current.has(reqId)) {
+          next[reqId] = prev[reqId];
+        }
+      }
+      return next;
+    });
   }, [submissionsByItem]);
 
   // When clearance items update (e.g. reviewer puts item on_hold/rejected),
@@ -247,39 +260,86 @@ export default function SubmitView({
     }
   }
 
-  async function handleCheckboxToggle(reqId: string, clearanceItemId: string, currentlyChecked: boolean) {
+  function handleCheckboxToggle(reqId: string, clearanceItemId: string, currentlyChecked: boolean) {
+    const acknowledged = !currentlyChecked;
+
+    // Apply optimistic update immediately so UI feels instant
+    togglingReqsRef.current.add(reqId);
     setTogglingReqs((prev) => new Set(prev).add(reqId));
-    try {
-      await acknowledgeRequirement({
-        clearance_item_id: clearanceItemId,
-        requirement_id: reqId,
-        student_id: studentId,
-        acknowledged: !currentlyChecked,
-      });
-      // Optimistic update
-      setLocalSubOverrides((prev) => ({
-        ...prev,
-        [reqId]: !currentlyChecked
-          ? {
-              id: reqId,
-              clearance_item_id: clearanceItemId,
-              requirement_id: reqId,
+    setLocalSubOverrides((prev) => ({
+      ...prev,
+      [reqId]: acknowledged
+        ? {
+            id: reqId,
+            clearance_item_id: clearanceItemId,
+            requirement_id: reqId,
+            student_id: studentId,
+            file_urls: [],
+            status: 'submitted' as const,
+            remarks: null,
+            submitted_at: new Date().toISOString(),
+            reviewed_at: null,
+            requirement: { id: reqId } as SubmissionWithRequirement["requirement"],
+          }
+        : null,
+    }));
+
+    // Queue this toggle — overwrite if same req clicked again before flush
+    pendingTogglesRef.current.set(reqId, { reqId, clearanceItemId, acknowledged });
+
+    // Debounce: flush all queued toggles as one batch call after 150ms idle
+    if (batchTimerRef.current) clearTimeout(batchTimerRef.current);
+    batchTimerRef.current = setTimeout(async () => {
+      const batch = new Map(pendingTogglesRef.current);
+      pendingTogglesRef.current.clear();
+      batchTimerRef.current = null;
+
+      // Group by clearanceItemId — batchAcknowledgeRequirements is per-item
+      const byItem = new Map<string, { toAck: string[]; toUnack: string[] }>();
+      for (const { reqId: rId, clearanceItemId: cId, acknowledged: ack } of batch.values()) {
+        if (!byItem.has(cId)) byItem.set(cId, { toAck: [], toUnack: [] });
+        if (ack) byItem.get(cId)!.toAck.push(rId);
+        else byItem.get(cId)!.toUnack.push(rId);
+      }
+
+      try {
+        // batchAcknowledgeRequirements only handles acknowledged=true rows;
+        // for un-acknowledges (rare) fall back to individual calls — still serial but fine
+        const calls: Promise<void>[] = [];
+        for (const [cId, { toAck, toUnack }] of byItem) {
+          if (toAck.length > 0) calls.push(batchAcknowledgeRequirements(cId, toAck, studentId));
+          for (const rId of toUnack) {
+            calls.push(acknowledgeRequirement({
+              clearance_item_id: cId,
+              requirement_id: rId,
               student_id: studentId,
-              file_urls: [],
-              status: 'submitted' as const,
-              remarks: null,
-              submitted_at: new Date().toISOString(),
-              reviewed_at: null,
-              requirement: { id: reqId } as SubmissionWithRequirement["requirement"],
-            }
-          : null,
-      }));
-      onUploadComplete?.();
-    } catch (err) {
-      showToast("error", "Failed to save", err instanceof Error ? err.message : "Could not save your response.");
-    } finally {
-      setTogglingReqs((prev) => { const n = new Set(prev); n.delete(reqId); return n; });
-    }
+              acknowledged: false,
+            }));
+          }
+        }
+        await Promise.all(calls);
+        // Do NOT call onUploadComplete here — optimistic updates already show
+        // the correct state. Triggering a full loadData reload for every batch
+        // of checkbox clicks compounds the statement timeout problem.
+      } catch (err) {
+        // Revert optimistic updates for everything in this batch
+        setLocalSubOverrides((prev) => {
+          const next = { ...prev };
+          for (const rId of batch.keys()) delete next[rId];
+          return next;
+        });
+        showToast("error", "Failed to save", err instanceof Error ? err.message : "Could not save your response.");
+      } finally {
+        setTogglingReqs((prev) => {
+          const n = new Set(prev);
+          for (const rId of batch.keys()) {
+            n.delete(rId);
+            togglingReqsRef.current.delete(rId);
+          }
+          return n;
+        });
+      }
+    }, 150);
   }
 
   async function handleSubmitForReview(sourceId: string, item: ClearanceItem) {

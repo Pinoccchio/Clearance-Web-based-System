@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Header from "@/components/layout/header";
 import { useAuth } from "@/contexts/auth-context";
 import { useToast } from "@/components/ui/Toast";
@@ -19,7 +19,7 @@ import {
   getStudentClearanceRequests,
   getOrCreateClearanceItem,
   getPublishedRequirementsBySource,
-  getSubmissionsByItem,
+  getSubmissionsByItems,
   getSystemSettings,
 } from "@/lib/supabase";
 
@@ -41,8 +41,11 @@ export default function StudentClubsSubmitPage() {
   const [requirementsBySource, setRequirementsBySource] = useState<Record<string, Requirement[]>>({});
   const [submissionsByItem, setSubmissionsByItem] = useState<Record<string, SubmissionWithRequirement[]>>({});
   const [isLoading, setIsLoading] = useState(true);
+  const isRefreshingRef = useRef(false);
+  const pendingRefreshRef = useRef(false);
+  const refreshDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const loadData = useCallback(async (cancelled: { value: boolean }) => {
+  const loadData = useCallback(async (cancelled: { value: boolean }, silent = false) => {
     if (!profile?.enrolled_clubs) return;
 
     try {
@@ -79,7 +82,6 @@ export default function StudentClubsSubmitPage() {
       // Fetch requirements and clearance items for each club
       const reqsBySource: Record<string, Requirement[]> = {};
       const items: ClearanceItem[] = [];
-      const subsByItem: Record<string, SubmissionWithRequirement[]> = {};
 
       await Promise.all(
         validClubs.map(async (club) => {
@@ -94,14 +96,17 @@ export default function StudentClubsSubmitPage() {
             if (cancelled.value) return;
             if (item) {
               items.push(item);
-              const subs = await getSubmissionsByItem(item.id);
-              if (!cancelled.value) {
-                subsByItem[item.id] = subs;
-              }
             }
           }
         })
       );
+
+      if (cancelled.value) return;
+
+      // Bulk-fetch all submissions in a single query
+      const subsByItem = active && items.length > 0
+        ? await getSubmissionsByItems(items.map((i) => i.id))
+        : {};
 
       if (!cancelled.value) {
         setRequirementsBySource(reqsBySource);
@@ -113,7 +118,7 @@ export default function StudentClubsSubmitPage() {
         // Better error logging for debugging
         const errorMessage = err instanceof Error ? err.message : JSON.stringify(err);
         console.error("Error loading club submit data:", errorMessage, err);
-        showToast("error", "Load failed", "Failed to load submission data.");
+        if (!silent) showToast("error", "Load failed", "Failed to load submission data.");
       }
     } finally {
       if (!cancelled.value) setIsLoading(false);
@@ -137,6 +142,27 @@ export default function StudentClubsSubmitPage() {
   const refreshData = useCallback(() => {
     const cancelled = { value: false };
     loadData(cancelled);
+  }, [loadData]);
+
+  const debouncedRefresh = useCallback(() => {
+    if (refreshDebounceRef.current) clearTimeout(refreshDebounceRef.current);
+    refreshDebounceRef.current = setTimeout(async () => {
+      if (isRefreshingRef.current) {
+        pendingRefreshRef.current = true;
+        return;
+      }
+      isRefreshingRef.current = true;
+      const cancelled = { value: false };
+      await loadData(cancelled, true);
+      isRefreshingRef.current = false;
+      if (pendingRefreshRef.current) {
+        pendingRefreshRef.current = false;
+        const c = { value: false };
+        isRefreshingRef.current = true;
+        await loadData(c, true);
+        isRefreshingRef.current = false;
+      }
+    }, 300);
   }, [loadData]);
 
   useRealtimeRefresh("clearance_items", refreshData);
@@ -211,10 +237,7 @@ export default function StudentClubsSubmitPage() {
           clearanceItems={clearanceItems}
           submissionsByItem={submissionsByItem}
           onRequestCreated={handleRequestCreated}
-          onUploadComplete={() => {
-            const c = { value: false };
-            loadData(c);
-          }}
+          onUploadComplete={debouncedRefresh}
           loading={false}
         />
       </div>

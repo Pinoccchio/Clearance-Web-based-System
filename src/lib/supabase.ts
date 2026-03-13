@@ -1933,6 +1933,26 @@ export async function getSubmissionsByItem(
   return (data as SubmissionWithRequirement[]) || [];
 }
 
+/** Bulk-fetch submissions for multiple clearance item IDs in a single query */
+export async function getSubmissionsByItems(
+  clearanceItemIds: string[]
+): Promise<Record<string, SubmissionWithRequirement[]>> {
+  if (clearanceItemIds.length === 0) return {};
+  const { data, error } = await supabase
+    .from('requirement_submissions')
+    .select('*, requirement:requirements(*)')
+    .in('clearance_item_id', clearanceItemIds)
+    .order('submitted_at', { ascending: true });
+  if (error) throw error;
+  const result: Record<string, SubmissionWithRequirement[]> = {};
+  for (const id of clearanceItemIds) result[id] = [];
+  for (const row of (data as SubmissionWithRequirement[]) ?? []) {
+    result[row.clearance_item_id] ??= [];
+    result[row.clearance_item_id].push(row);
+  }
+  return result;
+}
+
 /** Fetch all processed (approved/rejected/on_hold) clearance items for a department */
 export async function getProcessedClearanceItemsByDepartment(
   deptId: string
@@ -2159,13 +2179,11 @@ export async function acknowledgeRequirement(data: {
         clearance_item_id: data.clearance_item_id,
         requirement_id: data.requirement_id,
         student_id: data.student_id,
-        file_urls: [],
         status: data.acknowledged ? 'submitted' : 'pending',
         submitted_at: data.acknowledged ? new Date().toISOString() : null,
       },
       { onConflict: 'clearance_item_id,requirement_id' }
-    )
-    .select();
+    );
   if (error) throw error;
 }
 
@@ -2207,7 +2225,6 @@ export async function batchAcknowledgeRequirements(
     clearance_item_id: clearanceItemId,
     requirement_id: reqId,
     student_id: studentId,
-    file_urls: [] as string[],
     status: 'submitted' as const,
     submitted_at: new Date().toISOString(),
   }));
@@ -2410,6 +2427,191 @@ export async function getClearanceItemsBySourceAndRequests(
 
   if (error) throw error;
   return data || [];
+}
+
+// ==========================================
+// Student Documents Functions
+// ==========================================
+
+export interface StudentDocument {
+  submission_id: string;
+  clearance_item_id: string;
+  requirement_id: string;
+  requirement_name: string;
+  requires_upload: boolean;
+  file_urls: string[];
+  status: 'pending' | 'submitted' | 'verified' | 'rejected';
+  submitted_at: string | null;
+  remarks: string | null;
+  source_type: 'department' | 'office' | 'club';
+  source_id: string;
+  academic_year: string;
+  semester: string;
+}
+
+/** Get all requirement submissions that have uploaded files for a student */
+export async function getStudentDocuments(studentId: string): Promise<StudentDocument[]> {
+  const { data, error } = await supabase
+    .from('requirement_submissions')
+    .select(`
+      id,
+      clearance_item_id,
+      requirement_id,
+      file_urls,
+      status,
+      submitted_at,
+      remarks,
+      requirement:requirements(name, requires_upload),
+      clearance_item:clearance_items(
+        source_type,
+        source_id,
+        request:clearance_requests(academic_year, semester)
+      )
+    `)
+    .eq('student_id', studentId)
+    .not('file_urls', 'eq', '{}')
+    .order('submitted_at', { ascending: false });
+
+  if (error) throw error;
+
+  return ((data as unknown[]) || []).map((row: unknown) => {
+    const r = row as {
+      id: string;
+      clearance_item_id: string;
+      requirement_id: string;
+      file_urls: string[];
+      status: 'pending' | 'submitted' | 'verified' | 'rejected';
+      submitted_at: string | null;
+      remarks: string | null;
+      requirement: { name: string; requires_upload: boolean };
+      clearance_item: {
+        source_type: 'department' | 'office' | 'club';
+        source_id: string;
+        request: { academic_year: string; semester: string };
+      };
+    };
+    return {
+      submission_id: r.id,
+      clearance_item_id: r.clearance_item_id,
+      requirement_id: r.requirement_id,
+      requirement_name: r.requirement?.name ?? '',
+      requires_upload: r.requirement?.requires_upload ?? false,
+      file_urls: r.file_urls ?? [],
+      status: r.status,
+      submitted_at: r.submitted_at,
+      remarks: r.remarks,
+      source_type: r.clearance_item?.source_type ?? 'office',
+      source_id: r.clearance_item?.source_id ?? '',
+      academic_year: r.clearance_item?.request?.academic_year ?? '',
+      semester: r.clearance_item?.request?.semester ?? '',
+    };
+  });
+}
+
+// ==========================================
+// Admin Logs / History Functions
+// ==========================================
+
+export interface AdminLogEntry {
+  id: string;
+  clearance_item_id: string;
+  from_status: string | null;
+  to_status: string;
+  actor_id: string | null;
+  actor_role: string | null;
+  remarks: string | null;
+  created_at: string;
+  actor: { first_name: string | null; last_name: string | null; role: string | null } | null;
+  clearance_item: {
+    source_type: string;
+    source_id: string;
+    request: { student_id: string; academic_year: string; semester: string };
+  } | null;
+  student: { first_name: string | null; last_name: string | null; student_id: string | null } | null;
+}
+
+/** Fetch recent clearance_item_history entries for the admin logs page */
+export async function getAdminLogs(limit = 200): Promise<AdminLogEntry[]> {
+  const { data, error } = await supabase
+    .from('clearance_item_history')
+    .select(`
+      id,
+      clearance_item_id,
+      from_status,
+      to_status,
+      actor_id,
+      actor_role,
+      remarks,
+      created_at,
+      actor:profiles!clearance_item_history_actor_id_fkey(first_name, last_name, role),
+      clearance_item:clearance_items(
+        source_type,
+        source_id,
+        request:clearance_requests(student_id, academic_year, semester)
+      )
+    `)
+    .order('created_at', { ascending: false })
+    .limit(limit);
+
+  if (error) throw error;
+
+  const rows = (data as unknown[]) || [];
+
+  // Collect unique student IDs to batch-fetch names
+  const studentIds = [
+    ...new Set(
+      rows
+        .map((r: unknown) => {
+          const row = r as { clearance_item?: { request?: { student_id?: string } } };
+          return row?.clearance_item?.request?.student_id;
+        })
+        .filter(Boolean) as string[]
+    ),
+  ];
+
+  let studentMap: Record<string, { first_name: string | null; last_name: string | null; student_id: string | null }> = {};
+  if (studentIds.length > 0) {
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('id, first_name, last_name, student_id')
+      .in('id', studentIds);
+    for (const p of profiles ?? []) {
+      studentMap[p.id] = { first_name: p.first_name, last_name: p.last_name, student_id: p.student_id };
+    }
+  }
+
+  return rows.map((row: unknown) => {
+    const r = row as {
+      id: string;
+      clearance_item_id: string;
+      from_status: string | null;
+      to_status: string;
+      actor_id: string | null;
+      actor_role: string | null;
+      remarks: string | null;
+      created_at: string;
+      actor: { first_name: string | null; last_name: string | null; role: string | null } | null;
+      clearance_item: {
+        source_type: string;
+        source_id: string;
+        request: { student_id: string; academic_year: string; semester: string };
+      } | null;
+    };
+    const studentId = r.clearance_item?.request?.student_id;
+    return {
+      id: r.id,
+      clearance_item_id: r.clearance_item_id,
+      from_status: r.from_status,
+      to_status: r.to_status,
+      actor_id: r.actor_id,
+      actor_role: r.actor_role,
+      remarks: r.remarks,
+      created_at: r.created_at,
+      actor: r.actor ?? null,
+      clearance_item: r.clearance_item ?? null,
+      student: studentId ? (studentMap[studentId] ?? null) : null,
+    };
+  });
 }
 
 // ==========================================

@@ -1,9 +1,12 @@
+import { ReactNode } from "react";
+
 interface HeaderProps {
   title: string;
   subtitle?: string;
+  actions?: ReactNode;
 }
 
-export default function Header({ title, subtitle }: HeaderProps) {
+export default function Header({ title, subtitle, actions }: HeaderProps) {
   return (
     <header className="sticky top-0 z-30 bg-white border-b border-gray-200">
       <div className="px-6 py-4">
@@ -15,6 +18,7 @@ export default function Header({ title, subtitle }: HeaderProps) {
               <p className="text-sm text-gray-500 mt-0.5">{subtitle}</p>
             )}
           </div>
+          {actions && <div className="flex items-center gap-2">{actions}</div>}
         </div>
       </div>
     </header>
