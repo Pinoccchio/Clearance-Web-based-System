@@ -559,7 +559,7 @@ export default function SubmitView({
             {/* Accordion body */}
             {isOpen && (() => {
               const uploadReqs = reqs.filter((r) => r.requires_upload);
-              const requiredCheckboxReqs = reqs.filter((r) => !r.requires_upload && r.is_required);
+              const requiredCheckboxReqs = reqs.filter((r) => !r.requires_upload && !r.is_attendance && r.is_required);
               const existingSubsForItem = item ? (submissionsByItem[item.id] ?? []) : [];
               const allUploaded = uploadReqs.length === 0 || uploadReqs.every((r) => {
                 const sub = r.id in localSubOverrides

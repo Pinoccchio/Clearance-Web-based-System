@@ -983,6 +983,17 @@ export async function getClubRoleUsers(): Promise<Profile[]> {
   return data || [];
 }
 
+/** Get all student profiles (for office-level views — no department/club filter) */
+export async function getAllStudentProfiles(): Promise<Profile[]> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("role", "student")
+    .order("last_name", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
 /** Get the office where the given user is head */
 export async function getOfficeByHeadId(userId: string): Promise<Office | null> {
   const { data, error } = await supabase
@@ -2637,4 +2648,212 @@ export async function sendPasswordResetEmail(email: string) {
 export async function updateUserPassword(newPassword: string) {
   const { error } = await supabase.auth.updateUser({ password: newPassword });
   if (error) throw error;
+}
+
+// ── Events & Attendance ──────────────────────────────────────────────────────
+
+export type AttendanceType = "log_in" | "log_out";
+
+export interface EventRecord {
+  id: string;
+  source_type: string;
+  source_id: string;
+  name: string;
+  description: string | null;
+  event_date: string;
+  is_active: boolean;
+  created_by: string | null;
+  requirement_id: string | null;
+  require_logout: boolean;
+  created_at: string;
+  updated_at: string;
+  requirement?: { id: string; name: string } | null;
+  source_name?: string;
+}
+
+export interface AttendanceRecord {
+  id: string;
+  event_id: string;
+  student_id: string;
+  scanned_by: string | null;
+  scanned_at: string;
+  attendance_type: AttendanceType;
+  student?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    student_id: string | null;
+    course: string | null;
+    year_level: string | null;
+    avatar_url: string | null;
+  };
+}
+
+export async function getEventsForSource(sourceType: string, sourceId: string): Promise<EventRecord[]> {
+  const { data, error } = await supabase
+    .from("events")
+    .select("*, requirement:requirements(id, name)")
+    .eq("source_type", sourceType)
+    .eq("source_id", sourceId)
+    .order("event_date", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as EventRecord[];
+}
+
+export async function createEventRecord(event: {
+  source_type: string;
+  source_id: string;
+  name: string;
+  description?: string;
+  event_date: string;
+  requirement_id?: string | null;
+  require_logout?: boolean;
+}): Promise<EventRecord> {
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data, error } = await supabase
+    .from("events")
+    .insert({
+      source_type: event.source_type,
+      source_id: event.source_id,
+      name: event.name,
+      description: event.description || null,
+      event_date: event.event_date,
+      created_by: user?.id,
+      is_active: true,
+      require_logout: event.require_logout ?? false,
+      ...(event.requirement_id ? { requirement_id: event.requirement_id } : {}),
+    })
+    .select("*, requirement:requirements(id, name)")
+    .single();
+  if (error) throw error;
+  return data as EventRecord;
+}
+
+export async function updateEventRecord(id: string, updates: {
+  name?: string;
+  description?: string | null;
+  event_date?: string;
+  requirement_id?: string | null;
+  require_logout?: boolean;
+  is_active?: boolean;
+}, previousRequirementId?: string | null): Promise<EventRecord> {
+  const { data, error } = await supabase
+    .from("events")
+    .update(updates)
+    .eq("id", id)
+    .select("*, requirement:requirements(id, name)")
+    .single();
+  if (error) throw error;
+
+  // If requirement was just linked (was null, now set), backfill existing attendance
+  if (!previousRequirementId && updates.requirement_id) {
+    await supabase.rpc("backfill_attendance_submissions", { p_event_id: id });
+  }
+
+  return data as EventRecord;
+}
+
+export async function deleteEventRecord(id: string): Promise<void> {
+  const { error } = await supabase.from("events").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function getAttendanceForEvent(eventId: string): Promise<AttendanceRecord[]> {
+  const { data, error } = await supabase
+    .from("attendance_records")
+    .select("id, event_id, student_id, scanned_by, scanned_at, attendance_type, student:profiles!attendance_records_student_id_fkey(id, first_name, last_name, student_id, course, year_level, avatar_url)")
+    .eq("event_id", eventId)
+    .order("scanned_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []).map((r) => ({
+    ...r,
+    student: Array.isArray(r.student) ? r.student[0] ?? null : r.student,
+  })) as AttendanceRecord[];
+}
+
+export async function deleteStudentAttendance(eventId: string, studentId: string): Promise<number> {
+  const { data, error } = await supabase.rpc("delete_student_attendance", {
+    p_event_id: eventId,
+    p_student_id: studentId,
+  });
+  if (error) throw error;
+  return data as number;
+}
+
+export async function getAttendanceCountForEvent(eventId: string): Promise<number> {
+  const { count, error } = await supabase
+    .from("attendance_records")
+    .select("id", { count: "exact", head: true })
+    .eq("event_id", eventId);
+  if (error) throw error;
+  return count ?? 0;
+}
+
+export async function getAttendanceRequirementsBySource(sourceType: string, sourceId: string): Promise<{ id: string; name: string }[]> {
+  const { data, error } = await supabase
+    .from("requirements")
+    .select("id, name")
+    .eq("source_type", sourceType)
+    .eq("source_id", sourceId)
+    .eq("is_attendance", true)
+    .order("order", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as { id: string; name: string }[];
+}
+
+export interface StudentAttendanceWithEvent {
+  id: string;
+  event_id: string;
+  student_id: string;
+  scanned_at: string;
+  attendance_type: AttendanceType;
+  event: {
+    id: string;
+    name: string;
+    description: string | null;
+    event_date: string;
+    source_type: string;
+    source_id: string;
+  };
+}
+
+export async function getStudentAttendanceWithEvents(studentId: string): Promise<StudentAttendanceWithEvent[]> {
+  const { data, error } = await supabase
+    .from("attendance_records")
+    .select("id, event_id, student_id, scanned_at, attendance_type, event:events(id, name, description, event_date, source_type, source_id)")
+    .eq("student_id", studentId)
+    .order("scanned_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as unknown as StudentAttendanceWithEvent[];
+}
+
+export async function getAllEvents(): Promise<EventRecord[]> {
+  const { data, error } = await supabase
+    .from("events")
+    .select("*, requirement:requirements(id, name)")
+    .order("event_date", { ascending: false });
+  if (error) throw error;
+
+  // Fetch source names
+  const events = (data ?? []) as EventRecord[];
+  const officeIds = [...new Set(events.filter(e => e.source_type === 'office').map(e => e.source_id))];
+  const deptIds = [...new Set(events.filter(e => e.source_type === 'department').map(e => e.source_id))];
+  const clubIds = [...new Set(events.filter(e => e.source_type === 'club').map(e => e.source_id))];
+
+  const nameMap: Record<string, string> = {};
+
+  if (officeIds.length > 0) {
+    const { data: offices } = await supabase.from("offices").select("id, name").in("id", officeIds);
+    offices?.forEach((o: { id: string; name: string }) => { nameMap[o.id] = o.name; });
+  }
+  if (deptIds.length > 0) {
+    const { data: depts } = await supabase.from("departments").select("id, name").in("id", deptIds);
+    depts?.forEach((d: { id: string; name: string }) => { nameMap[d.id] = d.name; });
+  }
+  if (clubIds.length > 0) {
+    const { data: clubs } = await supabase.from("clubs").select("id, name").in("id", clubIds);
+    clubs?.forEach((c: { id: string; name: string }) => { nameMap[c.id] = c.name; });
+  }
+
+  return events.map(e => ({ ...e, source_name: nameMap[e.source_id] || 'Unknown' }));
 }

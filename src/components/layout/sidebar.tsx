@@ -26,6 +26,7 @@ import {
   User,
   UserCheck,
   Activity,
+  Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { UserRole } from "@/lib/supabase";
@@ -64,6 +65,7 @@ const adminNavSections: NavSection[] = [
     title: "System",
     items: [
       { label: "Announcements", href: "/admin/announcements", icon: <Megaphone className="w-5 h-5" /> },
+      { label: "Events", href: "/admin/events", icon: <Calendar className="w-5 h-5" /> },
       { label: "Logs", href: "/admin/logs", icon: <Activity className="w-5 h-5" /> },
       { label: "Settings", href: "/admin/settings", icon: <Settings className="w-5 h-5" /> },
     ],
@@ -93,6 +95,12 @@ const departmentNavSections: NavSection[] = [
       { label: "Clearance Queue", href: "/department/clearance", icon: <ClipboardList className="w-5 h-5" /> },
       { label: "Requirements", href: "/department/requirements", icon: <CheckSquare className="w-5 h-5" /> },
       { label: "History", href: "/department/history", icon: <History className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Events",
+    items: [
+      { label: "Events", href: "/department/events", icon: <Calendar className="w-5 h-5" /> },
     ],
   },
   {
@@ -127,8 +135,15 @@ const officeNavSections: NavSection[] = [
     title: "Clearance",
     items: [
       { label: "Clearance Queue", href: "/office/clearance", icon: <ClipboardList className="w-5 h-5" /> },
+      { label: "Students", href: "/office/students", icon: <Users className="w-5 h-5" /> },
       { label: "Requirements", href: "/office/requirements", icon: <CheckSquare className="w-5 h-5" /> },
       { label: "History", href: "/office/history", icon: <History className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Events",
+    items: [
+      { label: "Events", href: "/office/events", icon: <Calendar className="w-5 h-5" /> },
     ],
   },
   {
@@ -161,6 +176,12 @@ const clubNavSections: NavSection[] = [
     ],
   },
   {
+    title: "Events",
+    items: [
+      { label: "Events", href: "/club/events", icon: <Calendar className="w-5 h-5" /> },
+    ],
+  },
+  {
     title: "Management",
     items: [
       { label: "Members", href: "/club/members", icon: <Users className="w-5 h-5" /> },
@@ -187,6 +208,7 @@ const studentNavSections: NavSection[] = [
       { label: "Dashboard", href: "/student", icon: <LayoutDashboard className="w-5 h-5" /> },
       { label: "History", href: "/student/history", icon: <History className="w-5 h-5" /> },
       { label: "Documents", href: "/student/documents", icon: <FolderOpen className="w-5 h-5" /> },
+      { label: "My Events", href: "/student/events", icon: <Calendar className="w-5 h-5" /> },
     ],
   },
   {

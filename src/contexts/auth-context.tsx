@@ -14,22 +14,23 @@ interface AuthContextType {
   refreshProfile: () => Promise<void>;
   orgLogo: string | null;
   orgName: string | null;
+  orgId: string | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-async function fetchOrgForProfile(profile: Profile): Promise<{ logo: string | null; name: string | null }> {
+async function fetchOrgForProfile(profile: Profile): Promise<{ logo: string | null; name: string | null; id: string | null }> {
   if (profile.role === "office") {
     const org = await getOfficeByHeadId(profile.id);
-    return { logo: org?.logo_url ?? null, name: org?.name ?? null };
+    return { logo: org?.logo_url ?? null, name: org?.name ?? null, id: org?.id ?? null };
   } else if (profile.role === "department") {
     const org = await getDepartmentByHeadId(profile.id);
-    return { logo: org?.logo_url ?? null, name: org?.name ?? null };
+    return { logo: org?.logo_url ?? null, name: org?.name ?? null, id: org?.id ?? null };
   } else if (profile.role === "club") {
     const org = await getClubByAdviserId(profile.id);
-    return { logo: org?.logo_url ?? null, name: org?.name ?? null };
+    return { logo: org?.logo_url ?? null, name: org?.name ?? null, id: org?.id ?? null };
   }
-  return { logo: null, name: null };
+  return { logo: null, name: null, id: null };
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -38,6 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const [orgLogo, setOrgLogo] = useState<string | null>(null);
   const [orgName, setOrgName] = useState<string | null>(null);
+  const [orgId, setOrgId] = useState<string | null>(null);
 
   const isAuthenticated = !!user && !!profile;
 
@@ -77,9 +79,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       console.log("[Auth] Profile found, role:", userProfile.role);
       setProfile(userProfile);
-      const { logo, name } = await fetchOrgForProfile(userProfile);
+      const { logo, name, id } = await fetchOrgForProfile(userProfile);
       setOrgLogo(logo);
       setOrgName(name);
+      setOrgId(id);
       return { success: true, role: userProfile.role };
     } catch (error) {
       console.error("[Auth] Login error:", error);
@@ -96,6 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(null);
       setOrgLogo(null);
       setOrgName(null);
+      setOrgId(null);
     } catch (error) {
       console.error("Logout error:", error);
       // Still clear local state even if signOut fails
@@ -103,6 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(null);
       setOrgLogo(null);
       setOrgName(null);
+      setOrgId(null);
     }
   }, []);
 
@@ -130,9 +135,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userProfile = await getProfileById(user.id);
         setProfile(userProfile);
         if (userProfile) {
-          const { logo, name } = await fetchOrgForProfile(userProfile);
+          const { logo, name, id } = await fetchOrgForProfile(userProfile);
           setOrgLogo(logo);
           setOrgName(name);
+          setOrgId(id);
         }
       } catch (error) {
         // Silent fail for initialization - user just isn't logged in
@@ -152,6 +158,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(null);
         setOrgLogo(null);
         setOrgName(null);
+        setOrgId(null);
       } else if (event === "TOKEN_REFRESHED" && session?.user) {
         setUser(session.user);
       }
@@ -168,6 +175,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setProfile(null);
         setOrgLogo(null);
         setOrgName(null);
+        setOrgId(null);
         // Clear storage to force re-login
         if (typeof window !== 'undefined') {
           localStorage.removeItem('sb-joyrstittieqqfvvuuwb-auth-token');
@@ -200,6 +208,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         refreshProfile,
         orgLogo,
         orgName,
+        orgId,
       }}
     >
       {children}
