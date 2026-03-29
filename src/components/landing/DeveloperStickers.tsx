@@ -48,11 +48,8 @@ export function DeveloperStickers() {
       <div className="max-w-6xl mx-auto px-6">
         {/* Section Header */}
         <div className="mb-14 text-center fade-in-up">
-          <p className="text-sm font-semibold text-cjc-red uppercase tracking-wider mb-3">
-            The Team
-          </p>
           <h2 className="font-display text-3xl sm:text-4xl font-bold text-foreground">
-            Meet the Developers
+            Developed By
           </h2>
         </div>
 

@@ -11,11 +11,11 @@ export function CTASection({ onSignIn }: CTASectionProps) {
     <section className="bg-cjc-cta py-20 lg:py-28">
       <div className="max-w-4xl mx-auto px-6 text-center fade-in-up">
         <h2 className="font-display text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-6">
-          Start Your Clearance Today
+          Ready to check your clearance?
         </h2>
 
         <p className="text-white/80 text-lg mb-10 max-w-xl mx-auto leading-relaxed">
-          No more guessing which offices you still need to visit. Track your clearance progress and know exactly what to settle.
+          Sign in to see which departments and offices have cleared you, and what requirements you still need to complete.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">

@@ -18,11 +18,8 @@ export function FeaturesSection({ clearanceSources }: FeaturesSectionProps) {
     <section className="py-24 lg:py-32 bg-background">
       <div className="max-w-6xl mx-auto px-6">
         <div className="mb-16 text-center lg:text-left fade-in-up">
-          <p className="text-sm font-semibold text-cjc-red uppercase tracking-wider mb-3">
-            Why Use This?
-          </p>
           <h2 className="font-display text-3xl sm:text-4xl font-bold text-foreground">
-            Make Clearance Easier
+            What You Get
           </h2>
         </div>
 
@@ -30,10 +27,10 @@ export function FeaturesSection({ clearanceSources }: FeaturesSectionProps) {
         <div className="bg-cjc-red-dark text-white rounded-lg p-8 lg:p-12 mb-6 fade-in-up fade-in-up-delay-1">
           <div className="mb-8">
             <h3 className="text-2xl lg:text-3xl font-display font-bold mb-4">
-              One portal. Every clearance source.
+              All your clearance sources
             </h3>
             <p className="text-white/70 text-lg leading-relaxed max-w-2xl">
-              Check your status across all departments, offices, and clubs in one place. Know exactly what you need to settle before visiting each location.
+              See your status across every department, office, and club. Check what you still need to settle before heading to each one.
             </p>
           </div>
 

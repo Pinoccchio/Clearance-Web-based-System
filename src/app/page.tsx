@@ -6,7 +6,7 @@ import dynamic from "next/dynamic";
 import { AuthModal } from "@/components/features/auth-modal";
 import { AnnouncementDetailModal } from "@/components/features/AnnouncementDetailModal";
 import { useAuth } from "@/contexts/auth-context";
-import { supabase, AnnouncementWithRelations, getSystemSettings } from "@/lib/supabase";
+import { supabase, AnnouncementWithRelations } from "@/lib/supabase";
 
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { HeroSection } from "@/components/landing/HeroSection";
@@ -43,8 +43,6 @@ export default function LandingPage() {
   const [clearanceSources, setClearanceSources] = useState<ClearanceSource[]>([]);
   const [announcements, setAnnouncements] = useState<AnnouncementWithRelations[]>([]);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<AnnouncementWithRelations | null>(null);
-  const [academicYear, setAcademicYear] = useState<string | undefined>(undefined);
-
   // Auto-redirect authenticated users to their dashboard
   useEffect(() => {
     if (!isLoading && isAuthenticated && profile) {
@@ -57,16 +55,11 @@ export default function LandingPage() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        const [deptResult, officeResult, clubResult, systemSettings] = await Promise.all([
+        const [deptResult, officeResult, clubResult] = await Promise.all([
           supabase.from("departments").select("id", { count: "exact", head: true }).eq("status", "active"),
           supabase.from("offices").select("id", { count: "exact", head: true }).eq("status", "active"),
           supabase.from("clubs").select("id", { count: "exact", head: true }).eq("status", "active"),
-          getSystemSettings(),
         ]);
-
-        if (systemSettings?.academic_year) {
-          setAcademicYear(systemSettings.academic_year);
-        }
 
         setStats({
           departments: deptResult.count || 0,
@@ -119,7 +112,7 @@ export default function LandingPage() {
     <>
       <div className="min-h-screen bg-background">
         <LandingHeader onSignIn={openAuthModal} />
-        <HeroSection stats={stats} clearanceSources={clearanceSources} onSignIn={openAuthModal} academicYear={academicYear} />
+        <HeroSection stats={stats} clearanceSources={clearanceSources} onSignIn={openAuthModal} />
         <FeaturesSection clearanceSources={clearanceSources} />
         <AnnouncementsSection
           announcements={announcements}

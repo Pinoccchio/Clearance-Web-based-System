@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, Fraunces, JetBrains_Mono, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { Analytics } from "@vercel/analytics/next";
@@ -30,13 +30,32 @@ const playfairDisplay = Playfair_Display({
   display: "swap",
 });
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  viewportFit: "cover",
+  themeColor: "#0f2744",
+};
+
 export const metadata: Metadata = {
   title: "CJC Clearance System | Cor Jesu College",
   description: "Official Student Clearance Management System for Cor Jesu College",
   keywords: ["CJC", "Cor Jesu College", "Clearance", "Digos City", "Student Portal"],
   icons: {
-    icon: "/images/logos/cjc-logo.jpeg",
-    apple: "/images/logos/cjc-logo.jpeg",
+    icon: [
+      { url: "/favicon.ico", sizes: "32x32" },
+      { url: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
+      { url: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
+    ],
+    apple: [
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
+    ],
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "black-translucent",
+    title: "CJC Clearance",
   },
 };
 
@@ -56,6 +75,11 @@ export default function RootLayout({
           </AuthProvider>
         </ThemeProvider>
         <Analytics />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js'))}`,
+          }}
+        />
       </body>
     </html>
   );

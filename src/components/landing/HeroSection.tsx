@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { CheckCircle2, ArrowRight, Shield } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 interface ClearanceSource {
   name: string;
@@ -13,10 +13,9 @@ interface HeroSectionProps {
   stats: { departments: number; offices: number; clubs: number };
   clearanceSources: ClearanceSource[];
   onSignIn: () => void;
-  academicYear?: string;
 }
 
-export function HeroSection({ stats, clearanceSources, onSignIn, academicYear }: HeroSectionProps) {
+export function HeroSection({ stats, clearanceSources, onSignIn }: HeroSectionProps) {
   return (
     <section className="relative bg-card overflow-hidden">
       {/* Subtle dot pattern */}
@@ -26,23 +25,17 @@ export function HeroSection({ stats, clearanceSources, onSignIn, academicYear }:
         <div className="grid lg:grid-cols-5 gap-16 items-center">
           {/* Text Content - 60% */}
           <div className="lg:col-span-3 text-center lg:text-left fade-in-up">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded bg-surface-cream border border-border-warm text-sm text-muted-foreground mb-8">
-              <span className="w-2 h-2 rounded-full bg-cjc-red"></span>
-              Academic Year {academicYear ?? "2025-2026"}
-            </div>
-
             {/* Editorial Headline */}
             <div className="mb-8">
               <h1 className="headline-editorial text-cjc-red-dark">
                 <span className="block text-5xl sm:text-6xl lg:text-7xl">
-                  YOUR
+                  STUDENT
                 </span>
                 <span className="block text-5xl sm:text-6xl lg:text-7xl pb-3">
-                  <span className="headline-underline">CLEARANCE.</span>
+                  <span className="headline-underline">CLEARANCE</span>
                 </span>
                 <span className="block text-5xl sm:text-6xl lg:text-7xl text-cjc-red">
-                  SIMPLIFIED.
+                  SYSTEM
                 </span>
               </h1>
             </div>
@@ -81,31 +74,9 @@ export function HeroSection({ stats, clearanceSources, onSignIn, academicYear }:
           {/* Visual Mockup - 40% */}
           <div className="lg:col-span-2 hidden lg:block">
             <div className="relative">
-              {/* Floating decorative elements */}
-              <div className="absolute -top-4 -left-8 z-10 bg-card rounded-lg shadow-lg px-3 py-2 animate-float">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4 text-green-500" />
-                  <span className="text-xs font-medium text-foreground">Cleared!</span>
-                </div>
-              </div>
-              <div className="absolute -bottom-4 -right-4 z-10 bg-card rounded-lg shadow-lg px-3 py-2 animate-float" style={{ animationDelay: '0.5s' }}>
-                <div className="flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-cjc-red" />
-                  <span className="text-xs font-medium text-foreground">Secure</span>
-                </div>
-              </div>
-
               {/* Dashboard Preview Card */}
               <div className="relative bg-card rounded-2xl shadow-xl border border-border-warm p-6 fade-in-up fade-in-up-delay-2">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-cjc-red-dark to-cjc-red flex items-center justify-center">
-                    <span className="text-white font-bold text-sm">JD</span>
-                  </div>
-                  <div>
-                    <p className="font-semibold text-foreground">Juan Dela Cruz</p>
-                    <p className="text-xs text-muted-foreground">BSCS - 4th Year</p>
-                  </div>
-                </div>
+                <p className="text-sm font-semibold text-muted-foreground mb-4">Clearance Sources</p>
 
                 <div className="space-y-3">
                   {clearanceSources.length > 0 ? (
