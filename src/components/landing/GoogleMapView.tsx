@@ -82,31 +82,12 @@ const CJC_ICON = L.divIcon({
   popupAnchor: [0, -42],
 });
 
-// User location icon (blue pulsing dot)
+// User location icon (simple blue dot like Google Maps)
 const USER_ICON = L.divIcon({
   className: "user-location-icon",
-  html: `<div style="
-    width: 18px; height: 18px; position: relative;
-  ">
-    <div style="
-      width: 18px; height: 18px; border-radius: 50%;
-      background: #c41e2a; border: 3px solid white;
-      box-shadow: 0 0 0 2px rgba(196,30,42,0.3), 0 2px 8px rgba(0,0,0,0.3);
-    "></div>
-    <div style="
-      position: absolute; inset: -6px; border-radius: 50%;
-      background: rgba(196,30,42,0.15);
-      animation: userPulse 2s ease-in-out infinite;
-    "></div>
-  </div>
-  <style>
-    @keyframes userPulse {
-      0%, 100% { transform: scale(1); opacity: 0.6; }
-      50% { transform: scale(1.8); opacity: 0; }
-    }
-  </style>`,
-  iconSize: [18, 18],
-  iconAnchor: [9, 9],
+  html: `<div style="width:14px;height:14px;border-radius:50%;background:#4285f4;border:2px solid white;box-shadow:0 1px 3px rgba(0,0,0,0.3);"></div>`,
+  iconSize: [14, 14],
+  iconAnchor: [7, 7],
 });
 
 // Fix Leaflet default marker icon issue with bundlers
@@ -171,21 +152,21 @@ export function GoogleMapView({ viewMode }: GoogleMapViewProps) {
     // Add CJC Main Campus marker
     const mainMarker = L.marker([CJC_MAIN_LAT, CJC_MAIN_LNG], { icon: CJC_ICON }).addTo(map);
     mainMarker.bindPopup(
-      `<div style="text-align:center;font-family:system-ui,sans-serif;padding:4px 0;">
-        <strong style="color:#0f2744;font-size:14px;">CJC Main Campus</strong><br/>
-        <span style="color:#64605a;font-size:12px;">Sacred Heart Avenue, Digos City<br/>Davao del Sur 8002</span>
+      `<div class="cjc-popup">
+        <strong>CJC Main Campus</strong>
+        <span>Sacred Heart Avenue, Digos City, Davao del Sur 8002</span>
       </div>`,
-      { maxWidth: 220 }
+      { maxWidth: 200, className: "cjc-popup-wrapper" }
     );
 
     // Add CJC Power Campus marker
     const powerMarker = L.marker([CJC_POWER_LAT, CJC_POWER_LNG], { icon: CJC_ICON }).addTo(map);
     powerMarker.bindPopup(
-      `<div style="text-align:center;font-family:system-ui,sans-serif;padding:4px 0;">
-        <strong style="color:#0f2744;font-size:14px;">CJC Power Campus</strong><br/>
-        <span style="color:#64605a;font-size:12px;">Power, Digos City<br/>Davao del Sur 8002</span>
+      `<div class="cjc-popup">
+        <strong>CJC Power Campus</strong>
+        <span>Power, Digos City, Davao del Sur 8002</span>
       </div>`,
-      { maxWidth: 220 }
+      { maxWidth: 200, className: "cjc-popup-wrapper" }
     );
 
     // Fit map to show both campuses
@@ -312,35 +293,17 @@ export function GoogleMapView({ viewMode }: GoogleMapViewProps) {
         const fmtWalk = (km: number) => Math.round((km / 5) * 60);
         const fmtDrive = (km: number) => Math.max(1, Math.round((km / 30) * 60));
 
-        const btnStyle = "display:inline-block;margin-top:4px;padding:5px 10px;color:white;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none;";
-
         userMarker.bindPopup(
-          `<div style="text-align:center;font-family:system-ui,sans-serif;padding:4px 0;min-width:220px;">
-            <strong style="color:#c41e2a;font-size:13px;">Your Location</strong>
-            <div style="margin-top:8px;padding:6px;background:#fef7f7;border-radius:8px;border:1px solid #f0d0d0;">
-              <strong style="color:#c41e2a;font-size:12px;">Main Campus</strong><br/>
-              <span style="color:#64605a;font-size:11px;">
-                ${fmtDist(distMain)} &middot; ~${fmtWalk(distMain)} min walk &middot; ~${fmtDrive(distMain)} min drive
-              </span><br/>
-              <a href="https://www.google.com/maps/dir/${latitude},${longitude}/${CJC_MAIN_LAT},${CJC_MAIN_LNG}"
-                 target="_blank" rel="noopener noreferrer"
-                 style="${btnStyle}background:#c41e2a;">
-                Directions to Main
-              </a>
-            </div>
-            <div style="margin-top:6px;padding:6px;background:#fef7f7;border-radius:8px;border:1px solid #f0d0d0;">
-              <strong style="color:#c41e2a;font-size:12px;">Power Campus</strong><br/>
-              <span style="color:#64605a;font-size:11px;">
-                ${fmtDist(distPower)} &middot; ~${fmtWalk(distPower)} min walk &middot; ~${fmtDrive(distPower)} min drive
-              </span><br/>
-              <a href="https://www.google.com/maps/dir/${latitude},${longitude}/${CJC_POWER_LAT},${CJC_POWER_LNG}"
-                 target="_blank" rel="noopener noreferrer"
-                 style="${btnStyle}background:#c41e2a;">
-                Directions to Power
-              </a>
-            </div>
+          `<div class="cjc-popup">
+            <strong>Your Location</strong>
+            <span>Main Campus — ${fmtDist(distMain)}, ~${fmtWalk(distMain)} min walk</span>
+            <span>Power Campus — ${fmtDist(distPower)}, ~${fmtWalk(distPower)} min walk</span>
+            <a href="https://www.google.com/maps/dir/${latitude},${longitude}/${CJC_MAIN_LAT},${CJC_MAIN_LNG}"
+               target="_blank" rel="noopener noreferrer">Directions to Main</a>
+            <a href="https://www.google.com/maps/dir/${latitude},${longitude}/${CJC_POWER_LAT},${CJC_POWER_LNG}"
+               target="_blank" rel="noopener noreferrer">Directions to Power</a>
           </div>`,
-          { maxWidth: 280 }
+          { maxWidth: 240, className: "cjc-popup-wrapper" }
         ).openPopup();
 
         userMarkerRef.current = userMarker;
@@ -452,48 +415,16 @@ export function GoogleMapView({ viewMode }: GoogleMapViewProps) {
             title={`CJC Street View - ${streetCampus === "main" ? "Main Campus" : "Power Campus"}`}
           />
           {/* Campus switcher for street view */}
-          <div style={{
-            position: "absolute",
-            top: 12,
-            left: "50%",
-            transform: "translateX(-50%)",
-            display: "flex",
-            gap: 4,
-            background: "rgba(255,255,255,0.95)",
-            borderRadius: 10,
-            padding: 4,
-            boxShadow: "0 2px 12px rgba(0,0,0,0.15)",
-            zIndex: 10,
-          }}>
+          <div className="map-street-switcher">
             <button
               onClick={() => setStreetCampus("main")}
-              style={{
-                padding: "6px 14px",
-                borderRadius: 8,
-                border: "none",
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: "pointer",
-                transition: "all 0.2s",
-                background: streetCampus === "main" ? "#c41e2a" : "transparent",
-                color: streetCampus === "main" ? "white" : "#64605a",
-              }}
+              className={streetCampus === "main" ? "active" : ""}
             >
               Main Campus
             </button>
             <button
               onClick={() => setStreetCampus("power")}
-              style={{
-                padding: "6px 14px",
-                borderRadius: 8,
-                border: "none",
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: "pointer",
-                transition: "all 0.2s",
-                background: streetCampus === "power" ? "#c41e2a" : "transparent",
-                color: streetCampus === "power" ? "white" : "#64605a",
-              }}
+              className={streetCampus === "power" ? "active" : ""}
             >
               Power Campus
             </button>

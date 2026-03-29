@@ -1,104 +1,45 @@
 "use client";
 
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import {
   Mail,
   Phone,
   Clock,
   ExternalLink,
   Map as MapIcon,
-  Eye,
-  Satellite,
-  Mountain,
-  Moon,
-  Heart,
 } from "lucide-react";
 import Image from "next/image";
 import { GoogleMapView, type ViewMode } from "./GoogleMapView";
 
-const VIEW_MODES: { key: ViewMode; label: string; icon: React.ReactNode }[] = [
-  { key: "map", label: "Map", icon: <MapIcon className="w-3.5 h-3.5" /> },
-  { key: "satellite", label: "Satellite", icon: <Satellite className="w-3.5 h-3.5" /> },
-  { key: "terrain", label: "Terrain", icon: <Mountain className="w-3.5 h-3.5" /> },
-  { key: "street", label: "Street View", icon: <Eye className="w-3.5 h-3.5" /> },
-  { key: "dark", label: "Dark", icon: <Moon className="w-3.5 h-3.5" /> },
-  { key: "humanitarian", label: "Humanitarian", icon: <Heart className="w-3.5 h-3.5" /> },
+const VIEW_MODES: { key: ViewMode; label: string }[] = [
+  { key: "map", label: "Map" },
+  { key: "satellite", label: "Satellite" },
+  { key: "street", label: "Street View" },
 ];
 
 export function CampusMapSection() {
   const [viewMode, setViewMode] = useState<ViewMode>("map");
   const [mounted, setMounted] = useState(false);
 
-  // Sliding toggle indicator state
-  const [indicatorStyle, setIndicatorStyle] = useState<{ width: number; left: number }>({
-    width: 0,
-    left: 0,
-  });
-  const toggleGroupRef = useRef<HTMLDivElement>(null);
-  const buttonRefs = useRef<Map<ViewMode, HTMLButtonElement>>(new Map());
-
-  const setButtonRef = useCallback((key: ViewMode) => (el: HTMLButtonElement | null) => {
-    if (el) {
-      buttonRefs.current.set(key, el);
-    } else {
-      buttonRefs.current.delete(key);
-    }
-  }, []);
-
-  // Calculate indicator position based on active button
-  useEffect(() => {
-    const activeBtn = buttonRefs.current.get(viewMode);
-    const group = toggleGroupRef.current;
-    if (activeBtn && group) {
-      const groupRect = group.getBoundingClientRect();
-      const btnRect = activeBtn.getBoundingClientRect();
-      setIndicatorStyle({
-        width: btnRect.width,
-        left: btnRect.left - groupRect.left,
-      });
-    }
-  }, [viewMode]);
-
-  // Recalculate on resize
-  useEffect(() => {
-    const handleResize = () => {
-      const activeBtn = buttonRefs.current.get(viewMode);
-      const group = toggleGroupRef.current;
-      if (activeBtn && group) {
-        const groupRect = group.getBoundingClientRect();
-        const btnRect = activeBtn.getBoundingClientRect();
-        setIndicatorStyle({
-          width: btnRect.width,
-          left: btnRect.left - groupRect.left,
-        });
-      }
-    };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [viewMode]);
-
-  // Lazy mount: render map after component mounts (CSS animation handles reveal)
   useEffect(() => {
     setMounted(true);
   }, []);
 
   return (
-    <section className="map-section-bg relative overflow-hidden py-24 lg:py-32">
-      <div className="relative max-w-6xl mx-auto px-6">
+    <section className="py-20 lg:py-28 bg-muted/40">
+      <div className="max-w-6xl mx-auto px-6">
         {/* Section Header */}
-        <div className="mb-12 text-center lg:text-left fade-in-up">
-          <p className="text-sm font-semibold text-cjc-red uppercase tracking-wider mb-3">
-            Find Us
-          </p>
-          <h2 className="font-display text-3xl sm:text-4xl font-bold text-foreground">
-            Visit Our Campus
+        <div className="mb-12 text-center">
+          <h2 className="font-display text-3xl sm:text-4xl font-bold text-foreground mb-3">
+            Campus Location
           </h2>
+          <div className="w-16 h-0.5 bg-cjc-red mx-auto" />
         </div>
 
         {/* Two-column grid */}
-        <div className="map-section-grid">
+        <div className="grid lg:grid-cols-2 gap-6">
           {/* Left Column - Info Card */}
-          <div className="map-info-card fade-in-up fade-in-up-delay-1">
+          <div className="bg-card rounded-lg border border-border p-6">
             {/* Location Header */}
             <div className="flex items-start gap-4 mb-6">
               <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-white">
@@ -125,7 +66,7 @@ export function CampusMapSection() {
             </div>
 
             {/* Divider */}
-            <div className="h-px bg-border-warm mb-6" />
+            <div className="h-px bg-border mb-6" />
 
             {/* Contact Info */}
             <div className="space-y-4 mb-8">
@@ -162,47 +103,38 @@ export function CampusMapSection() {
               className="btn btn-cjc-red w-full justify-center text-sm py-3"
             >
               Get Directions
-              <ExternalLink className="w-4 h-4 arrow-slide-right" />
+              <ExternalLink className="w-4 h-4" />
             </a>
           </div>
 
           {/* Right Column - Map */}
-          <div className="fade-in-up fade-in-up-delay-2">
-            {/* Toggle Bar with Sliding Indicator */}
-            <div className="flex justify-center mb-4">
-            <div className="map-toggle-group" ref={toggleGroupRef}>
-              {/* Sliding indicator */}
-              <div
-                className="map-toggle-indicator"
-                style={{
-                  width: indicatorStyle.width,
-                  transform: `translateX(${indicatorStyle.left}px)`,
-                }}
-                aria-hidden="true"
-              />
+          <div>
+            {/* View mode tabs — simple Google Maps style */}
+            <div className="flex gap-1 mb-2">
               {VIEW_MODES.map((mode) => (
                 <button
                   key={mode.key}
-                  ref={setButtonRef(mode.key)}
                   onClick={() => setViewMode(mode.key)}
-                  className={`map-toggle-btn ${viewMode === mode.key ? "map-toggle-active" : ""}`}
+                  className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${
+                    viewMode === mode.key
+                      ? "bg-foreground text-background"
+                      : "bg-muted text-muted-foreground hover:text-foreground"
+                  }`}
                 >
-                  {mode.icon}
-                  <span className="hidden sm:inline">{mode.label}</span>
+                  {mode.label}
                 </button>
               ))}
             </div>
-            </div>
 
-            {/* Map Container */}
-            <div className="map-wrapper relative">
+            {/* Map container */}
+            <div className="rounded-lg overflow-hidden border border-border h-[350px] lg:h-[450px]">
               {mounted ? (
                 <GoogleMapView viewMode={viewMode} />
               ) : (
-                <div className="map-container map-placeholder-premium">
-                  <div className="flex flex-col items-center justify-center h-full gap-3">
-                    <MapIcon className="w-10 h-10 text-cjc-gold map-placeholder-icon" />
-                    <p className="text-sm text-muted-foreground">Loading interactive map...</p>
+                <div className="flex items-center justify-center h-full bg-muted/40">
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <MapIcon className="w-5 h-5" />
+                    <p className="text-sm">Loading map...</p>
                   </div>
                 </div>
               )}

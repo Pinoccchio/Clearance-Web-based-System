@@ -86,21 +86,11 @@ export function FeaturesSection({ clearanceSources }: FeaturesSectionProps) {
               <Users className="w-6 h-6 text-white" />
             </div>
             <h3 className="text-lg font-display font-bold text-foreground mb-2">
-              Role-Based Access
+              Dashboards for Every Role
             </h3>
-            <p className="text-muted-foreground text-sm leading-relaxed mb-4">
+            <p className="text-muted-foreground text-sm leading-relaxed">
               Students, department staff, organization officers, deans, and admins each get their own dashboard designed for their needs.
             </p>
-            <div className="flex flex-wrap justify-center md:justify-start gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-warm text-sm text-foreground">
-                <CheckCircle2 className="w-4 h-4 text-cjc-red" />
-                5 user roles
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-warm text-sm text-foreground">
-                <CheckCircle2 className="w-4 h-4 text-cjc-red" />
-                Custom views
-              </span>
-            </div>
           </div>
 
           {/* Digital Documents */}
@@ -109,21 +99,11 @@ export function FeaturesSection({ clearanceSources }: FeaturesSectionProps) {
               <FileCheck className="w-6 h-6 text-white" />
             </div>
             <h3 className="text-lg font-display font-bold text-foreground mb-2">
-              Digital Documents
+              Document Uploads
             </h3>
-            <p className="text-muted-foreground text-sm leading-relaxed mb-4">
+            <p className="text-muted-foreground text-sm leading-relaxed">
               Upload required documents online. Your files are saved securely so you won&apos;t lose them.
             </p>
-            <div className="flex flex-wrap justify-center md:justify-start gap-2">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-warm text-sm text-foreground">
-                <CheckCircle2 className="w-4 h-4 text-cjc-red" />
-                Secure uploads
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-surface-warm text-sm text-foreground">
-                <CheckCircle2 className="w-4 h-4 text-cjc-red" />
-                Easy tracking
-              </span>
-            </div>
           </div>
         </div>
       </div>

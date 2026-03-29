@@ -2,7 +2,7 @@
 
 import { Modal } from "@/components/ui/modal";
 import { AnnouncementWithRelations } from "@/lib/supabase";
-import { Calendar, MapPin, Clock, User, X, AlertTriangle, Bell, Info, Megaphone } from "lucide-react";
+import { Calendar, MapPin, Clock, User, X } from "lucide-react";
 
 interface AnnouncementDetailModalProps {
   isOpen: boolean;
@@ -42,147 +42,108 @@ export function AnnouncementDetailModal({
     });
   };
 
-  const priorityConfig = {
-    urgent: {
-      headerClass: "modal-header-urgent",
-      icon: AlertTriangle,
-      iconBg: "bg-white/20",
-      label: "Urgent Notice",
-      textColor: "text-white",
-      closeBtnClass: "bg-cjc-red text-white hover:bg-cjc-red-dark",
-    },
-    high: {
-      headerClass: "modal-header-high",
-      icon: Bell,
-      iconBg: "bg-cjc-navy/10",
-      label: "High Priority",
-      textColor: "text-cjc-navy",
-      closeBtnClass: "bg-cjc-gold text-cjc-navy hover:bg-cjc-gold/80",
-    },
-    normal: {
-      headerClass: "modal-header-normal",
-      icon: Megaphone,
-      iconBg: "bg-white/20",
-      label: "Announcement",
-      textColor: "text-white",
-      closeBtnClass: "bg-cjc-red text-white hover:bg-cjc-red-dark",
-    },
-    low: {
-      headerClass: "modal-header-low",
-      icon: Info,
-      iconBg: "bg-white/20",
-      label: "Notice",
-      textColor: "text-white",
-      closeBtnClass: "bg-gray-600 text-white hover:bg-gray-700",
-    },
+  const priorityLabel: Record<string, string> = {
+    urgent: "Urgent",
+    high: "Important",
+    normal: "Announcement",
+    low: "Notice",
   };
 
-  const priority = priorityConfig[announcement.priority] || priorityConfig.normal;
-  const PriorityIcon = priority.icon;
+  const priorityColor: Record<string, string> = {
+    urgent: "text-red-600",
+    high: "text-amber-600",
+    normal: "text-cjc-red",
+    low: "text-muted-foreground",
+  };
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="max-w-2xl overflow-hidden" showCloseButton={false}>
-      {/* Priority Header Band - Full width gradient */}
-      <div className={`${priority.headerClass} px-6 py-5 relative`}>
-        {/* Close button - positioned in header */}
+      {/* Header */}
+      <div className="px-6 pt-6 pb-0 relative">
+        {/* Close button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition-colors"
+          className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full hover:bg-muted flex items-center justify-center transition-colors"
           aria-label="Close"
         >
-          <X className={`w-4 h-4 ${priority.textColor}`} />
+          <X className="w-4 h-4 text-muted-foreground" />
         </button>
 
-        <div className="flex items-center gap-4 modal-fade-up">
-          {/* Priority Icon Circle */}
-          <div className={`w-14 h-14 rounded-full ${priority.iconBg} flex items-center justify-center modal-scale-in`}>
-            <PriorityIcon className={`w-6 h-6 ${priority.textColor}`} />
-          </div>
-
-          <div>
-            {/* Priority Label */}
-            <span className={`inline-block text-xs font-bold uppercase tracking-wider ${priority.textColor} opacity-80 mb-1`}>
-              {priority.label}
-            </span>
-            {/* Title */}
-            <h2 className={`font-display text-xl sm:text-2xl font-bold ${priority.textColor} leading-tight pr-8`}>
-              {announcement.title}
-            </h2>
-          </div>
+        {/* Priority + Date */}
+        <div className="flex items-center gap-3 mb-3">
+          <span className={`text-xs font-bold uppercase tracking-wider ${priorityColor[announcement.priority] || priorityColor.normal}`}>
+            {priorityLabel[announcement.priority] || "Announcement"}
+          </span>
+          <span className="text-xs text-muted-foreground">
+            {formatDate(announcement.created_at)}
+          </span>
         </div>
+
+        {/* Title */}
+        <h2 className="font-display text-xl sm:text-2xl font-bold text-foreground leading-tight pr-8 mb-4">
+          {announcement.title}
+        </h2>
+
+        <div className="h-px bg-border" />
       </div>
 
       {/* Content Area */}
-      <div className="p-6 sm:p-8 relative">
-        {/* Decorative Quotation Marks */}
-        <div className="decorative-quote decorative-quote-left">&ldquo;</div>
-        <div className="decorative-quote decorative-quote-right">&rdquo;</div>
-
-        {/* Event Details Pills - If Present */}
+      <div className="px-6 py-6">
+        {/* Event Details */}
         {(announcement.event_date || announcement.event_location) && (
-          <div className="flex flex-wrap gap-3 mb-6 modal-fade-up modal-fade-up-delay-1">
+          <div className="flex flex-wrap gap-4 mb-5 text-sm">
             {announcement.event_date && (
-              <div className="event-pill">
-                <Calendar className="event-pill-icon" />
-                <span>{formatDateTime(announcement.event_date)}</span>
-              </div>
+              <span className="flex items-center gap-1.5 text-foreground">
+                <Calendar className="w-4 h-4 text-cjc-red" />
+                {formatDateTime(announcement.event_date)}
+              </span>
             )}
             {announcement.event_location && (
-              <div className="event-pill">
-                <MapPin className="event-pill-icon" />
-                <span>{announcement.event_location}</span>
-              </div>
+              <span className="flex items-center gap-1.5 text-foreground">
+                <MapPin className="w-4 h-4 text-cjc-red" />
+                {announcement.event_location}
+              </span>
             )}
           </div>
         )}
 
         {/* Main Content */}
-        <div className="mb-8 modal-fade-up modal-fade-up-delay-2 relative z-10">
-          <div className="prose prose-sm max-w-none">
-            <p className="text-cjc-navy leading-relaxed whitespace-pre-wrap text-base">
-              {announcement.content}
-            </p>
-          </div>
+        <div className="mb-6">
+          <p className="text-foreground leading-relaxed whitespace-pre-wrap text-base">
+            {announcement.content}
+          </p>
         </div>
 
-        {/* Divider */}
-        <div className="h-px bg-gradient-to-r from-transparent via-border-warm to-transparent mb-6 modal-fade-up modal-fade-up-delay-3" />
-
-        {/* Meta Information */}
-        <div className="flex flex-wrap items-center justify-between gap-4 modal-fade-up modal-fade-up-delay-3">
-          <div className="flex flex-wrap items-center gap-4 text-sm text-warm-muted">
-            <div className="flex items-center gap-2">
-              <Clock className="w-4 h-4" />
-              <span>Posted {formatDate(announcement.created_at)}</span>
+        {/* Meta */}
+        <div className="h-px bg-border mb-4" />
+        <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+          <div className="flex items-center gap-1.5">
+            <Clock className="w-3.5 h-3.5" />
+            <span>Posted {formatDate(announcement.created_at)}</span>
+          </div>
+          {announcement.posted_by && (
+            <div className="flex items-center gap-1.5">
+              <User className="w-3.5 h-3.5" />
+              <span>
+                {announcement.posted_by.first_name} {announcement.posted_by.last_name}
+                {" "}({roleLabel[announcement.posted_by.role] ?? announcement.posted_by.role})
+              </span>
             </div>
-            {announcement.posted_by && (
-              <div className="flex items-center gap-2">
-                <User className="w-4 h-4" />
-                <span>
-                  {announcement.posted_by.first_name} {announcement.posted_by.last_name}
-                  {" "}
-                  <span className="font-medium text-cjc-navy capitalize">
-                    ({roleLabel[announcement.posted_by.role] ?? announcement.posted_by.role})
-                  </span>
-                </span>
-              </div>
-            )}
-            {announcement.expires_at && (
-              <div className="flex items-center gap-2 text-warning">
-                <span className="w-1.5 h-1.5 rounded-full bg-warning animate-pulse" />
-                <span>Expires {formatDate(announcement.expires_at)}</span>
-              </div>
-            )}
-          </div>
+          )}
+          {announcement.expires_at && (
+            <div className="flex items-center gap-1.5">
+              <span>Expires {formatDate(announcement.expires_at)}</span>
+            </div>
+          )}
         </div>
 
-        {/* Close Button - Enhanced */}
-        <div className="mt-8 flex justify-end modal-fade-up modal-fade-up-delay-4">
+        {/* Close Button */}
+        <div className="mt-6 flex justify-end">
           <button
             onClick={onClose}
-            className={`inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm transition-colors duration-200 ${priority.closeBtnClass}`}
+            className="px-5 py-2.5 rounded bg-cjc-red-dark text-white text-sm font-medium hover:bg-cjc-red transition-colors"
           >
-            Close Announcement
+            Close
           </button>
         </div>
       </div>

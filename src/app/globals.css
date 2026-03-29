@@ -1204,67 +1204,12 @@ body {
    CAMPUS MAP SECTION
    ============================================ */
 
-.map-section-bg {
-  background: linear-gradient(
-    180deg,
-    var(--surface-primary) 0%,
-    var(--surface-cream-premium) 30%,
-    var(--surface-warm) 70%,
-    var(--surface-primary) 100%
-  );
-}
-
-.map-section-grid {
-  display: grid;
-  gap: 2rem;
-}
-
-@media (min-width: 1024px) {
-  .map-section-grid {
-    grid-template-columns: 5fr 7fr;
-    gap: 2.5rem;
-  }
-}
-
-.map-info-card {
-  background: var(--surface-primary);
-  border: 1px solid var(--border-warm);
-  border-radius: var(--radius-lg);
-  padding: 2rem;
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow 200ms ease;
-}
-
-.map-info-card:hover {
-  box-shadow: var(--shadow-lg);
-}
-
-.map-wrapper {
-  border-radius: var(--radius-lg);
-  overflow: hidden;
-  background: var(--surface-warm);
-  position: relative;
-  border: 1px solid var(--border-warm);
-  box-shadow: var(--shadow-sm);
-  transition: box-shadow 200ms ease;
-}
-
-.map-wrapper:hover {
-  box-shadow: var(--shadow-lg);
-}
-
 .map-container {
   width: 100%;
-  aspect-ratio: 4 / 3;
+  height: 100%;
   position: relative;
   isolation: isolate;
   z-index: 0;
-}
-
-@media (max-width: 1023px) {
-  .map-container {
-    aspect-ratio: 1 / 1;
-  }
 }
 
 .map-container .map-leaflet-container {
@@ -1272,146 +1217,68 @@ body {
   height: 100%;
 }
 
-.map-container .map-street-iframe {
-  width: 100%;
-  height: 100%;
+/* Leaflet popup — plain institutional style */
+.cjc-popup-wrapper .leaflet-popup-content-wrapper {
+  border-radius: 4px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15) !important;
+  border: none !important;
+  padding: 0 !important;
 }
 
-/* Dark mode map filter */
-.dark .map-wrapper {
-  filter: brightness(0.9);
+.cjc-popup-wrapper .leaflet-popup-content {
+  margin: 0 !important;
 }
 
-/* Toggle group */
-.map-toggle-group {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.125rem;
-  padding: 0.25rem;
-  background: var(--surface-warm);
-  border: 1px solid var(--border-warm);
-  border-radius: var(--radius-lg);
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
-  position: relative;
-  max-width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-  flex-wrap: wrap;
-}
-
-.map-toggle-group::-webkit-scrollbar {
-  display: none;
-}
-
-@media (min-width: 640px) {
-  .map-toggle-group {
-    flex-wrap: nowrap;
-    border-radius: 9999px;
-    gap: 0.25rem;
-  }
-}
-
-.map-toggle-indicator {
-  position: absolute;
-  top: 0.25rem;
-  left: 0;
-  height: calc(100% - 0.5rem);
-  border-radius: var(--radius-md);
-  background: linear-gradient(135deg, var(--cjc-red), var(--cjc-red));
-  box-shadow: 0 2px 8px rgba(196, 30, 42, 0.35);
-  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  z-index: 1;
-  pointer-events: none;
-}
-
-@media (min-width: 640px) {
-  .map-toggle-indicator {
-    border-radius: 9999px;
-  }
-}
-
-.map-toggle-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  padding: 0.5rem 1rem;
-  border-radius: 9999px;
-  font-size: 0.8125rem;
-  font-weight: 500;
-  color: var(--text-warm-muted);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  transition: color 200ms ease;
-  white-space: nowrap;
-  position: relative;
-  z-index: 2;
-}
-
-.map-toggle-btn:hover {
-  color: var(--foreground);
-}
-
-.map-toggle-active {
-  color: white !important;
-}
-
-/* Map placeholder */
-.map-placeholder-premium {
-  background: linear-gradient(
-    135deg,
-    var(--surface-warm) 0%,
-    var(--surface-cream-premium) 50%,
-    var(--surface-warm) 100%
-  );
-  position: relative;
-  overflow: hidden;
-}
-
-.map-placeholder-premium::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(212, 164, 24, 0.1) 50%,
-    transparent 100%
-  );
-  background-size: 200% 100%;
-  animation: skeletonShimmer 1.5s ease-in-out infinite;
-}
-
-.map-placeholder-icon {
-  animation: float 3s ease-in-out infinite;
-}
-
-/* Leaflet overrides */
-.leaflet-popup-content-wrapper {
-  border-radius: var(--radius-md) !important;
-  box-shadow: var(--shadow-md) !important;
-  border: 1px solid var(--border-warm) !important;
-}
-
-.leaflet-popup-tip {
+.cjc-popup-wrapper .leaflet-popup-tip {
   box-shadow: none !important;
 }
 
+.cjc-popup {
+  font-family: system-ui, -apple-system, sans-serif;
+  padding: 10px 14px;
+  line-height: 1.5;
+}
+
+.cjc-popup strong {
+  display: block;
+  font-size: 13px;
+  color: #1a1a1a;
+  margin-bottom: 2px;
+}
+
+.cjc-popup span {
+  display: block;
+  font-size: 12px;
+  color: #555;
+}
+
+.cjc-popup a {
+  display: inline-block;
+  font-size: 12px;
+  color: #c41e2a;
+  text-decoration: underline;
+  margin-top: 4px;
+  margin-right: 8px;
+}
+
+.cjc-popup a:hover {
+  color: #9a1620;
+}
+
+/* Leaflet zoom control */
 .leaflet-control-zoom {
-  border: 1px solid var(--border-warm) !important;
-  border-radius: var(--radius-md) !important;
+  border: 1px solid #ccc !important;
+  border-radius: 4px !important;
   overflow: hidden;
 }
 
 .leaflet-control-zoom a {
-  color: var(--cjc-navy) !important;
-  border-color: var(--border-warm) !important;
+  color: #333 !important;
+  border-color: #ccc !important;
 }
 
 .leaflet-control-zoom a:hover {
-  background: var(--surface-warm) !important;
+  background: #f5f5f5 !important;
 }
 
 .cjc-marker-icon,
@@ -1420,7 +1287,7 @@ body {
   border: none !important;
 }
 
-/* Map controls */
+/* Map locate button */
 .map-locate-btn {
   position: absolute;
   bottom: 16px;
@@ -1429,23 +1296,17 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--surface-primary);
-  border: 1px solid var(--border-warm);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+  width: 34px;
+  height: 34px;
+  border-radius: 4px;
+  background: white;
+  border: 1px solid #ccc;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
   cursor: pointer;
-  transition: background-color 200ms ease, box-shadow 200ms ease;
 }
 
 .map-locate-btn:hover {
-  background: var(--surface-warm);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.map-locate-btn:active {
-  transform: scale(0.95);
+  background: #f5f5f5;
 }
 
 .map-locate-btn:disabled {
@@ -1454,8 +1315,8 @@ body {
 }
 
 .map-locate-active {
-  background: var(--cjc-red);
-  border-color: var(--cjc-red);
+  background: #c41e2a;
+  border-color: #c41e2a;
 }
 
 .map-locate-active svg circle,
@@ -1469,7 +1330,7 @@ body {
 }
 
 .map-locate-active:hover {
-  background: var(--cjc-red);
+  background: #c41e2a;
 }
 
 .map-location-toast {
@@ -1477,14 +1338,50 @@ body {
   bottom: 60px;
   right: 16px;
   z-index: 1000;
-  padding: 0.5rem 1rem;
-  background: rgba(220, 38, 38, 0.9);
+  padding: 6px 12px;
+  background: rgba(0, 0, 0, 0.75);
   color: white;
-  font-size: 0.8125rem;
+  font-size: 12px;
+  border-radius: 4px;
+}
+
+.map-container .map-street-iframe {
+  width: 100%;
+  height: 100%;
+}
+
+/* Street view campus switcher */
+.map-street-switcher {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 1px;
+  background: white;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  z-index: 10;
+}
+
+.map-street-switcher button {
+  padding: 6px 14px;
+  border: none;
+  font-size: 12px;
   font-weight: 500;
-  border-radius: var(--radius-md);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  animation: toastSlideIn 0.3s ease-out;
+  cursor: pointer;
+  background: white;
+  color: #333;
+}
+
+.map-street-switcher button:hover {
+  background: #f5f5f5;
+}
+
+.map-street-switcher button.active {
+  background: #333;
+  color: white;
 }
 
 /* ============================================
@@ -1646,16 +1543,10 @@ button:hover .arrow-slide-right {
 @media (prefers-reduced-motion: reduce) {
   .fade-in-up,
   .animate-float,
-  .map-placeholder-icon,
-  .map-placeholder-premium::before,
   .priority-badge-urgent {
     animation: none;
     transform: none;
     opacity: 1;
-  }
-
-  .map-toggle-indicator {
-    transition: none;
   }
 }
 

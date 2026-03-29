@@ -5,13 +5,13 @@ import { Facebook, Smartphone, Phone, Mail, MapPin } from "lucide-react";
 
 export function LandingFooter() {
   return (
-    <footer className="bg-cjc-red-dark text-white/80">
-      <div className="h-1 bg-cjc-gold"></div>
-      <div className="max-w-6xl mx-auto px-6 py-16">
+    <footer className="bg-cjc-red-dark text-white/70">
+      <div className="max-w-6xl mx-auto px-6 py-14">
         <div className="grid md:grid-cols-5 gap-10 text-center md:text-left">
+          {/* Logos + Info */}
           <div className="md:col-span-2">
-            <div className="flex flex-col items-center md:items-start gap-3 mb-6">
-              <div className="w-14 h-14 rounded-full overflow-hidden border-2 border-white/20 shadow-lg bg-white">
+            <div className="flex items-center justify-center md:justify-start gap-4 mb-5">
+              <div className="w-14 h-14 rounded-full overflow-hidden bg-white flex-shrink-0">
                 <Image
                   src="/images/logos/cjc-logo.jpeg"
                   alt="CJC Logo"
@@ -20,74 +20,84 @@ export function LandingFooter() {
                   className="w-full h-full object-cover"
                 />
               </div>
-              <div>
-                <p className="text-white font-bold text-xl">Cor Jesu College</p>
-                <p className="text-sm text-white/60">
-                  Sacred Heart Avenue, Digos City
-                </p>
+              <div className="w-14 h-14 rounded-full overflow-hidden bg-white flex-shrink-0">
+                <Image
+                  src="/images/logos/ccis-logo.jpg"
+                  alt="CCIS Logo"
+                  width={56}
+                  height={56}
+                  className="w-full h-full object-cover"
+                />
               </div>
             </div>
-            <p className="text-sm leading-relaxed max-w-md mx-auto md:mx-0 mb-6">
-              A software engineering project developed by Jan Miko A. Guevarra
-              and Jan Carlo Surig, students of Cor Jesu College.
+            <p className="text-white font-bold text-lg mb-1">Cor Jesu College</p>
+            <p className="text-sm mb-4">
+              Sacred Heart Avenue, Digos City
+            </p>
+            <p className="text-sm leading-relaxed max-w-md mx-auto md:mx-0">
+              A digital clearance tracking system for students, departments, offices, and organizations of Cor Jesu College.
             </p>
           </div>
 
+          {/* Colleges */}
           <div>
-            <h4 className="text-white font-bold mb-5 text-lg">Colleges</h4>
-            <ul className="space-y-3 text-sm">
-              <li><span className="link-slide-underline hover:text-white transition-colors duration-200 cursor-default">CABE</span></li>
-              <li><span className="link-slide-underline hover:text-white transition-colors duration-200 cursor-default">CEDAS</span></li>
-              <li><span className="link-slide-underline hover:text-white transition-colors duration-200 cursor-default">CCIS</span></li>
-              <li><span className="link-slide-underline hover:text-white transition-colors duration-200 cursor-default">CHS</span></li>
-              <li><span className="link-slide-underline hover:text-white transition-colors duration-200 cursor-default">COE</span></li>
-              <li><span className="link-slide-underline hover:text-white transition-colors duration-200 cursor-default">CSP</span></li>
+            <h4 className="text-white font-bold mb-4">Colleges</h4>
+            <ul className="space-y-2.5 text-sm">
+              <li>CABE</li>
+              <li>CEDAS</li>
+              <li>CCIS</li>
+              <li>CHS</li>
+              <li>COE</li>
+              <li>CSP</li>
             </ul>
           </div>
 
+          {/* Contact */}
           <div>
-            <h4 className="text-white font-bold mb-5 text-lg">Contact Us</h4>
-            <ul className="space-y-4 text-sm">
-              <li className="flex items-center gap-3 md:justify-start justify-center hover:text-white transition-colors duration-200">
-                <Smartphone className="w-4 h-4 text-cjc-gold flex-shrink-0" />
+            <h4 className="text-white font-bold mb-4">Contact Us</h4>
+            <ul className="space-y-3 text-sm">
+              <li className="flex items-center gap-2.5 md:justify-start justify-center">
+                <Smartphone className="w-4 h-4 flex-shrink-0" />
                 +63 985 062 0281
               </li>
-              <li className="flex items-center gap-3 md:justify-start justify-center hover:text-white transition-colors duration-200">
-                <Phone className="w-4 h-4 text-cjc-gold flex-shrink-0" />
+              <li className="flex items-center gap-2.5 md:justify-start justify-center">
+                <Phone className="w-4 h-4 flex-shrink-0" />
                 (082) 553-2433
               </li>
-              <li className="flex items-center gap-3 md:justify-start justify-center hover:text-white transition-colors duration-200">
-                <Mail className="w-4 h-4 text-cjc-gold flex-shrink-0" />
+              <li className="flex items-center gap-2.5 md:justify-start justify-center">
+                <Mail className="w-4 h-4 flex-shrink-0" />
                 customerservice@cjc.edu.ph
               </li>
-              <li className="flex items-start gap-3 md:justify-start justify-center hover:text-white transition-colors duration-200">
-                <MapPin className="w-4 h-4 text-cjc-gold flex-shrink-0 mt-0.5" />
-                <span>Sacred Heart Avenue, Digos City, Province of Davao del Sur</span>
+              <li className="flex items-start gap-2.5 md:justify-start justify-center">
+                <MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" />
+                <span>Sacred Heart Avenue,<br />Digos City, Davao del Sur</span>
               </li>
             </ul>
           </div>
 
+          {/* Social */}
           <div>
-            <h4 className="text-white font-bold mb-5 text-lg">Follow CJC</h4>
+            <h4 className="text-white font-bold mb-4">Follow CJC</h4>
             <div className="flex gap-3 justify-center md:justify-start">
               <a
                 href="https://facebook.com/CorJesuCollegeDigos"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="social-icon-hover"
+                className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors"
                 aria-label="Facebook"
               >
-                <Facebook className="w-5 h-5" />
+                <Facebook className="w-4 h-4" />
               </a>
             </div>
           </div>
         </div>
 
-        <div className="border-t border-white/10 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm">
+        {/* Bottom bar */}
+        <div className="border-t border-white/10 mt-10 pt-6 flex flex-col md:flex-row justify-between items-center gap-3 text-sm">
+          <p>
             &copy; {new Date().getFullYear()} Cor Jesu College. All rights reserved.
           </p>
-          <p className="text-sm text-white font-semibold">
+          <p className="text-white/50">
             Student Clearance System
           </p>
         </div>

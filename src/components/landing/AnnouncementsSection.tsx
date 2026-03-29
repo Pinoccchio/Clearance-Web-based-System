@@ -9,182 +9,164 @@ interface AnnouncementsSectionProps {
   onSignIn: () => void;
 }
 
-function formatAnnouncementDate(dateString: string) {
+function formatDate(dateString: string) {
   return new Date(dateString).toLocaleDateString("en-US", {
-    month: "short",
+    month: "long",
     day: "numeric",
     year: "numeric",
-    hour: "numeric",
-    minute: "2-digit",
   });
 }
 
-function formatRelativeTime(dateString: string) {
-  const date = new Date(dateString);
-  const now = new Date();
-  const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
-  if (diffInSeconds < 60) return "Just now";
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)}d ago`;
-  return formatAnnouncementDate(dateString);
+function formatShortDate(dateString: string) {
+  return new Date(dateString).toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric",
+  });
 }
+
+const priorityLabel: Record<string, string> = {
+  urgent: "Urgent",
+  high: "Important",
+  normal: "New",
+  low: "Notice",
+};
+
+const priorityColor: Record<string, string> = {
+  urgent: "text-red-600",
+  high: "text-amber-600",
+  normal: "text-cjc-red",
+  low: "text-muted-foreground",
+};
 
 export function AnnouncementsSection({ announcements, onSelectAnnouncement, onSignIn }: AnnouncementsSectionProps) {
   if (announcements.length === 0) return null;
 
+  const featured = announcements[0];
+  const secondary = announcements.slice(1);
+
   return (
-    <section className="py-24 lg:py-32 bg-card">
+    <section className="py-20 lg:py-28 bg-muted/40">
       <div className="max-w-6xl mx-auto px-6">
-        {/* Section Header */}
-        <div className="mb-12 text-center lg:text-left fade-in-up">
-          <p className="text-sm font-semibold text-cjc-red uppercase tracking-wider mb-3">
-            Announcements
-          </p>
+        {/* Section Header — centered like UPLB */}
+        <div className="text-center mb-12 fade-in-up">
           <h2 className="font-display text-3xl sm:text-4xl font-bold text-foreground">
-            Latest Updates
+            News and Updates
           </h2>
+          <div className="w-16 h-0.5 bg-cjc-red mx-auto mt-4" />
         </div>
 
-        {/* Newspaper Grid Layout */}
-        <div className="announcement-grid">
-          {/* Featured Announcement */}
+        {/* Grid: featured left, secondary stacked right */}
+        <div className="grid lg:grid-cols-5 gap-6 fade-in-up fade-in-up-delay-1">
+          {/* Featured — large card */}
           <button
-            onClick={() => onSelectAnnouncement(announcements[0])}
-            className="announcement-featured group text-left cursor-pointer fade-in-up fade-in-up-delay-1"
+            onClick={() => onSelectAnnouncement(featured)}
+            className="lg:col-span-3 bg-card rounded-lg border border-border overflow-hidden text-left cursor-pointer group hover:shadow-md transition-shadow"
           >
-            {/* Decorative elements */}
-            <div className="dot-pattern top-4 right-4" />
-
-            <div className="relative p-8 sm:p-10 h-full flex flex-col">
-              {/* Priority Badge */}
-              <div className="mb-6">
-                <span className={`priority-badge ${
-                  announcements[0].priority === 'urgent' ? 'priority-badge-urgent pulse-glow' :
-                  announcements[0].priority === 'high' ? 'priority-badge-high' :
-                  announcements[0].priority === 'normal' ? 'priority-badge-normal' :
-                  'priority-badge-low'
-                }`}>
-                  {announcements[0].priority === 'urgent' && (
-                    <span className="w-2 h-2 rounded-full bg-white animate-pulse" />
-                  )}
-                  {announcements[0].priority === 'urgent' ? 'Breaking' :
-                   announcements[0].priority === 'high' ? 'High Priority' :
-                   announcements[0].priority === 'normal' ? 'Announcement' : 'Notice'}
+            <div className="p-8">
+              {/* Priority + Date */}
+              <div className="flex items-center gap-3 mb-3">
+                <span className={`text-xs font-bold uppercase tracking-wider ${priorityColor[featured.priority] || priorityColor.normal}`}>
+                  {priorityLabel[featured.priority] || "New"}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  {formatDate(featured.created_at)}
                 </span>
               </div>
 
               {/* Title */}
-              <h3 className="announcement-featured-title text-white mb-6 group-hover:text-cjc-gold transition-colors duration-200">
-                {announcements[0].title}
+              <h3 className="font-display font-bold text-xl sm:text-2xl text-foreground mb-4 group-hover:text-cjc-red transition-colors line-clamp-3">
+                {featured.title}
               </h3>
 
-              {/* Content Preview */}
-              <div className="content-fade-mask flex-1 mb-6">
-                <p className="text-white/70 leading-relaxed line-clamp-4">
-                  {announcements[0].content}
-                </p>
-              </div>
+              {/* Content */}
+              <p className="text-muted-foreground leading-relaxed line-clamp-4 mb-6">
+                {featured.content}
+              </p>
 
               {/* Event Details */}
-              {(announcements[0].event_date || announcements[0].event_location) && (
-                <div className="flex flex-wrap items-center gap-3 mb-6">
-                  {announcements[0].event_date && (
-                    <span className="event-pill bg-white/10 border-white/20 text-white">
-                      <Calendar className="event-pill-icon" />
-                      {formatAnnouncementDate(announcements[0].event_date)}
+              {(featured.event_date || featured.event_location) && (
+                <div className="flex flex-wrap items-center gap-4 mb-6 text-sm">
+                  {featured.event_date && (
+                    <span className="flex items-center gap-1.5 text-foreground">
+                      <Calendar className="w-4 h-4 text-cjc-red" />
+                      {formatDate(featured.event_date)}
                     </span>
                   )}
-                  {announcements[0].event_location && (
-                    <span className="event-pill bg-white/10 border-white/20 text-white">
-                      <MapPin className="event-pill-icon" />
-                      {announcements[0].event_location}
+                  {featured.event_location && (
+                    <span className="flex items-center gap-1.5 text-foreground">
+                      <MapPin className="w-4 h-4 text-cjc-red" />
+                      {featured.event_location}
                     </span>
                   )}
                 </div>
               )}
 
-              {/* Footer */}
-              <div className="flex items-center justify-between pt-6 border-t border-white/10">
-                <span className="text-xs text-white/50 font-medium">
-                  {formatRelativeTime(announcements[0].created_at)}
-                </span>
-                <span className="text-sm text-cjc-gold font-semibold flex items-center gap-2 group-hover:gap-3 transition-all duration-200">
-                  Read More
-                  <ArrowRight className="w-4 h-4 arrow-slide-right" />
-                </span>
-              </div>
+              {/* Read more */}
+              <span className="text-sm font-semibold text-cjc-red flex items-center gap-2 group-hover:gap-3 transition-all">
+                Read more
+                <ArrowRight className="w-4 h-4" />
+              </span>
             </div>
           </button>
 
-          {/* Secondary Announcements */}
-          {announcements.slice(1).map((announcement, index) => (
-            <button
-              key={announcement.id}
-              onClick={() => onSelectAnnouncement(announcement)}
-              className={`announcement-card announcement-card-${announcement.priority} group text-left cursor-pointer fade-in-up fade-in-up-delay-${index + 2}`}
-            >
-              <div className="p-6">
-                {/* Header */}
-                <div className="flex items-start justify-between gap-3 mb-4">
-                  <span className={`priority-badge ${
-                    announcement.priority === 'urgent' ? 'priority-badge-urgent' :
-                    announcement.priority === 'high' ? 'priority-badge-high' :
-                    announcement.priority === 'normal' ? 'priority-badge-normal' :
-                    'priority-badge-low'
-                  }`}>
-                    {announcement.priority === 'urgent' && (
-                      <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                    )}
-                    {announcement.priority === 'urgent' ? 'Urgent' :
-                     announcement.priority === 'high' ? 'High' :
-                     announcement.priority === 'normal' ? 'New' : 'Notice'}
+          {/* Secondary — stacked on right */}
+          <div className="lg:col-span-2 flex flex-col gap-4">
+            {secondary.map((announcement) => (
+              <button
+                key={announcement.id}
+                onClick={() => onSelectAnnouncement(announcement)}
+                className="bg-card rounded-lg border border-border p-5 text-left cursor-pointer group hover:shadow-md transition-shadow"
+              >
+                {/* Priority + Date */}
+                <div className="flex items-center justify-between mb-2">
+                  <span className={`text-xs font-bold uppercase tracking-wider ${priorityColor[announcement.priority] || priorityColor.normal}`}>
+                    {priorityLabel[announcement.priority] || "New"}
                   </span>
-                  <span className="text-xs text-muted-foreground font-medium whitespace-nowrap">
-                    {formatRelativeTime(announcement.created_at)}
+                  <span className="text-xs text-muted-foreground">
+                    {formatDate(announcement.created_at)}
                   </span>
                 </div>
 
                 {/* Title */}
-                <h3 className="announcement-card-title font-display font-bold text-lg text-foreground mb-3 line-clamp-2 group-hover:text-cjc-red transition-colors duration-200">
+                <h3 className="font-display font-bold text-base text-foreground mb-2 line-clamp-2 group-hover:text-cjc-red transition-colors">
                   {announcement.title}
                 </h3>
 
-                {/* Content Preview */}
-                <p className="text-sm text-muted-foreground line-clamp-2 mb-4 leading-relaxed">
+                {/* Content */}
+                <p className="text-sm text-muted-foreground line-clamp-2 mb-3 leading-relaxed">
                   {announcement.content}
                 </p>
 
                 {/* Event Details */}
                 {(announcement.event_date || announcement.event_location) && (
-                  <div className="flex flex-wrap items-center gap-3 text-xs">
+                  <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                     {announcement.event_date && (
-                      <span className="flex items-center gap-1.5 text-foreground font-medium">
-                        <Calendar className="w-3.5 h-3.5 text-cjc-gold" />
-                        {new Date(announcement.event_date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                      <span className="flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-cjc-red" />
+                        {formatShortDate(announcement.event_date)}
                       </span>
                     )}
                     {announcement.event_location && (
-                      <span className="flex items-center gap-1.5 text-foreground font-medium">
-                        <MapPin className="w-3.5 h-3.5 text-cjc-gold" />
+                      <span className="flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-cjc-red" />
                         {announcement.event_location}
                       </span>
                     )}
                   </div>
                 )}
-              </div>
-            </button>
-          ))}
+              </button>
+            ))}
+          </div>
         </div>
 
-        {/* View All CTA */}
-        <div className="mt-16 text-center fade-in-up fade-in-up-delay-4">
+        {/* CTA */}
+        <div className="mt-12 text-center fade-in-up fade-in-up-delay-2">
           <button
             onClick={onSignIn}
-            className="btn btn-cjc-red text-base px-8 py-4 rounded-lg"
+            className="inline-flex items-center gap-2 bg-cjc-red-dark text-white text-sm font-semibold px-6 py-3 rounded hover:bg-cjc-red transition-colors"
           >
-            Sign in to view all announcements
-            <ArrowRight className="w-5 h-5 arrow-slide-right" />
+            Read more
+            <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       </div>

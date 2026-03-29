@@ -112,7 +112,7 @@ export default function LandingPage() {
     <>
       <div className="min-h-screen bg-background">
         <LandingHeader onSignIn={openAuthModal} />
-        <HeroSection stats={stats} clearanceSources={clearanceSources} onSignIn={openAuthModal} />
+        <HeroSection stats={stats} onSignIn={openAuthModal} />
         <FeaturesSection clearanceSources={clearanceSources} />
         <AnnouncementsSection
           announcements={announcements}
