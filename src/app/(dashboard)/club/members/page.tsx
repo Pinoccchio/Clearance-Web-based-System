@@ -359,7 +359,7 @@ export default function ClubMembersPage() {
               leftIcon={<Search className="w-4 h-4" />}
             />
           </div>
-          <div className="w-64">
+          <div className="w-full sm:w-64">
             <Select
               options={[
 ...distinctPeriods.map((p) => {
@@ -377,14 +377,14 @@ export default function ClubMembersPage() {
               onChange={(e) => setPeriodFilter(e.target.value)}
             />
           </div>
-          <div className="w-48">
+          <div className="w-full sm:w-48">
             <Select
               options={STATUS_OPTIONS}
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             />
           </div>
-          <div className="w-48">
+          <div className="w-full sm:w-48">
             <Select
               options={CLUB_STATUS_OPTIONS}
               value={clubStatusFilter}

@@ -97,7 +97,7 @@ export default function EventsPage({ sourceType, sourceId, admin }: EventsPagePr
           {!admin && <p className="text-gray-400 text-sm mt-1">Create your first event to start tracking attendance</p>}
         </div>
       ) : (
-        <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+        <div className="bg-white rounded-xl border border-gray-200 overflow-x-auto">
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>

@@ -24,7 +24,7 @@ export function FeaturesSection({ clearanceSources }: FeaturesSectionProps) {
         </div>
 
         {/* Featured Block - Full Width CJC Red */}
-        <div className="bg-cjc-red-dark text-white rounded-lg p-8 lg:p-12 mb-6 fade-in-up fade-in-up-delay-1">
+        <div className="bg-cjc-red-dark text-white rounded-lg p-5 sm:p-8 lg:p-12 mb-6 fade-in-up fade-in-up-delay-1">
           <div className="mb-8">
             <h3 className="text-2xl lg:text-3xl font-display font-bold mb-4">
               All your clearance sources
@@ -35,12 +35,12 @@ export function FeaturesSection({ clearanceSources }: FeaturesSectionProps) {
           </div>
 
           {/* Clearance sources grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3">
             {clearanceSources.length > 0 ? (
               clearanceSources.map((source) => (
                 <div
                   key={`${source.type}-${source.name}`}
-                  className="flex items-center gap-3 py-3 px-4 rounded-lg bg-white/15 hover:bg-white/25 transition-colors duration-200"
+                  className="flex items-center gap-2 sm:gap-3 py-3 px-3 sm:px-4 rounded-lg bg-white/15 hover:bg-white/25 transition-colors duration-200"
                 >
                   {source.logo_url ? (
                     <Image

@@ -94,6 +94,7 @@ export default function AttendanceViewModal({ isOpen, onClose, eventId, eventNam
                 <p>No attendance records yet</p>
               </div>
             ) : (
+              <div className="overflow-x-auto">
               <table className="w-full">
                 <thead className="bg-gray-50 sticky top-0">
                   <tr>
@@ -140,6 +141,7 @@ export default function AttendanceViewModal({ isOpen, onClose, eventId, eventNam
                   })}
                 </tbody>
               </table>
+              </div>
             )}
           </div>
         </div>

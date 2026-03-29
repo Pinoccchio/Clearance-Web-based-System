@@ -374,9 +374,10 @@ interface SidebarProps {
   orgLogo?: string | null;
   orgName?: string | null;
   isCsp?: boolean;
+  onMobileClose?: () => void;
 }
 
-export default function Sidebar({ role, userName, userEmail, userAvatar, isCollapsed, onToggleCollapse, onLogout, orgLogo, orgName, isCsp }: SidebarProps) {
+export default function Sidebar({ role, userName, userEmail, userAvatar, isCollapsed, onToggleCollapse, onLogout, orgLogo, orgName, isCsp, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
 
   const roleToPath: Record<string, string> = { csg_lgu: 'csg-lgu', cspsp_division: 'cspsp-division' };
@@ -400,8 +401,10 @@ export default function Sidebar({ role, userName, userEmail, userAvatar, isColla
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen bg-gradient-to-b from-[#2d0a0d] to-cjc-red-dark transition-all duration-200 flex flex-col",
-        isCollapsed ? "w-[72px]" : "w-64"
+        "h-screen bg-gradient-to-b from-[#2d0a0d] to-cjc-red-dark transition-all duration-200 flex flex-col",
+        // Mobile: always full width (w-64), Desktop: collapsible
+        "w-64",
+        isCollapsed && "lg:w-[72px]"
       )}
     >
       {/* Logo Section */}
@@ -463,6 +466,7 @@ export default function Sidebar({ role, userName, userEmail, userAvatar, isColla
                   <Link
                     key={item.href}
                     href={item.href}
+                    onClick={onMobileClose}
                     className={cn(
                       "sidebar-nav-item group relative",
                       isActive && "active"
@@ -530,10 +534,10 @@ export default function Sidebar({ role, userName, userEmail, userAvatar, isColla
         </button>
       </div>
 
-      {/* Collapse Toggle */}
+      {/* Collapse Toggle — desktop only */}
       <button
         onClick={onToggleCollapse}
-        className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-cjc-red-dark border border-white/20 flex items-center justify-center text-white/60 hover:text-white hover:bg-cjc-red-dark transition-colors shadow-lg"
+        className="hidden lg:flex absolute -right-3 top-20 w-6 h-6 rounded-full bg-cjc-red-dark border border-white/20 items-center justify-center text-white/60 hover:text-white hover:bg-cjc-red-dark transition-colors shadow-lg"
       >
         {isCollapsed ? (
           <ChevronRight className="w-3.5 h-3.5" />
@@ -541,6 +545,17 @@ export default function Sidebar({ role, userName, userEmail, userAvatar, isColla
           <ChevronLeft className="w-3.5 h-3.5" />
         )}
       </button>
+
+      {/* Close button — mobile only */}
+      {onMobileClose && (
+        <button
+          onClick={onMobileClose}
+          className="lg:hidden absolute top-4 right-4 w-8 h-8 rounded-lg flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10"
+          aria-label="Close menu"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+      )}
     </aside>
   );
 }

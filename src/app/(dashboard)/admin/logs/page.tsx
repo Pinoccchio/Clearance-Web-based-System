@@ -181,7 +181,7 @@ export default function AdminLogsPage() {
 
       <div className="p-6 space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
           <div className="card p-4 text-center">
             <p className="text-2xl font-bold text-cjc-navy">{logs.length}</p>
             <p className="text-sm text-warm-muted">Total Logs</p>
@@ -211,7 +211,7 @@ export default function AdminLogsPage() {
               className="w-full h-10 pl-10 pr-3 border border-border-warm rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-cjc-blue/20 focus:border-cjc-blue"
             />
           </div>
-          <div className="w-48">
+          <div className="w-full sm:w-48">
             <select
               value={actionFilter}
               onChange={(e) => setActionFilter(e.target.value)}

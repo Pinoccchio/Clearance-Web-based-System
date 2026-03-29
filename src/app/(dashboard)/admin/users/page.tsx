@@ -345,7 +345,7 @@ export default function AdminUsersPage() {
               leftIcon={<Search className="w-4 h-4" />}
             />
           </div>
-          <div className="w-48">
+          <div className="w-full sm:w-48">
             <Select
               options={roleOptions}
               value={roleFilter}

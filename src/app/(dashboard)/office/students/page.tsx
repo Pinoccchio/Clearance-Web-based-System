@@ -348,7 +348,7 @@ export default function OfficeStudentsPage() {
               leftIcon={<Search className="w-4 h-4" />}
             />
           </div>
-          <div className="w-64">
+          <div className="w-full sm:w-64">
             <Select
               options={[
 ...distinctPeriods.map((p) => {
@@ -366,14 +366,14 @@ export default function OfficeStudentsPage() {
               onChange={(e) => setPeriodFilter(e.target.value)}
             />
           </div>
-          <div className="w-48">
+          <div className="w-full sm:w-48">
             <Select
               options={STATUS_OPTIONS}
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             />
           </div>
-          <div className="w-48">
+          <div className="w-full sm:w-48">
             <Select
               options={OFFICE_STATUS_OPTIONS}
               value={officeStatusFilter}
