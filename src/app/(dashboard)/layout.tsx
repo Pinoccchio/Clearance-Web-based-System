@@ -164,7 +164,7 @@ export default function DashboardLayout({
       <main className={cn(
         "min-h-screen transition-all duration-200",
         // Mobile: full width + bottom padding for nav bar; Desktop: sidebar margin
-        "ml-0 pb-16 lg:pb-0 lg:ml-64",
+        "ml-0 pb-16 lg:pb-0 lg:ml-64 safe-area-top lg:!pt-0",
         isSidebarCollapsed && "lg:ml-[72px]"
       )}>
         {children}
