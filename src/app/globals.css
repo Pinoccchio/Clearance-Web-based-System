@@ -1443,6 +1443,7 @@ button:hover .arrow-slide-right {
   background: var(--background);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  padding-top: env(safe-area-inset-top);
 }
 
 /* ============================================
