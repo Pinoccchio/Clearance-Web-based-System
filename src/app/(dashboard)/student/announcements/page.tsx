@@ -57,6 +57,8 @@ export default function StudentAnnouncementsPage() {
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [detailAnnouncement, setDetailAnnouncement] = useState<AnnouncementWithRelations | null>(null);
 
+  const isCsp = !!(profile?.cspsp_division || profile?.department === "CSP");
+
   const loadData = useCallback(async () => {
     if (!profile) return;
     setIsLoading(true);
@@ -68,14 +70,15 @@ export default function StudentAnnouncementsPage() {
         ? profile.enrolled_clubs.split(",").map((id) => id.trim()).filter(Boolean)
         : [];
       // Show system-wide announcements, department-specific, or club-specific
+      // CSP students see CSPSP Division announcements only; regular students see CSG LGU only
       const visible = all.filter(
         (a) =>
           a.is_system_wide ||
           (a.department_id && a.department?.code === profile.department) ||
           (a.office_id) ||
           (a.club_id && enrolledClubIds.includes(a.club_id)) ||
-          a.csg_lgu_id ||
-          a.cspsp_division_id
+          (a.csg_lgu_id && !isCsp) ||
+          (a.cspsp_division_id && isCsp)
       );
       // Sort by priority then date
       visible.sort((a, b) => {
@@ -186,7 +189,7 @@ export default function StudentAnnouncementsPage() {
         )}
 
         {/* Stats Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-4">
           <div className="card p-4 text-center">
             <p className="text-2xl font-bold text-cjc-navy">{stats.total}</p>
             <p className="text-sm text-warm-muted">Total</p>
@@ -211,27 +214,31 @@ export default function StudentAnnouncementsPage() {
             <p className="text-2xl font-bold text-purple-500">{stats.clubSpecific}</p>
             <p className="text-sm text-warm-muted">Clubs</p>
           </div>
-          <div className="card p-4 text-center">
-            <p className="text-2xl font-bold text-indigo-500">{stats.csgLguSpecific}</p>
-            <p className="text-sm text-warm-muted">CSG LGU</p>
-          </div>
-          <div className="card p-4 text-center">
-            <p className="text-2xl font-bold text-teal-500">{stats.cspspSpecific}</p>
-            <p className="text-sm text-warm-muted">CSPSP Div</p>
-          </div>
+          {!isCsp && (
+            <div className="card p-4 text-center">
+              <p className="text-2xl font-bold text-indigo-500">{stats.csgLguSpecific}</p>
+              <p className="text-sm text-warm-muted">CSG LGU</p>
+            </div>
+          )}
+          {isCsp && (
+            <div className="card p-4 text-center">
+              <p className="text-2xl font-bold text-teal-500">{stats.cspspSpecific}</p>
+              <p className="text-sm text-warm-muted">CSPSP Div</p>
+            </div>
+          )}
         </div>
 
         {/* Scope Filter Tabs */}
         <div className="flex flex-wrap gap-2">
-          {[
+          {([
             { value: "all" as const, label: "All", count: announcements.length },
             { value: "system" as const, label: "System", count: stats.systemWide },
             { value: "department" as const, label: "Department", count: stats.deptSpecific },
             { value: "office" as const, label: "Offices", count: stats.officeSpecific },
             { value: "club" as const, label: "Clubs", count: stats.clubSpecific },
-            { value: "csg_lgu" as const, label: "CSG LGU", count: stats.csgLguSpecific },
-            { value: "cspsp_division" as const, label: "CSPSP Div", count: stats.cspspSpecific },
-          ].map((tab) => (
+            ...(!isCsp ? [{ value: "csg_lgu" as const, label: "CSG LGU", count: stats.csgLguSpecific }] : []),
+            ...(isCsp ? [{ value: "cspsp_division" as const, label: "CSPSP Div", count: stats.cspspSpecific }] : []),
+          ]).map((tab) => (
             <button
               key={tab.value}
               onClick={() => setScopeFilter(tab.value)}

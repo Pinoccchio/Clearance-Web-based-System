@@ -174,6 +174,11 @@ export function AnnouncementFormModal({
       setFormData({
         ...initialFormData,
         scope: defaultScope as FormData["scope"],
+        ...(currentUser.role === "department" && departmentId ? { department_id: departmentId } : {}),
+        ...(currentUser.role === "office" && departmentId ? { office_id: departmentId } : {}),
+        ...(currentUser.role === "club" && departmentId ? { club_id: departmentId } : {}),
+        ...(currentUser.role === "csg_lgu" && departmentId ? { csg_lgu_id: departmentId } : {}),
+        ...(currentUser.role === "cspsp_division" && departmentId ? { cspsp_division_id: departmentId } : {}),
       });
     }
     setErrors({});
@@ -286,16 +291,16 @@ export function AnnouncementFormModal({
             department_id = formData.department_id || departmentId || null;
             break;
           case "office":
-            office_id = formData.office_id || null;
+            office_id = formData.office_id || departmentId || null;
             break;
           case "club":
-            club_id = formData.club_id || null;
+            club_id = formData.club_id || departmentId || null;
             break;
           case "csg_lgu":
-            csg_lgu_id = formData.csg_lgu_id || null;
+            csg_lgu_id = formData.csg_lgu_id || departmentId || null;
             break;
           case "cspsp_division":
-            cspsp_division_id = formData.cspsp_division_id || null;
+            cspsp_division_id = formData.cspsp_division_id || departmentId || null;
             break;
         }
       }

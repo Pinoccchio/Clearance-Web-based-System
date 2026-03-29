@@ -373,13 +373,19 @@ interface SidebarProps {
   onLogout?: () => void;
   orgLogo?: string | null;
   orgName?: string | null;
+  isCsp?: boolean;
 }
 
-export default function Sidebar({ role, userName, userEmail, userAvatar, isCollapsed, onToggleCollapse, onLogout, orgLogo, orgName }: SidebarProps) {
+export default function Sidebar({ role, userName, userEmail, userAvatar, isCollapsed, onToggleCollapse, onLogout, orgLogo, orgName, isCsp }: SidebarProps) {
   const pathname = usePathname();
 
   const roleToPath: Record<string, string> = { csg_lgu: 'csg-lgu', cspsp_division: 'cspsp-division' };
   const effectiveRole = roleToPath[role] ?? role;
+
+  const getStudentNav = (): NavSection[] => {
+    const excludeTitle = isCsp ? "CSG LGU" : "CSPSP Division";
+    return studentNavSections.filter((section) => section.title !== excludeTitle);
+  };
 
   const navSections =
     role === "admin" ? adminNavSections :
@@ -388,7 +394,7 @@ export default function Sidebar({ role, userName, userEmail, userAvatar, isColla
     role === "club" ? clubNavSections :
     role === "csg_lgu" ? csgLguNavSections :
     role === "cspsp_division" ? cspspDivisionNavSections :
-    role === "student" ? studentNavSections :
+    role === "student" ? getStudentNav() :
     getDashboardOnlyNav(role);
 
   return (

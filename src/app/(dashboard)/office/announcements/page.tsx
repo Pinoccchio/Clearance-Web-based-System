@@ -576,6 +576,7 @@ export default function OfficeAnnouncementsPage() {
           mode={formMode}
           announcement={selectedAnnouncement}
           currentUser={profile}
+          departmentId={office?.id}
         />
       )}
 

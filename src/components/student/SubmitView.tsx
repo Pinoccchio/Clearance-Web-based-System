@@ -16,7 +16,6 @@ import {
   addFileToSubmission,
   removeFileFromSubmission,
   submitClearanceItem,
-  batchAcknowledgeRequirements,
   acknowledgeRequirement,
 } from "@/lib/supabase";
 import { uploadSubmissionFile, validateSubmissionFile, deleteSubmissionFile } from "@/lib/storage";
@@ -60,6 +59,7 @@ interface Props {
   onRequestCreated: (req: ClearanceRequest) => void;
   onUploadComplete?: () => void;
   loading: boolean;
+  mutationsInFlightRef?: React.MutableRefObject<number>;
 }
 
 function formatFileSize(bytes: number): string {
@@ -85,6 +85,7 @@ export default function SubmitView({
   onRequestCreated,
   onUploadComplete,
   loading,
+  mutationsInFlightRef,
 }: Props) {
   const { showToast } = useToast();
 
@@ -111,27 +112,30 @@ export default function SubmitView({
   const [localSubOverrides, setLocalSubOverrides] = useState<Record<string, SubmissionWithRequirement | null>>({});
   const [submittingSource, setSubmittingSource] = useState<string | null>(null);
   const [submittedSources, setSubmittedSources] = useState<Set<string>>(new Set());
-  const [togglingReqs, setTogglingReqs] = useState<Set<string>>(new Set());
-  const togglingReqsRef = useRef<Set<string>>(new Set());
-  // Batch flush: collect pending toggles and send as one DB call
-  const pendingTogglesRef = useRef<Map<string, { reqId: string; clearanceItemId: string; acknowledged: boolean }>>(new Map());
-  const batchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [savingReqIds, setSavingReqIds] = useState<Set<string>>(new Set());
+  const queueRef = useRef<Array<{ reqId: string; clearanceItemId: string; acknowledged: boolean }>>([]);
+  const processingRef = useRef(false);
   const [pendingSubmit, setPendingSubmit] = useState<{ sourceId: string; item: ClearanceItem } | null>(null);
   const [pendingDelete, setPendingDelete] = useState<{ reqId: string; clearanceItemId: string; fileUrl: string } | null>(null);
   const [historyItem, setHistoryItem] = useState<{ item: ClearanceItem; sourceName: string } | null>(null);
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   // Clear optimistic overrides once parent re-syncs the prop,
-  // but keep overrides for reqs that are still in-flight (being toggled)
+  // but keep overrides for reqs still in the queue or being processed
   useEffect(() => {
-    setLocalSubOverrides((prev) => {
-      const next: typeof prev = {};
-      for (const reqId of Object.keys(prev)) {
-        if (togglingReqsRef.current.has(reqId)) {
-          next[reqId] = prev[reqId];
-        }
+    setSavingReqIds((cur) => {
+      if (cur.size === 0) {
+        setLocalSubOverrides({});
+      } else {
+        setLocalSubOverrides((prev) => {
+          const next: typeof prev = {};
+          for (const reqId of Object.keys(prev)) {
+            if (cur.has(reqId)) next[reqId] = prev[reqId];
+          }
+          return next;
+        });
       }
-      return next;
+      return cur;
     });
   }, [submissionsByItem]);
 
@@ -149,6 +153,7 @@ export default function SubmitView({
       return next.size === prev.size ? prev : next;
     });
   }, [clearanceItems]);
+
 
   const clearanceOpen = !!(systemSettings?.allow_semester_clearance);
 
@@ -264,9 +269,11 @@ export default function SubmitView({
   function handleCheckboxToggle(reqId: string, clearanceItemId: string, currentlyChecked: boolean) {
     const acknowledged = !currentlyChecked;
 
-    // Apply optimistic update immediately so UI feels instant
-    togglingReqsRef.current.add(reqId);
-    setTogglingReqs((prev) => new Set(prev).add(reqId));
+    // If this req is already queued/saving, ignore (no double-toggle)
+    if (queueRef.current.some((q) => q.reqId === reqId)) return;
+
+    // Optimistic UI update — instant green check / uncheck
+    setSavingReqIds((prev) => new Set(prev).add(reqId));
     setLocalSubOverrides((prev) => ({
       ...prev,
       [reqId]: acknowledged
@@ -285,62 +292,61 @@ export default function SubmitView({
         : null,
     }));
 
-    // Queue this toggle — overwrite if same req clicked again before flush
-    pendingTogglesRef.current.set(reqId, { reqId, clearanceItemId, acknowledged });
+    // Enqueue and kick off processing
+    queueRef.current.push({ reqId, clearanceItemId, acknowledged });
+    processQueue();
+  }
 
-    // Debounce: flush all queued toggles as one batch call after 150ms idle
-    if (batchTimerRef.current) clearTimeout(batchTimerRef.current);
-    batchTimerRef.current = setTimeout(async () => {
-      const batch = new Map(pendingTogglesRef.current);
-      pendingTogglesRef.current.clear();
-      batchTimerRef.current = null;
+  async function processQueue() {
+    if (processingRef.current) return; // already running — will pick up new items
+    processingRef.current = true;
 
-      // Group by clearanceItemId — batchAcknowledgeRequirements is per-item
-      const byItem = new Map<string, { toAck: string[]; toUnack: string[] }>();
-      for (const { reqId: rId, clearanceItemId: cId, acknowledged: ack } of batch.values()) {
-        if (!byItem.has(cId)) byItem.set(cId, { toAck: [], toUnack: [] });
-        if (ack) byItem.get(cId)!.toAck.push(rId);
-        else byItem.get(cId)!.toUnack.push(rId);
-      }
+    while (queueRef.current.length > 0) {
+      const { reqId, clearanceItemId, acknowledged } = queueRef.current[0];
+      if (mutationsInFlightRef) mutationsInFlightRef.current += 1;
 
       try {
-        // batchAcknowledgeRequirements only handles acknowledged=true rows;
-        // for un-acknowledges (rare) fall back to individual calls — still serial but fine
-        const calls: Promise<void>[] = [];
-        for (const [cId, { toAck, toUnack }] of byItem) {
-          if (toAck.length > 0) calls.push(batchAcknowledgeRequirements(cId, toAck, studentId));
-          for (const rId of toUnack) {
-            calls.push(acknowledgeRequirement({
-              clearance_item_id: cId,
-              requirement_id: rId,
+        await acknowledgeRequirement({
+          clearance_item_id: clearanceItemId,
+          requirement_id: reqId,
+          student_id: studentId,
+          acknowledged,
+        });
+      } catch (err) {
+        // Single retry on timeout (500ms delay)
+        const isTimeout = err instanceof Error && (err.message.includes('timeout') || err.message.includes('57014'));
+        let retryOk = false;
+        if (isTimeout) {
+          await new Promise((r) => setTimeout(r, 500));
+          try {
+            await acknowledgeRequirement({
+              clearance_item_id: clearanceItemId,
+              requirement_id: reqId,
               student_id: studentId,
-              acknowledged: false,
-            }));
+              acknowledged,
+            });
+            retryOk = true;
+          } catch {
+            // retry also failed
           }
         }
-        await Promise.all(calls);
-        // Do NOT call onUploadComplete here — optimistic updates already show
-        // the correct state. Triggering a full loadData reload for every batch
-        // of checkbox clicks compounds the statement timeout problem.
-      } catch (err) {
-        // Revert optimistic updates for everything in this batch
-        setLocalSubOverrides((prev) => {
-          const next = { ...prev };
-          for (const rId of batch.keys()) delete next[rId];
-          return next;
-        });
-        showToast("error", "Failed to save", err instanceof Error ? err.message : "Could not save your response.");
+        if (!retryOk) {
+          // Revert optimistic update for this one req
+          setLocalSubOverrides((prev) => {
+            const next = { ...prev };
+            delete next[reqId];
+            return next;
+          });
+          showToast("error", "Failed to save", err instanceof Error ? err.message : "Could not save your response.");
+        }
       } finally {
-        setTogglingReqs((prev) => {
-          const n = new Set(prev);
-          for (const rId of batch.keys()) {
-            n.delete(rId);
-            togglingReqsRef.current.delete(rId);
-          }
-          return n;
-        });
+        if (mutationsInFlightRef) mutationsInFlightRef.current = Math.max(0, mutationsInFlightRef.current - 1);
+        queueRef.current.shift(); // remove processed item
+        setSavingReqIds((prev) => { const n = new Set(prev); n.delete(reqId); return n; });
       }
-    }, 150);
+    }
+
+    processingRef.current = false;
   }
 
   async function handleSubmitForReview(sourceId: string, item: ClearanceItem) {
@@ -788,12 +794,12 @@ export default function SubmitView({
                                 </>
                               ) : (() => {
                                 const isChecked = existingSub?.status === 'submitted' || existingSub?.status === 'verified';
-                                const isToggling = togglingReqs.has(req.id);
+                                const isThisSaving = savingReqIds.has(req.id);
                                 const checkboxLocked = isLocked;
                                 return (
                                   <button
                                     type="button"
-                                    disabled={isToggling || checkboxLocked}
+                                    disabled={checkboxLocked}
                                     onClick={() => item && handleCheckboxToggle(req.id, item.id, !!isChecked)}
                                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border-2 text-left transition-all group ${
                                       checkboxLocked
@@ -805,7 +811,7 @@ export default function SubmitView({
                                           : "border-dashed border-gray-300 bg-gray-50 hover:border-cjc-gold/60 hover:bg-cjc-gold/5"
                                     }`}
                                   >
-                                    {isToggling ? (
+                                    {isThisSaving ? (
                                       <Loader2 className="w-4 h-4 text-gray-400 animate-spin flex-shrink-0" />
                                     ) : (
                                       <div className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 border-2 transition-colors ${

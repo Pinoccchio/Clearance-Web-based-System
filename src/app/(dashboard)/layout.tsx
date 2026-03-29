@@ -63,6 +63,7 @@ export default function DashboardLayout({
   // Get the role from the profile
   const role = profile.role as UserRole;
   const userName = `${profile.first_name} ${profile.last_name}`;
+  const isCsp = !!(profile.cspsp_division || profile.department === "CSP");
 
   const handleLogout = async () => {
     await logout();
@@ -82,6 +83,7 @@ export default function DashboardLayout({
         onLogout={handleLogout}
         orgLogo={orgLogo}
         orgName={orgName}
+        isCsp={isCsp}
       />
 
       {/* Main Content */}

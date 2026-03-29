@@ -1639,6 +1639,8 @@ export async function createAnnouncement(
       department_id: data.department_id || null,
       office_id: data.office_id || null,
       club_id: data.club_id || null,
+      csg_lgu_id: data.csg_lgu_id || null,
+      cspsp_division_id: data.cspsp_division_id || null,
       is_system_wide: data.is_system_wide || false,
       priority: data.priority || "normal",
       event_date: data.event_date || null,
@@ -1672,6 +1674,8 @@ export async function updateAnnouncement(
   if (data.department_id !== undefined) updates.department_id = data.department_id;
   if (data.office_id !== undefined) updates.office_id = data.office_id;
   if (data.club_id !== undefined) updates.club_id = data.club_id;
+  if (data.csg_lgu_id !== undefined) updates.csg_lgu_id = data.csg_lgu_id;
+  if (data.cspsp_division_id !== undefined) updates.cspsp_division_id = data.cspsp_division_id;
   if (data.is_system_wide !== undefined) updates.is_system_wide = data.is_system_wide;
   if (data.priority !== undefined) updates.priority = data.priority;
   if (data.event_date !== undefined) updates.event_date = data.event_date;
@@ -1697,10 +1701,19 @@ export async function updateAnnouncement(
  * Delete an announcement
  */
 export async function deleteAnnouncement(id: string): Promise<void> {
-  const { error } = await supabase.from("announcements").delete().eq("id", id);
+  const { data, error } = await supabase
+    .from("announcements")
+    .delete()
+    .eq("id", id)
+    .select("id")
+    .single();
 
   if (error) {
     throw error;
+  }
+
+  if (!data) {
+    throw new Error("Announcement not found or you do not have permission to delete it.");
   }
 }
 
@@ -2604,25 +2617,6 @@ export async function submitClearanceItem(
   });
 }
 
-/** Create acknowledgement rows for non-upload requirements when student submits */
-export async function batchAcknowledgeRequirements(
-  clearanceItemId: string,
-  requirementIds: string[],
-  studentId: string
-): Promise<void> {
-  if (requirementIds.length === 0) return;
-  const rows = requirementIds.map((reqId) => ({
-    clearance_item_id: clearanceItemId,
-    requirement_id: reqId,
-    student_id: studentId,
-    status: 'submitted' as const,
-    submitted_at: new Date().toISOString(),
-  }));
-  const { error } = await supabase
-    .from('requirement_submissions')
-    .upsert(rows, { onConflict: 'clearance_item_id,requirement_id' });
-  if (error) throw error;
-}
 
 /**
  * Get all requirements for multiple (source_type, source_id) pairs in one query.

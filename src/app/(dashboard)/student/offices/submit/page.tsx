@@ -37,9 +37,14 @@ export default function OfficesSubmitPage() {
   const isRefreshingRef = useRef(false);
   const pendingRefreshRef = useRef(false);
   const refreshDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loadGenRef = useRef(0);
+  const mutationsInFlightRef = useRef(0);
 
   const loadData = useCallback(async (cancelled: { value: boolean }, silent = false) => {
     if (!profile) return;
+
+    loadGenRef.current += 1;
+    const gen = loadGenRef.current;
 
     try {
       const [sys, allOffices, requests] = await Promise.all([
@@ -48,7 +53,7 @@ export default function OfficesSubmitPage() {
         getStudentClearanceRequests(profile.id),
       ]);
 
-      if (cancelled.value) return;
+      if (cancelled.value || gen !== loadGenRef.current) return;
 
       setSystemSettings(sys);
       setOffices(allOffices);
@@ -70,7 +75,7 @@ export default function OfficesSubmitPage() {
         byId[k.split(":")[1]] = v;
       }
 
-      if (cancelled.value) return;
+      if (cancelled.value || gen !== loadGenRef.current) return;
       setRequirementsBySource(byId);
 
       if (active) {
@@ -78,19 +83,19 @@ export default function OfficesSubmitPage() {
           allOffices.map((o) => getClearanceItemForRequest(active.id, "office", o.id))
         );
         const validItems = items.filter((i): i is ClearanceItem => i !== null);
-        if (cancelled.value) return;
+        if (cancelled.value || gen !== loadGenRef.current) return;
         setClearanceItems(validItems);
 
         // Fetch submissions for all items in a single bulk query
         const subsByItem = await getSubmissionsByItems(validItems.map((i) => i.id));
-        if (!cancelled.value) {
+        if (!cancelled.value && gen === loadGenRef.current) {
           setSubmissionsByItem(subsByItem);
         }
       }
     } catch (err) {
-      if (!cancelled.value && !silent) showToast("error", "Load failed", "Failed to load submission data.");
+      if (!cancelled.value && gen === loadGenRef.current && !silent) showToast("error", "Load failed", "Failed to load submission data.");
     } finally {
-      if (!cancelled.value) setIsLoading(false);
+      if (!cancelled.value && gen === loadGenRef.current) setIsLoading(false);
     }
   }, [profile?.id]);
 
@@ -109,6 +114,7 @@ export default function OfficesSubmitPage() {
   }, [loadData]);
 
   const debouncedRefresh = useCallback(() => {
+    if (mutationsInFlightRef.current > 0) return;
     if (refreshDebounceRef.current) clearTimeout(refreshDebounceRef.current);
     refreshDebounceRef.current = setTimeout(async () => {
       if (isRefreshingRef.current) {
@@ -130,7 +136,7 @@ export default function OfficesSubmitPage() {
   }, [loadData]);
 
   useRealtimeRefresh('clearance_items', refreshData);
-  useRealtimeRefresh('requirement_submissions', refreshData);
+  useRealtimeRefresh('requirement_submissions', debouncedRefresh, undefined, 400);
 
   function handleRequestCreated(req: ClearanceRequest) {
     setActiveRequest(req);
@@ -181,6 +187,7 @@ export default function OfficesSubmitPage() {
           onRequestCreated={handleRequestCreated}
           onUploadComplete={debouncedRefresh}
           loading={false}
+          mutationsInFlightRef={mutationsInFlightRef}
         />
       </div>
     </div>

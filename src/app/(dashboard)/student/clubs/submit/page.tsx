@@ -44,9 +44,14 @@ export default function StudentClubsSubmitPage() {
   const isRefreshingRef = useRef(false);
   const pendingRefreshRef = useRef(false);
   const refreshDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loadGenRef = useRef(0);
+  const mutationsInFlightRef = useRef(0);
 
   const loadData = useCallback(async (cancelled: { value: boolean }, silent = false) => {
     if (!profile?.enrolled_clubs) return;
+
+    loadGenRef.current += 1;
+    const gen = loadGenRef.current;
 
     try {
       // Parse enrolled club IDs
@@ -54,7 +59,7 @@ export default function StudentClubsSubmitPage() {
 
       if (clubIds.length === 0) {
         setClubs([]);
-        if (!cancelled.value) setIsLoading(false);
+        if (!cancelled.value && gen === loadGenRef.current) setIsLoading(false);
         return;
       }
 
@@ -65,7 +70,7 @@ export default function StudentClubsSubmitPage() {
         getStudentClearanceRequests(profile.id),
       ]);
 
-      if (cancelled.value) return;
+      if (cancelled.value || gen !== loadGenRef.current) return;
 
       setSystemSettings(sys);
       const validClubs = clubsData.filter((c): c is Club => c !== null);
@@ -86,14 +91,14 @@ export default function StudentClubsSubmitPage() {
       await Promise.all(
         validClubs.map(async (club) => {
           const reqs = await getPublishedRequirementsBySource("club", club.id);
-          if (cancelled.value) return;
+          if (cancelled.value || gen !== loadGenRef.current) return;
           reqsBySource[club.id] = reqs;
 
           if (active) {
             // Use getOrCreateClearanceItem to ensure clubs have clearance items
             // (DB trigger only creates them for departments/offices, not clubs)
             const item = await getOrCreateClearanceItem(active.id, "club", club.id);
-            if (cancelled.value) return;
+            if (cancelled.value || gen !== loadGenRef.current) return;
             if (item) {
               items.push(item);
             }
@@ -101,27 +106,27 @@ export default function StudentClubsSubmitPage() {
         })
       );
 
-      if (cancelled.value) return;
+      if (cancelled.value || gen !== loadGenRef.current) return;
 
       // Bulk-fetch all submissions in a single query
       const subsByItem = active && items.length > 0
         ? await getSubmissionsByItems(items.map((i) => i.id))
         : {};
 
-      if (!cancelled.value) {
+      if (!cancelled.value && gen === loadGenRef.current) {
         setRequirementsBySource(reqsBySource);
         setClearanceItems(items);
         setSubmissionsByItem(subsByItem);
       }
     } catch (err) {
-      if (!cancelled.value) {
+      if (!cancelled.value && gen === loadGenRef.current) {
         // Better error logging for debugging
         const errorMessage = err instanceof Error ? err.message : JSON.stringify(err);
         console.error("Error loading club submit data:", errorMessage, err);
         if (!silent) showToast("error", "Load failed", "Failed to load submission data.");
       }
     } finally {
-      if (!cancelled.value) setIsLoading(false);
+      if (!cancelled.value && gen === loadGenRef.current) setIsLoading(false);
     }
   }, [profile?.id, profile?.enrolled_clubs, showToast]);
 
@@ -145,6 +150,7 @@ export default function StudentClubsSubmitPage() {
   }, [loadData]);
 
   const debouncedRefresh = useCallback(() => {
+    if (mutationsInFlightRef.current > 0) return;
     if (refreshDebounceRef.current) clearTimeout(refreshDebounceRef.current);
     refreshDebounceRef.current = setTimeout(async () => {
       if (isRefreshingRef.current) {
@@ -166,7 +172,7 @@ export default function StudentClubsSubmitPage() {
   }, [loadData]);
 
   useRealtimeRefresh("clearance_items", refreshData);
-  useRealtimeRefresh("requirement_submissions", refreshData);
+  useRealtimeRefresh("requirement_submissions", debouncedRefresh, undefined, 400);
 
   function handleRequestCreated(req: ClearanceRequest) {
     setActiveRequest(req);
@@ -239,6 +245,7 @@ export default function StudentClubsSubmitPage() {
           onRequestCreated={handleRequestCreated}
           onUploadComplete={debouncedRefresh}
           loading={false}
+          mutationsInFlightRef={mutationsInFlightRef}
         />
       </div>
     </div>

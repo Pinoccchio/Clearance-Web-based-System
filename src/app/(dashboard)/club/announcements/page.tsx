@@ -576,6 +576,7 @@ export default function ClubAnnouncementsPage() {
           mode={formMode}
           announcement={selectedAnnouncement}
           currentUser={profile}
+          departmentId={club?.id}
         />
       )}
 

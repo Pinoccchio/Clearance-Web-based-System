@@ -37,9 +37,14 @@ export default function CsgLguSubmitPage() {
   const isRefreshingRef = useRef(false);
   const pendingRefreshRef = useRef(false);
   const refreshDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const loadGenRef = useRef(0);
+  const mutationsInFlightRef = useRef(0);
 
   const loadData = useCallback(async (cancelled: { value: boolean }, silent = false) => {
     if (!profile?.department) return;
+
+    loadGenRef.current += 1;
+    const gen = loadGenRef.current;
 
     try {
       const [sys, d, requests] = await Promise.all([
@@ -48,7 +53,7 @@ export default function CsgLguSubmitPage() {
         getStudentClearanceRequests(profile.id),
       ]);
 
-      if (cancelled.value) return;
+      if (cancelled.value || gen !== loadGenRef.current) return;
 
       setSystemSettings(sys);
       setLgu(d);
@@ -63,26 +68,26 @@ export default function CsgLguSubmitPage() {
 
       if (d) {
         const reqs = await getPublishedRequirementsBySource("csg_lgu", d.id);
-        if (cancelled.value) return;
+        if (cancelled.value || gen !== loadGenRef.current) return;
         setRequirements(reqs);
 
         if (active) {
           const item = await getClearanceItemForRequest(active.id, "csg_lgu", d.id);
-          if (cancelled.value) return;
+          if (cancelled.value || gen !== loadGenRef.current) return;
           setClearanceItem(item);
 
           if (item) {
             const subsByItem = await getSubmissionsByItems([item.id]);
-            if (!cancelled.value) {
+            if (!cancelled.value && gen === loadGenRef.current) {
               setSubmissionsByItem(subsByItem);
             }
           }
         }
       }
     } catch (err) {
-      if (!cancelled.value && !silent) showToast("error", "Load failed", "Failed to load submission data.");
+      if (!cancelled.value && gen === loadGenRef.current && !silent) showToast("error", "Load failed", "Failed to load submission data.");
     } finally {
-      if (!cancelled.value) setIsLoading(false);
+      if (!cancelled.value && gen === loadGenRef.current) setIsLoading(false);
     }
   }, [profile?.id, profile?.department]);
 
@@ -101,6 +106,7 @@ export default function CsgLguSubmitPage() {
   }, [loadData]);
 
   const debouncedRefresh = useCallback(() => {
+    if (mutationsInFlightRef.current > 0) return;
     if (refreshDebounceRef.current) clearTimeout(refreshDebounceRef.current);
     refreshDebounceRef.current = setTimeout(async () => {
       if (isRefreshingRef.current) {
@@ -122,7 +128,7 @@ export default function CsgLguSubmitPage() {
   }, [loadData]);
 
   useRealtimeRefresh('clearance_items', refreshData);
-  useRealtimeRefresh('requirement_submissions', refreshData);
+  useRealtimeRefresh('requirement_submissions', debouncedRefresh, undefined, 400);
 
   function handleRequestCreated(req: ClearanceRequest) {
     setActiveRequest(req);
@@ -192,6 +198,7 @@ export default function CsgLguSubmitPage() {
           onRequestCreated={handleRequestCreated}
           onUploadComplete={debouncedRefresh}
           loading={false}
+          mutationsInFlightRef={mutationsInFlightRef}
         />
       </div>
     </div>
