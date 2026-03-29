@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { InstallPwaButton } from "./InstallPwaButton";
 
 interface LandingHeaderProps {
   onSignIn: () => void;
@@ -35,7 +34,6 @@ export function LandingHeader({ onSignIn }: LandingHeaderProps) {
 
           {/* Actions */}
           <div className="flex items-center gap-3">
-            <InstallPwaButton variant="header" />
             <button
               onClick={onSignIn}
               className="btn btn-cjc-red text-sm"
