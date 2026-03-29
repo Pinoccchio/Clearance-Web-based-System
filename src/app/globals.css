@@ -1446,6 +1446,10 @@ button:hover .arrow-slide-right {
   padding-top: env(safe-area-inset-top);
 }
 
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
 /* ============================================
    PROGRAM CARD (dashboard)
    ============================================ */

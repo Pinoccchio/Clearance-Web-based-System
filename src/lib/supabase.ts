@@ -655,6 +655,20 @@ export async function getCsgLguByDepartmentCode(departmentCode: string): Promise
   return data;
 }
 
+export async function getCsgLguWithHeadByDepartmentCode(departmentCode: string): Promise<CsgLguWithHead | null> {
+  const { data, error } = await supabase
+    .from("csg_lgus")
+    .select(`
+      *,
+      head:profiles!csg_lgus_head_id_fkey(*)
+    `)
+    .eq("department_code", departmentCode)
+    .eq("status", "active")
+    .maybeSingle();
+  if (error) return null;
+  return data;
+}
+
 export async function createCsgLgu(data: CreateCsgLguData): Promise<CsgLgu> {
   const { data: lgu, error } = await supabase
     .from("csg_lgus")
@@ -815,6 +829,20 @@ export async function getCspspDivisionByCode(code: string): Promise<CspspDivisio
   const { data, error } = await supabase
     .from("cspsp_divisions")
     .select("*")
+    .ilike("code", code)
+    .eq("status", "active")
+    .maybeSingle();
+  if (error) return null;
+  return data;
+}
+
+export async function getCspspDivisionWithHeadByCode(code: string): Promise<CspspDivisionWithHead | null> {
+  const { data, error } = await supabase
+    .from("cspsp_divisions")
+    .select(`
+      *,
+      head:profiles!cspsp_divisions_head_id_fkey(*)
+    `)
     .ilike("code", code)
     .eq("status", "active")
     .maybeSingle();

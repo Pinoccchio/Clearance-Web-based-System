@@ -408,7 +408,7 @@ export default function Sidebar({ role, userName, userEmail, userAvatar, isColla
       )}
     >
       {/* Logo Section */}
-      <div className="p-4 border-b border-white/10">
+      <div className="p-4 pt-[calc(0.75rem+env(safe-area-inset-top))] border-b border-white/10">
         <Link href={`/${effectiveRole}`} className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 bg-white/10 p-0.5">
             <Image

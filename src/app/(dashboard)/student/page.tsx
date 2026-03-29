@@ -26,8 +26,8 @@ import {
   getClearanceItemsForStudent,
   getAllOffices,
   getAllClubs,
-  getAllCsgLgus,
-  getAllCspspDivisions,
+  getCsgLguWithHeadByDepartmentCode,
+  getCspspDivisionWithHeadByCode,
   getSystemSettings,
   getDepartmentByCode,
   ClearanceItem,
@@ -60,26 +60,38 @@ export default function StudentDashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const isCsp = !!(profile?.cspsp_division || profile?.department === "CSP");
+
   const loadData = useCallback(async () => {
     if (!profile?.id) return;
     try {
       setError(null);
-      const [itemsData, deptsData, officesData, clubsData, csgLgusData, cspspDivisionsData, settingsData] = await Promise.all([
+      const [itemsData, deptsData, officesData, clubsData, settingsData] = await Promise.all([
         getClearanceItemsForStudent(profile.id),
         profile.department ? getDepartmentByCode(profile.department) : Promise.resolve(null),
         getAllOffices(),
         getAllClubs(),
-        getAllCsgLgus(),
-        getAllCspspDivisions(),
         getSystemSettings(),
       ]);
+
+      // CSP students see CSPSP Division only; regular students see CSG LGU only
+      let csgLgusData: CsgLguWithHead[] = [];
+      let cspspDivisionsData: CspspDivisionWithHead[] = [];
+
+      if (isCsp && profile.cspsp_division) {
+        const div = await getCspspDivisionWithHeadByCode(profile.cspsp_division);
+        if (div) cspspDivisionsData = [div];
+      } else if (!isCsp && profile.department) {
+        const lgu = await getCsgLguWithHeadByDepartmentCode(profile.department);
+        if (lgu) csgLgusData = [lgu];
+      }
 
       setItems(itemsData as ClearanceItemWithRequest[]);
       setStudentDept(deptsData);
       setOffices(officesData.filter((o) => o.status === "active"));
       setClubs(clubsData.filter((c) => c.status === "active"));
-      setCsgLgus(csgLgusData.filter((l) => l.status === "active"));
-      setCspspDivisions(cspspDivisionsData.filter((d) => d.status === "active"));
+      setCsgLgus(csgLgusData);
+      setCspspDivisions(cspspDivisionsData);
       setSettings(settingsData);
     } catch (err) {
       console.error("Failed to load dashboard data:", err);
@@ -88,7 +100,7 @@ export default function StudentDashboardPage() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [profile?.id, profile?.department]);
+  }, [profile?.id, profile?.department, profile?.cspsp_division, isCsp]);
 
   useEffect(() => {
     if (authLoading) return;
