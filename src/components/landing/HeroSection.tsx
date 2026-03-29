@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
+import { InstallPwaButton } from "./InstallPwaButton";
 
 interface HeroSectionProps {
   stats: { departments: number; offices: number; clubs: number };
@@ -59,6 +60,7 @@ export function HeroSection({ stats, onSignIn }: HeroSectionProps) {
               Sign In
               <ArrowRight className="w-4 h-4" />
             </button>
+            <InstallPwaButton variant="hero" />
           </div>
         </div>
       </div>
