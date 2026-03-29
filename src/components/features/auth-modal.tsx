@@ -83,9 +83,11 @@ function LoginForm({ onClose, onForgotPassword }: { onClose: () => void; onForgo
     console.log("[LoginForm] Login result:", result);
 
     if (result.success && result.role) {
-      console.log("[LoginForm] Login successful, redirecting to:", `/${result.role}`);
+      const rolePathMap: Record<string, string> = { csg_lgu: 'csg-lgu', cspsp_division: 'cspsp-division' };
+      const path = rolePathMap[result.role] ?? result.role;
+      console.log("[LoginForm] Login successful, redirecting to:", `/${path}`);
       onClose();
-      router.push(`/${result.role}`);
+      router.push(`/${path}`);
     } else {
       console.log("[LoginForm] Login failed:", result.error);
       setError(result.error || "Invalid credentials. Please try again.");

@@ -24,10 +24,14 @@ export default function DashboardLayout({
         router.push('/');
         return;
       }
-      // Check role matches route
-      const roleFromPath = pathname.split('/')[1];
+      // Check role matches route — roles use underscores, URLs use hyphens
+      const roleToPath: Record<string, string> = { csg_lgu: 'csg-lgu', cspsp_division: 'cspsp-division' };
+      const pathToRole: Record<string, string> = { 'csg-lgu': 'csg_lgu', 'cspsp-division': 'cspsp_division' };
+      const pathSegment = pathname.split('/')[1];
+      const roleFromPath = pathToRole[pathSegment] ?? pathSegment;
       if (profile && roleFromPath !== profile.role) {
-        router.push(`/${profile.role}`);
+        const targetPath = roleToPath[profile.role] ?? profile.role;
+        router.push(`/${targetPath}`);
       }
     }
   }, [isLoading, isAuthenticated, profile, pathname, router]);

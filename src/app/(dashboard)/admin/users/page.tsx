@@ -35,6 +35,8 @@ import {
   Department,
   Office,
   Club,
+  CsgLgu,
+  CspspDivision,
 } from "@/lib/supabase";
 import { UserFormModal } from "@/components/features/UserFormModal";
 import { BatchImportModal } from "@/components/features/BatchImportModal";
@@ -45,6 +47,8 @@ interface UserWithStatus extends Profile {
   linkedDepartment?: Department | null;
   linkedOffice?: Office | null;
   linkedClub?: Club | null;
+  linkedCsgLgu?: CsgLgu | null;
+  linkedCspspDivision?: CspspDivision | null;
 }
 
 export default function AdminUsersPage() {
@@ -72,7 +76,7 @@ export default function AdminUsersPage() {
       setError(null);
 
       // Fetch users, departments, offices, and clubs in parallel
-      const [usersResponse, departmentsResponse, officesResponse, clubsResponse] = await Promise.all([
+      const [usersResponse, departmentsResponse, officesResponse, clubsResponse, csgLgusResponse, cspspDivisionsResponse] = await Promise.all([
         supabase
           .from("profiles")
           .select("*")
@@ -86,6 +90,12 @@ export default function AdminUsersPage() {
         supabase
           .from("clubs")
           .select("*"),
+        supabase
+          .from("csg_lgus")
+          .select("*"),
+        supabase
+          .from("cspsp_divisions")
+          .select("*"),
       ]);
 
       if (usersResponse.error) {
@@ -95,6 +105,8 @@ export default function AdminUsersPage() {
       const departments = departmentsResponse.data || [];
       const offices = officesResponse.data || [];
       const clubs = clubsResponse.data || [];
+      const csgLgus = csgLgusResponse.data || [];
+      const cspspDivisions = cspspDivisionsResponse.data || [];
 
       // Create maps of head_id to department/office for quick lookup
       const headToDepartmentMap = new Map<string, Department>();
@@ -118,6 +130,20 @@ export default function AdminUsersPage() {
         }
       });
 
+      const headToCsgLguMap = new Map<string, CsgLgu>();
+      csgLgus.forEach((lgu: CsgLgu) => {
+        if (lgu.head_id) {
+          headToCsgLguMap.set(lgu.head_id, lgu);
+        }
+      });
+
+      const headToCspspDivisionMap = new Map<string, CspspDivision>();
+      cspspDivisions.forEach((div: CspspDivision) => {
+        if (div.head_id) {
+          headToCspspDivisionMap.set(div.head_id, div);
+        }
+      });
+
       // Add status field and linked department/office/club
       const usersWithStatus = (usersResponse.data || []).map((user) => ({
         ...user,
@@ -125,6 +151,8 @@ export default function AdminUsersPage() {
         linkedDepartment: headToDepartmentMap.get(user.id) || null,
         linkedOffice: headToOfficeMap.get(user.id) || null,
         linkedClub: adviserToClubMap.get(user.id) || null,
+        linkedCsgLgu: headToCsgLguMap.get(user.id) || null,
+        linkedCspspDivision: headToCspspDivisionMap.get(user.id) || null,
       }));
 
       setUsers(usersWithStatus);
@@ -150,6 +178,10 @@ export default function AdminUsersPage() {
         return "info";
       case "club":
         return "gold";
+      case "csg_lgu":
+        return "info";
+      case "cspsp_division":
+        return "neutral";
       default:
         return "pending";
     }
@@ -163,6 +195,10 @@ export default function AdminUsersPage() {
         return "Department";
       case "club":
         return "Club";
+      case "csg_lgu":
+        return "CSG LGU";
+      case "cspsp_division":
+        return "CSPSP Division";
       default:
         return role.charAt(0).toUpperCase() + role.slice(1);
     }
@@ -183,6 +219,8 @@ export default function AdminUsersPage() {
     { value: "office", label: "Office" },
     { value: "department", label: "Department" },
     { value: "club", label: "Club" },
+    { value: "csg_lgu", label: "CSG LGU" },
+    { value: "cspsp_division", label: "CSPSP Division" },
     { value: "admin", label: "Admin" },
   ];
 
@@ -269,10 +307,10 @@ export default function AdminUsersPage() {
               {isLoading
                 ? "..."
                 : users.filter(
-                    (u) => u.role === "department" || u.role === "club"
+                    (u) => u.role === "department" || u.role === "club" || u.role === "csg_lgu" || u.role === "cspsp_division"
                   ).length}
             </p>
-            <p className="text-sm text-gray-500">Dept/Clubs</p>
+            <p className="text-sm text-gray-500">Dept/Clubs/Orgs</p>
           </Card>
           <Card padding="sm" className="text-center">
             <p className="text-2xl font-bold text-red-600">
@@ -434,6 +472,44 @@ export default function AdminUsersPage() {
                                 </Badge>
                                 <span className="text-sm text-gray-600">
                                   {user.linkedOffice.name}
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <UserX className="w-4 h-4 text-gray-400" />
+                                <span className="text-sm text-gray-400 italic">
+                                  Not linked
+                                </span>
+                              </div>
+                            )
+                          ) : user.role === "csg_lgu" ? (
+                            user.linkedCsgLgu ? (
+                              <div className="flex items-center gap-2">
+                                <UserCheck className="w-4 h-4 text-green-500" />
+                                <Badge variant="info" size="sm">
+                                  {user.linkedCsgLgu.code}
+                                </Badge>
+                                <span className="text-sm text-gray-600">
+                                  {user.linkedCsgLgu.name}
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <UserX className="w-4 h-4 text-gray-400" />
+                                <span className="text-sm text-gray-400 italic">
+                                  Not linked
+                                </span>
+                              </div>
+                            )
+                          ) : user.role === "cspsp_division" ? (
+                            user.linkedCspspDivision ? (
+                              <div className="flex items-center gap-2">
+                                <UserCheck className="w-4 h-4 text-green-500" />
+                                <Badge variant="gold" size="sm">
+                                  {user.linkedCspspDivision.code}
+                                </Badge>
+                                <span className="text-sm text-gray-600">
+                                  {user.linkedCspspDivision.name}
                                 </span>
                               </div>
                             ) : (

@@ -49,7 +49,7 @@ interface Source {
 }
 
 interface Props {
-  sourceType: "department" | "office" | "club";
+  sourceType: "department" | "office" | "club" | "csg_lgu" | "cspsp_division";
   sources: Source[];
   studentId: string;
   systemSettings: SystemSettings | null;

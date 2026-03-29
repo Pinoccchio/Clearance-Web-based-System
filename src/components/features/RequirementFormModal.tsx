@@ -38,7 +38,7 @@ interface RequirementFormModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
-  sourceType: "department" | "office" | "club";
+  sourceType: "department" | "office" | "club" | "csg_lgu" | "cspsp_division";
   sourceId: string;
   existingRequirements: Requirement[];
 }

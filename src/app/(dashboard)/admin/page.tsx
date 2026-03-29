@@ -27,6 +27,8 @@ import {
   getAllDepartments,
   getAllOffices,
   getAllClubs,
+  getAllCsgLgus,
+  getAllCspspDivisions,
   getSystemSettings,
   getAllAnnouncements,
   SystemSettings,
@@ -34,6 +36,8 @@ import {
   DepartmentWithHead,
   OfficeWithHead,
   ClubWithAdviser,
+  CsgLguWithHead,
+  CspspDivisionWithHead,
 } from "@/lib/supabase";
 
 interface AdminStats {
@@ -45,6 +49,10 @@ interface AdminStats {
   officeHeads: number;
   clubs: number;
   clubAdvisers: number;
+  csgLguHeads: number;
+  cspspDivisionHeads: number;
+  csgLgus: number;
+  cspspDivisions: number;
   admins: number;
   activeAnnouncements: number;
 }
@@ -61,6 +69,10 @@ function getRoleBadge(role: string) {
       return <Badge variant="warning" size="sm"><Building2 className="w-3 h-3" /> Office Head</Badge>;
     case "club":
       return <Badge variant="neutral" size="sm"><UsersRound className="w-3 h-3" /> Club Adviser</Badge>;
+    case "csg_lgu":
+      return <Badge variant="info" size="sm"><Shield className="w-3 h-3" /> CSG LGU</Badge>;
+    case "cspsp_division":
+      return <Badge variant="neutral" size="sm"><GraduationCap className="w-3 h-3" /> CSPSP Div</Badge>;
     default:
       return <Badge variant="neutral" size="sm">{role}</Badge>;
   }
@@ -78,6 +90,10 @@ export default function AdminDashboard() {
     officeHeads: 0,
     clubs: 0,
     clubAdvisers: 0,
+    csgLguHeads: 0,
+    cspspDivisionHeads: 0,
+    csgLgus: 0,
+    cspspDivisions: 0,
     admins: 0,
     activeAnnouncements: 0,
   });
@@ -91,11 +107,13 @@ export default function AdminDashboard() {
       setError(null);
 
       // Parallel fetch all data
-      const [profiles, departments, offices, clubs, announcements, settingsData] = await Promise.all([
+      const [profiles, departments, offices, clubs, csgLgusData, cspspDivisionsData, announcements, settingsData] = await Promise.all([
         getAllProfiles(),
         getAllDepartments(),
         getAllOffices(),
         getAllClubs(),
+        getAllCsgLgus(),
+        getAllCspspDivisions(),
         getAllAnnouncements(),
         getSystemSettings(),
       ]);
@@ -107,6 +125,8 @@ export default function AdminDashboard() {
       let departmentHeads = 0;
       let officeHeads = 0;
       let clubAdvisers = 0;
+      let csgLguHeads = 0;
+      let cspspDivisionHeads = 0;
       let admins = 0;
 
       for (const user of profiles) {
@@ -123,6 +143,12 @@ export default function AdminDashboard() {
           case "club":
             clubAdvisers++;
             break;
+          case "csg_lgu":
+            csgLguHeads++;
+            break;
+          case "cspsp_division":
+            cspspDivisionHeads++;
+            break;
           case "admin":
             admins++;
             break;
@@ -133,6 +159,8 @@ export default function AdminDashboard() {
       const activeDepartments = departments.filter((d) => d.status === "active").length;
       const activeOffices = offices.filter((o) => o.status === "active").length;
       const activeClubs = clubs.filter((c) => c.status === "active").length;
+      const activeCsgLgus = csgLgusData.filter((l) => l.status === "active").length;
+      const activeCspspDivisions = cspspDivisionsData.filter((d) => d.status === "active").length;
 
       // Count active announcements (not expired)
       const now = new Date();
@@ -150,6 +178,10 @@ export default function AdminDashboard() {
         officeHeads,
         clubs: activeClubs,
         clubAdvisers,
+        csgLguHeads,
+        cspspDivisionHeads,
+        csgLgus: activeCsgLgus,
+        cspspDivisions: activeCspspDivisions,
         admins,
         activeAnnouncements,
       });
@@ -317,6 +349,20 @@ export default function AdminDashboard() {
                 <p className="text-xs text-purple-600">Club Advisers</p>
               </div>
             </div>
+            <div className="flex items-center gap-3 p-3 bg-indigo-50 rounded-lg">
+              <Shield className="w-5 h-5 text-indigo-600" />
+              <div>
+                <p className="text-lg font-bold text-indigo-700">{stats.csgLguHeads}</p>
+                <p className="text-xs text-indigo-600">CSG LGU Heads</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 p-3 bg-teal-50 rounded-lg">
+              <GraduationCap className="w-5 h-5 text-teal-600" />
+              <div>
+                <p className="text-lg font-bold text-teal-700">{stats.cspspDivisionHeads}</p>
+                <p className="text-xs text-teal-600">CSPSP Div Heads</p>
+              </div>
+            </div>
             <div className="flex items-center gap-3 p-3 bg-red-50 rounded-lg">
               <Shield className="w-5 h-5 text-red-600" />
               <div>
@@ -388,7 +434,7 @@ export default function AdminDashboard() {
             {stats.totalUsers} Users
           </span>
           <span className="px-3 py-1 bg-white border border-gray-200 rounded-full">
-            {stats.departments + stats.offices + stats.clubs} Entities
+            {stats.departments + stats.offices + stats.clubs + stats.csgLgus + stats.cspspDivisions} Entities
           </span>
         </div>
       </div>

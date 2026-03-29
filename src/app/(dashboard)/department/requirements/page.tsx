@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { CheckSquare, Plus, Pencil, Trash2, X, Check, ExternalLink, Eye, EyeOff } from "lucide-react";
+import { CheckSquare, Plus, Pencil, Trash2, X, Check, ExternalLink, Eye, EyeOff, ScanLine } from "lucide-react";
 import { RequirementFormModal } from "@/components/features/RequirementFormModal";
 import { useAuth } from "@/contexts/auth-context";
 import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
@@ -28,10 +28,11 @@ interface RequirementFormData {
   description: string;
   is_required: boolean;
   requires_upload: boolean;
+  is_attendance: boolean;
   links: LinkEntry[];
 }
 
-const emptyForm: RequirementFormData = { name: "", description: "", is_required: true, requires_upload: false, links: [] };
+const emptyForm: RequirementFormData = { name: "", description: "", is_required: true, requires_upload: false, is_attendance: false, links: [] };
 
 export default function DepartmentRequirementsPage() {
   const { profile } = useAuth();
@@ -93,6 +94,7 @@ export default function DepartmentRequirementsPage() {
       description: req.description ?? "",
       is_required: req.is_required,
       requires_upload: req.requires_upload,
+      is_attendance: req.is_attendance,
       links: (req.links ?? []).map(l => ({ url: l.url, label: l.label ?? "" })),
     });
     setEditNameError(null);
@@ -117,6 +119,7 @@ export default function DepartmentRequirementsPage() {
         description: editForm.description.trim() || null,
         is_required: editForm.is_required,
         requires_upload: editForm.requires_upload,
+        is_attendance: editForm.is_attendance,
       });
       // Replace all links for this requirement
       const validLinks = editForm.links.filter(l => l.url.trim());
@@ -328,14 +331,31 @@ export default function DepartmentRequirementsPage() {
                                 />
                                 <span className="text-xs text-cjc-navy">Required</span>
                               </label>
-                              <label className="flex items-center gap-2 cursor-pointer ml-4">
+                              <label className={`flex items-center gap-2 cursor-pointer ml-4 ${editForm.is_attendance ? "opacity-40 cursor-not-allowed" : ""}`}>
                                 <input
                                   type="checkbox"
                                   checked={editForm.requires_upload}
+                                  disabled={editForm.is_attendance}
                                   onChange={e => setEditForm(prev => ({ ...prev, requires_upload: e.target.checked }))}
                                   className="w-4 h-4 rounded border-gray-300 text-cjc-red focus:ring-cjc-red"
                                 />
                                 <span className="text-xs text-cjc-navy">Requires upload</span>
+                              </label>
+                              <label className="flex items-center gap-2 cursor-pointer ml-4">
+                                <input
+                                  type="checkbox"
+                                  checked={editForm.is_attendance}
+                                  onChange={e => setEditForm(prev => ({
+                                    ...prev,
+                                    is_attendance: e.target.checked,
+                                    requires_upload: e.target.checked ? false : prev.requires_upload,
+                                  }))}
+                                  className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                />
+                                <span className="text-xs text-cjc-navy flex items-center gap-1">
+                                  <ScanLine className="w-3 h-3 text-indigo-500" />
+                                  Scan only
+                                </span>
                               </label>
                             </div>
                             <div className="space-y-2">

@@ -8,7 +8,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOi
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Types
-export type UserRole = "student" | "office" | "department" | "club" | "admin";
+export type UserRole = "student" | "office" | "department" | "club" | "csg_lgu" | "cspsp_division" | "admin";
 
 export interface Profile {
   id: string;
@@ -24,6 +24,7 @@ export interface Profile {
   avatar_url?: string | null;
   enrolled_clubs?: string | null;
   date_of_birth?: string | null;
+  cspsp_division?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -294,6 +295,7 @@ export interface CreateUserData {
   yearLevel?: string;
   enrolledClubs?: string;
   dateOfBirth?: string;
+  cspspDivision?: string;
 }
 
 /**
@@ -560,6 +562,351 @@ export async function getDepartmentRoleUsers(): Promise<Profile[]> {
     throw error;
   }
 
+  return data || [];
+}
+
+// ==========================================
+// CSG LGU Management Types and Functions
+// ==========================================
+
+export interface CsgLgu {
+  id: string;
+  name: string;
+  code: string;
+  department_code: string;
+  description?: string | null;
+  head_id?: string | null;
+  logo_url?: string | null;
+  status: "active" | "inactive";
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CsgLguWithHead extends CsgLgu {
+  head?: Profile | null;
+}
+
+export interface CreateCsgLguData {
+  name: string;
+  code: string;
+  department_code: string;
+  description?: string;
+  head_id?: string | null;
+  logo_url?: string | null;
+  status?: "active" | "inactive";
+}
+
+export interface UpdateCsgLguData {
+  name?: string;
+  code?: string;
+  department_code?: string;
+  description?: string | null;
+  head_id?: string | null;
+  logo_url?: string | null;
+  status?: "active" | "inactive";
+}
+
+export async function getAllCsgLgus(): Promise<CsgLguWithHead[]> {
+  const { data, error } = await supabase
+    .from("csg_lgus")
+    .select(`
+      *,
+      head:profiles!csg_lgus_head_id_fkey(*)
+    `)
+    .order("name", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getCsgLguById(id: string): Promise<CsgLguWithHead | null> {
+  const { data, error } = await supabase
+    .from("csg_lgus")
+    .select(`
+      *,
+      head:profiles!csg_lgus_head_id_fkey(*)
+    `)
+    .eq("id", id)
+    .single();
+  if (error) {
+    if (error.code === "PGRST116") return null;
+    throw error;
+  }
+  return data;
+}
+
+export async function getCsgLguByHeadId(userId: string): Promise<CsgLgu | null> {
+  const { data, error } = await supabase
+    .from("csg_lgus")
+    .select("*")
+    .eq("head_id", userId)
+    .single();
+  if (error) return null;
+  return data;
+}
+
+export async function getCsgLguByDepartmentCode(departmentCode: string): Promise<CsgLgu | null> {
+  const { data, error } = await supabase
+    .from("csg_lgus")
+    .select("*")
+    .eq("department_code", departmentCode)
+    .eq("status", "active")
+    .maybeSingle();
+  if (error) return null;
+  return data;
+}
+
+export async function createCsgLgu(data: CreateCsgLguData): Promise<CsgLgu> {
+  const { data: lgu, error } = await supabase
+    .from("csg_lgus")
+    .insert({
+      name: data.name,
+      code: data.code.toUpperCase(),
+      department_code: data.department_code.toUpperCase(),
+      description: data.description || null,
+      head_id: data.head_id || null,
+      logo_url: data.logo_url || null,
+      status: data.status || "active",
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return lgu;
+}
+
+export async function updateCsgLgu(id: string, data: UpdateCsgLguData): Promise<CsgLgu> {
+  const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (data.name !== undefined) updates.name = data.name;
+  if (data.code !== undefined) updates.code = data.code.toUpperCase();
+  if (data.department_code !== undefined) updates.department_code = data.department_code.toUpperCase();
+  if (data.description !== undefined) updates.description = data.description;
+  if (data.head_id !== undefined) updates.head_id = data.head_id;
+  if (data.logo_url !== undefined) updates.logo_url = data.logo_url;
+  if (data.status !== undefined) updates.status = data.status;
+
+  const { data: lgu, error } = await supabase
+    .from("csg_lgus")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) throw error;
+  return lgu;
+}
+
+export async function deleteCsgLgu(id: string): Promise<void> {
+  const { error } = await supabase.from("csg_lgus").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function getUnlinkedCsgLguUsers(): Promise<Profile[]> {
+  const { data: lgus, error: lguError } = await supabase
+    .from("csg_lgus")
+    .select("head_id")
+    .not("head_id", "is", null);
+  if (lguError) throw lguError;
+
+  const linkedHeadIds = lgus?.map((d) => d.head_id).filter(Boolean) || [];
+
+  let query = supabase
+    .from("profiles")
+    .select("*")
+    .eq("role", "csg_lgu")
+    .order("last_name", { ascending: true });
+
+  if (linkedHeadIds.length > 0) {
+    query = query.not("id", "in", `(${linkedHeadIds.join(",")})`);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getCsgLguRoleUsers(): Promise<Profile[]> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("role", "csg_lgu")
+    .order("last_name", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+// ==========================================
+// CSPSP Division Management Types and Functions
+// ==========================================
+
+export interface CspspDivision {
+  id: string;
+  name: string;
+  code: string;
+  department_code: string;
+  description?: string | null;
+  head_id?: string | null;
+  logo_url?: string | null;
+  status: "active" | "inactive";
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CspspDivisionWithHead extends CspspDivision {
+  head?: Profile | null;
+}
+
+export interface CreateCspspDivisionData {
+  name: string;
+  code: string;
+  department_code: string;
+  description?: string;
+  head_id?: string | null;
+  logo_url?: string | null;
+  status?: "active" | "inactive";
+}
+
+export interface UpdateCspspDivisionData {
+  name?: string;
+  code?: string;
+  department_code?: string;
+  description?: string | null;
+  head_id?: string | null;
+  logo_url?: string | null;
+  status?: "active" | "inactive";
+}
+
+export async function getAllCspspDivisions(): Promise<CspspDivisionWithHead[]> {
+  const { data, error } = await supabase
+    .from("cspsp_divisions")
+    .select(`
+      *,
+      head:profiles!cspsp_divisions_head_id_fkey(*)
+    `)
+    .order("name", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getCspspDivisionById(id: string): Promise<CspspDivisionWithHead | null> {
+  const { data, error } = await supabase
+    .from("cspsp_divisions")
+    .select(`
+      *,
+      head:profiles!cspsp_divisions_head_id_fkey(*)
+    `)
+    .eq("id", id)
+    .single();
+  if (error) {
+    if (error.code === "PGRST116") return null;
+    throw error;
+  }
+  return data;
+}
+
+export async function getCspspDivisionByHeadId(userId: string): Promise<CspspDivision | null> {
+  const { data, error } = await supabase
+    .from("cspsp_divisions")
+    .select("*")
+    .eq("head_id", userId)
+    .single();
+  if (error) return null;
+  return data;
+}
+
+export async function getCspspDivisionByCode(code: string): Promise<CspspDivision | null> {
+  const { data, error } = await supabase
+    .from("cspsp_divisions")
+    .select("*")
+    .ilike("code", code)
+    .eq("status", "active")
+    .maybeSingle();
+  if (error) return null;
+  return data;
+}
+
+export async function createCspspDivision(data: CreateCspspDivisionData): Promise<CspspDivision> {
+  const { data: division, error } = await supabase
+    .from("cspsp_divisions")
+    .insert({
+      name: data.name,
+      code: data.code.toUpperCase(),
+      department_code: data.department_code.toUpperCase(),
+      description: data.description || null,
+      head_id: data.head_id || null,
+      logo_url: data.logo_url || null,
+      status: data.status || "active",
+    })
+    .select()
+    .single();
+  if (error) throw error;
+  return division;
+}
+
+export async function updateCspspDivision(id: string, data: UpdateCspspDivisionData): Promise<CspspDivision> {
+  const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (data.name !== undefined) updates.name = data.name;
+  if (data.code !== undefined) updates.code = data.code.toUpperCase();
+  if (data.department_code !== undefined) updates.department_code = data.department_code.toUpperCase();
+  if (data.description !== undefined) updates.description = data.description;
+  if (data.head_id !== undefined) updates.head_id = data.head_id;
+  if (data.logo_url !== undefined) updates.logo_url = data.logo_url;
+  if (data.status !== undefined) updates.status = data.status;
+
+  const { data: division, error } = await supabase
+    .from("cspsp_divisions")
+    .update(updates)
+    .eq("id", id)
+    .select()
+    .single();
+  if (error) throw error;
+  return division;
+}
+
+export async function deleteCspspDivision(id: string): Promise<void> {
+  const { error } = await supabase.from("cspsp_divisions").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function getUnlinkedCspspDivisionUsers(): Promise<Profile[]> {
+  const { data: divisions, error: divError } = await supabase
+    .from("cspsp_divisions")
+    .select("head_id")
+    .not("head_id", "is", null);
+  if (divError) throw divError;
+
+  const linkedHeadIds = divisions?.map((d) => d.head_id).filter(Boolean) || [];
+
+  let query = supabase
+    .from("profiles")
+    .select("*")
+    .eq("role", "cspsp_division")
+    .order("last_name", { ascending: true });
+
+  if (linkedHeadIds.length > 0) {
+    query = query.not("id", "in", `(${linkedHeadIds.join(",")})`);
+  }
+
+  const { data, error } = await query;
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getCspspDivisionRoleUsers(): Promise<Profile[]> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("role", "cspsp_division")
+    .order("last_name", { ascending: true });
+  if (error) throw error;
+  return data || [];
+}
+
+export async function getStudentsByDivision(divisionCode: string): Promise<Profile[]> {
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("role", "student")
+    .eq("cspsp_division", divisionCode)
+    .order("last_name", { ascending: true });
+  if (error) throw error;
   return data || [];
 }
 
@@ -1145,6 +1492,8 @@ export interface Announcement {
   department_id?: string | null;
   office_id?: string | null;
   club_id?: string | null;
+  csg_lgu_id?: string | null;
+  cspsp_division_id?: string | null;
   is_system_wide: boolean;
   priority: AnnouncementPriority;
   event_date?: string | null;
@@ -1160,6 +1509,8 @@ export interface AnnouncementWithRelations extends Announcement {
   department?: Department | null;
   office?: Office | null;
   club?: Club | null;
+  csg_lgu?: CsgLgu | null;
+  cspsp_division?: CspspDivision | null;
 }
 
 export interface CreateAnnouncementData {
@@ -1169,6 +1520,8 @@ export interface CreateAnnouncementData {
   department_id?: string | null;
   office_id?: string | null;
   club_id?: string | null;
+  csg_lgu_id?: string | null;
+  cspsp_division_id?: string | null;
   is_system_wide?: boolean;
   priority?: AnnouncementPriority;
   event_date?: string | null;
@@ -1183,6 +1536,8 @@ export interface UpdateAnnouncementData {
   department_id?: string | null;
   office_id?: string | null;
   club_id?: string | null;
+  csg_lgu_id?: string | null;
+  cspsp_division_id?: string | null;
   is_system_wide?: boolean;
   priority?: AnnouncementPriority;
   event_date?: string | null;
@@ -1202,7 +1557,9 @@ export async function getAllAnnouncements(): Promise<AnnouncementWithRelations[]
       posted_by:profiles!announcements_posted_by_id_fkey(*),
       department:departments!announcements_department_id_fkey(*),
       office:offices!announcements_office_id_fkey(*),
-      club:clubs!announcements_club_id_fkey(*)
+      club:clubs!announcements_club_id_fkey(*),
+      csg_lgu:csg_lgus!announcements_csg_lgu_id_fkey(*),
+      cspsp_division:cspsp_divisions!announcements_cspsp_division_id_fkey(*)
     `)
     .order("created_at", { ascending: false });
 
@@ -1224,7 +1581,9 @@ export async function getActiveAnnouncements(): Promise<AnnouncementWithRelation
       posted_by:profiles!announcements_posted_by_id_fkey(*),
       department:departments!announcements_department_id_fkey(*),
       office:offices!announcements_office_id_fkey(*),
-      club:clubs!announcements_club_id_fkey(*)
+      club:clubs!announcements_club_id_fkey(*),
+      csg_lgu:csg_lgus!announcements_csg_lgu_id_fkey(*),
+      cspsp_division:cspsp_divisions!announcements_cspsp_division_id_fkey(*)
     `)
     .eq("is_active", true)
     .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
@@ -1393,6 +1752,24 @@ export async function getAnnouncementsByClub(
       club:clubs!announcements_club_id_fkey(*)
     `)
     .eq('club_id', clubId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data as AnnouncementWithRelations[]) || [];
+}
+
+/** Fetch all announcements scoped to a given CSG LGU (by csg_lgu_id) */
+export async function getAnnouncementsByCsgLgu(
+  csgLguId: string
+): Promise<AnnouncementWithRelations[]> {
+  const { data, error } = await supabase
+    .from('announcements')
+    .select(`
+      *,
+      posted_by:profiles!announcements_posted_by_id_fkey(*),
+      csg_lgu:csg_lgus!announcements_csg_lgu_id_fkey(*)
+    `)
+    .eq('csg_lgu_id', csgLguId)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -2420,12 +2797,118 @@ export async function getProcessedClearanceItemsByClub(
   return (data as ClearanceItemWithDetails[]) || [];
 }
 
+/** Fetch all non-pending clearance items for a CSPSP division */
+export async function getClearanceItemsByCspspDivision(
+  divisionId: string
+): Promise<ClearanceItemWithDetails[]> {
+  const { data, error } = await supabase
+    .from('clearance_items')
+    .select(`
+      *,
+      request:clearance_requests(
+        *,
+        student:profiles(*)
+      )
+    `)
+    .eq('source_type', 'cspsp_division')
+    .eq('source_id', divisionId)
+    .neq('status', 'pending')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data as ClearanceItemWithDetails[]) || [];
+}
+
+/** Fetch processed (approved/rejected/on_hold) clearance items for a CSPSP division */
+export async function getProcessedClearanceItemsByCspspDivision(
+  divisionId: string
+): Promise<ClearanceItemWithDetails[]> {
+  const { data, error } = await supabase
+    .from('clearance_items')
+    .select(`
+      *,
+      request:clearance_requests(
+        *,
+        student:profiles(*)
+      )
+    `)
+    .eq('source_type', 'cspsp_division')
+    .eq('source_id', divisionId)
+    .in('status', ['approved', 'rejected', 'on_hold'])
+    .order('reviewed_at', { ascending: false });
+
+  if (error) throw error;
+  return (data as ClearanceItemWithDetails[]) || [];
+}
+
+/** Fetch all non-pending clearance items for a CSG LGU */
+export async function getClearanceItemsByCsgLgu(
+  lguId: string
+): Promise<ClearanceItemWithDetails[]> {
+  const { data, error } = await supabase
+    .from('clearance_items')
+    .select(`
+      *,
+      request:clearance_requests(
+        *,
+        student:profiles(*)
+      )
+    `)
+    .eq('source_type', 'csg_lgu')
+    .eq('source_id', lguId)
+    .neq('status', 'pending')
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data as ClearanceItemWithDetails[]) || [];
+}
+
+/** Fetch processed (approved/rejected/on_hold) clearance items for a CSG LGU */
+export async function getProcessedClearanceItemsByCsgLgu(
+  lguId: string
+): Promise<ClearanceItemWithDetails[]> {
+  const { data, error } = await supabase
+    .from('clearance_items')
+    .select(`
+      *,
+      request:clearance_requests(
+        *,
+        student:profiles(*)
+      )
+    `)
+    .eq('source_type', 'csg_lgu')
+    .eq('source_id', lguId)
+    .in('status', ['approved', 'rejected', 'on_hold'])
+    .order('reviewed_at', { ascending: false });
+
+  if (error) throw error;
+  return (data as ClearanceItemWithDetails[]) || [];
+}
+
+
+/** Fetch announcements scoped to a CSPSP division (by posted_by matching the division head) */
+export async function getAnnouncementsByCspspDivision(
+  divisionId: string
+): Promise<AnnouncementWithRelations[]> {
+  const { data, error } = await supabase
+    .from('announcements')
+    .select(`
+      *,
+      posted_by:profiles!announcements_posted_by_id_fkey(*)
+    `)
+    .eq('cspsp_division_id', divisionId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data as AnnouncementWithRelations[]) || [];
+}
+
 /**
  * Get clearance items for a specific source (department/office/club) by student request IDs.
  * Used by admin list pages to show the source-specific clearance status for each student.
  */
 export async function getClearanceItemsBySourceAndRequests(
-  sourceType: 'department' | 'office' | 'club',
+  sourceType: 'department' | 'office' | 'club' | 'csg_lgu' | 'cspsp_division',
   sourceId: string,
   requestIds: string[]
 ): Promise<ClearanceItem[]> {
@@ -2456,7 +2939,7 @@ export interface StudentDocument {
   status: 'pending' | 'submitted' | 'verified' | 'rejected';
   submitted_at: string | null;
   remarks: string | null;
-  source_type: 'department' | 'office' | 'club';
+  source_type: 'department' | 'office' | 'club' | 'csg_lgu' | 'cspsp_division';
   source_id: string;
   academic_year: string;
   semester: string;
@@ -2498,7 +2981,7 @@ export async function getStudentDocuments(studentId: string): Promise<StudentDoc
       remarks: string | null;
       requirement: { name: string; requires_upload: boolean };
       clearance_item: {
-        source_type: 'department' | 'office' | 'club';
+        source_type: 'department' | 'office' | 'club' | 'csg_lgu' | 'cspsp_division';
         source_id: string;
         request: { academic_year: string; semester: string };
       };
@@ -2839,6 +3322,8 @@ export async function getAllEvents(): Promise<EventRecord[]> {
   const officeIds = [...new Set(events.filter(e => e.source_type === 'office').map(e => e.source_id))];
   const deptIds = [...new Set(events.filter(e => e.source_type === 'department').map(e => e.source_id))];
   const clubIds = [...new Set(events.filter(e => e.source_type === 'club').map(e => e.source_id))];
+  const lguIds = [...new Set(events.filter(e => e.source_type === 'csg_lgu').map(e => e.source_id))];
+  const divisionIds = [...new Set(events.filter(e => e.source_type === 'cspsp_division').map(e => e.source_id))];
 
   const nameMap: Record<string, string> = {};
 
@@ -2853,6 +3338,14 @@ export async function getAllEvents(): Promise<EventRecord[]> {
   if (clubIds.length > 0) {
     const { data: clubs } = await supabase.from("clubs").select("id, name").in("id", clubIds);
     clubs?.forEach((c: { id: string; name: string }) => { nameMap[c.id] = c.name; });
+  }
+  if (lguIds.length > 0) {
+    const { data: lgus } = await supabase.from("csg_lgus").select("id, name").in("id", lguIds);
+    lgus?.forEach((l: { id: string; name: string }) => { nameMap[l.id] = l.name; });
+  }
+  if (divisionIds.length > 0) {
+    const { data: divs } = await supabase.from("cspsp_divisions").select("id, name").in("id", divisionIds);
+    divs?.forEach((d: { id: string; name: string }) => { nameMap[d.id] = d.name; });
   }
 
   return events.map(e => ({ ...e, source_name: nameMap[e.source_id] || 'Unknown' }));

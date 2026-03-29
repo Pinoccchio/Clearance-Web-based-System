@@ -18,12 +18,15 @@ import {
   GraduationCap,
   Users,
   ChevronDown,
+  Shield,
 } from "lucide-react";
 import {
   getStudentAttendanceWithEvents,
   getAllDepartments,
   getAllOffices,
   getAllClubs,
+  getAllCsgLgus,
+  getAllCspspDivisions,
   StudentAttendanceWithEvent,
 } from "@/lib/supabase";
 
@@ -46,17 +49,21 @@ export default function StudentEventsPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const [attendance, depts, offices, clubs] = await Promise.all([
+      const [attendance, depts, offices, clubs, csgLgus, cspspDivisions] = await Promise.all([
         getStudentAttendanceWithEvents(profile.id),
         getAllDepartments(),
         getAllOffices(),
         getAllClubs(),
+        getAllCsgLgus(),
+        getAllCspspDivisions(),
       ]);
 
       const names: Record<string, { name: string; code: string; logo_url: string | null }> = {};
       for (const d of depts) names[d.id] = { name: d.name, code: d.code, logo_url: d.logo_url ?? null };
       for (const o of offices) names[o.id] = { name: o.name, code: o.code, logo_url: o.logo_url ?? null };
       for (const c of clubs) names[c.id] = { name: c.name, code: c.code, logo_url: c.logo_url ?? null };
+      for (const l of csgLgus) names[l.id] = { name: l.name, code: l.code, logo_url: l.logo_url ?? null };
+      for (const d of cspspDivisions) names[d.id] = { name: d.name, code: d.code, logo_url: d.logo_url ?? null };
       setSourceNames(names);
       setRecords(attendance);
     } catch (err) {
@@ -174,12 +181,20 @@ export default function StudentEventsPage() {
                   ? Building2
                   : group.sourceType === "department"
                   ? GraduationCap
+                  : group.sourceType === "csg_lgu"
+                  ? Shield
+                  : group.sourceType === "cspsp_division"
+                  ? GraduationCap
                   : Users;
               const fallbackBg =
                 group.sourceType === "office"
                   ? "bg-blue-100 text-blue-600"
                   : group.sourceType === "department"
                   ? "bg-amber-100 text-amber-600"
+                  : group.sourceType === "csg_lgu"
+                  ? "bg-purple-100 text-purple-600"
+                  : group.sourceType === "cspsp_division"
+                  ? "bg-teal-100 text-teal-600"
                   : "bg-green-100 text-green-600";
 
               const isExpanded = expandedOrgs.has(group.key);

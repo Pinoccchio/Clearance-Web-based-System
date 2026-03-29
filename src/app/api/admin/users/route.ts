@@ -24,13 +24,14 @@ interface CreateUserRequestBody {
   firstName: string;
   lastName: string;
   middleName?: string;
-  role: "student" | "office" | "department" | "club" | "admin";
+  role: "student" | "office" | "department" | "club" | "csg_lgu" | "cspsp_division" | "admin";
   department?: string;
   studentId?: string;
   course?: string;
   yearLevel?: string;
   enrolledClubs?: string;
   dateOfBirth?: string;
+  cspspDivision?: string;
 }
 
 export async function POST(request: NextRequest) {
@@ -111,6 +112,7 @@ export async function POST(request: NextRequest) {
           year_level: body.yearLevel || null,
           enrolled_clubs: body.enrolledClubs || null,
           date_of_birth: body.dateOfBirth || null,
+          cspsp_division: body.cspspDivision || null,
         },
       });
 

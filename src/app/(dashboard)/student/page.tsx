@@ -15,6 +15,7 @@ import {
   FileText,
   AlertTriangle,
   Info,
+  Shield,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { Card, CardHeader, CardTitle } from "@/components/ui/Card";
@@ -25,12 +26,16 @@ import {
   getClearanceItemsForStudent,
   getAllOffices,
   getAllClubs,
+  getAllCsgLgus,
+  getAllCspspDivisions,
   getSystemSettings,
   getDepartmentByCode,
   ClearanceItem,
   ClearanceRequest,
   OfficeWithHead,
   ClubWithAdviser,
+  CsgLguWithHead,
+  CspspDivisionWithHead,
   SystemSettings,
   Department,
 } from "@/lib/supabase";
@@ -48,6 +53,8 @@ export default function StudentDashboardPage() {
   const [studentDept, setStudentDept] = useState<Department | null>(null);
   const [offices, setOffices] = useState<OfficeWithHead[]>([]);
   const [clubs, setClubs] = useState<ClubWithAdviser[]>([]);
+  const [csgLgus, setCsgLgus] = useState<CsgLguWithHead[]>([]);
+  const [cspspDivisions, setCspspDivisions] = useState<CspspDivisionWithHead[]>([]);
   const [settings, setSettings] = useState<SystemSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,11 +64,13 @@ export default function StudentDashboardPage() {
     if (!profile?.id) return;
     try {
       setError(null);
-      const [itemsData, deptsData, officesData, clubsData, settingsData] = await Promise.all([
+      const [itemsData, deptsData, officesData, clubsData, csgLgusData, cspspDivisionsData, settingsData] = await Promise.all([
         getClearanceItemsForStudent(profile.id),
         profile.department ? getDepartmentByCode(profile.department) : Promise.resolve(null),
         getAllOffices(),
         getAllClubs(),
+        getAllCsgLgus(),
+        getAllCspspDivisions(),
         getSystemSettings(),
       ]);
 
@@ -69,6 +78,8 @@ export default function StudentDashboardPage() {
       setStudentDept(deptsData);
       setOffices(officesData.filter((o) => o.status === "active"));
       setClubs(clubsData.filter((c) => c.status === "active"));
+      setCsgLgus(csgLgusData.filter((l) => l.status === "active"));
+      setCspspDivisions(cspspDivisionsData.filter((d) => d.status === "active"));
       setSettings(settingsData);
     } catch (err) {
       console.error("Failed to load dashboard data:", err);
@@ -123,8 +134,8 @@ export default function StudentDashboardPage() {
   const onHoldCount = currentItems.filter((i) => i.status === "on_hold").length;
   const actionRequiredCount = rejectedCount + onHoldCount;
 
-  // Total sources: 1 department + all offices + enrolled clubs
-  const totalSources = (studentDept ? 1 : 0) + offices.length + enrolledClubs.length;
+  // Total sources: 1 department + all offices + enrolled clubs + CSG LGUs + CSPSP divisions
+  const totalSources = (studentDept ? 1 : 0) + offices.length + enrolledClubs.length + csgLgus.length + cspspDivisions.length;
 
   // Build source name lookup map
   const sourceNameMap: Record<string, string> = {};
@@ -136,6 +147,12 @@ export default function StudentDashboardPage() {
   }
   for (const c of clubs) {
     sourceNameMap[`club:${c.id}`] = c.name;
+  }
+  for (const l of csgLgus) {
+    sourceNameMap[`csg_lgu:${l.id}`] = l.name;
+  }
+  for (const d of cspspDivisions) {
+    sourceNameMap[`cspsp_division:${d.id}`] = d.name;
   }
 
   // Group items by source_type for display (current period only)
@@ -365,6 +382,58 @@ export default function StudentDashboardPage() {
                 </div>
               </div>
             )}
+
+              {/* CSG LGU */}
+              {csgLgus.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    <Shield className="w-4 h-4" />
+                    CSG LGU ({csgLgus.length})
+                  </div>
+                  <div className="space-y-2">
+                    {csgLgus.map((lgu) => (
+                      <div key={lgu.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <p className="font-medium text-cjc-navy text-sm">{lgu.name}</p>
+                          <p className="text-xs text-gray-400">{lgu.code}</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {getStatusBadge(getItemsForSource("csg_lgu", lgu.id)?.status)}
+                          <Link href="/student/csg-lgu/submit">
+                            <ArrowRight className="w-4 h-4 text-gray-400 hover:text-cjc-navy transition-colors" />
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* CSPSP Division */}
+              {cspspDivisions.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                    <GraduationCap className="w-4 h-4" />
+                    CSPSP Division ({cspspDivisions.length})
+                  </div>
+                  <div className="space-y-2">
+                    {cspspDivisions.map((div) => (
+                      <div key={div.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <p className="font-medium text-cjc-navy text-sm">{div.name}</p>
+                          <p className="text-xs text-gray-400">{div.code}</p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          {getStatusBadge(getItemsForSource("cspsp_division", div.id)?.status)}
+                          <Link href="/student/cspsp-division/submit">
+                            <ArrowRight className="w-4 h-4 text-gray-400 hover:text-cjc-navy transition-colors" />
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
 
             {totalSources === 0 && (
               <div className="text-center py-8 text-gray-500">

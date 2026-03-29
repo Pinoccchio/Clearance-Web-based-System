@@ -14,6 +14,8 @@ import {
   CreateUserData,
   getAllDepartments,
   getAllClubs,
+  getAllCspspDivisions,
+  CspspDivision,
   getCoursesByDepartmentId,
   Course,
 } from "@/lib/supabase";
@@ -40,6 +42,7 @@ interface FormData {
   course: string;
   yearLevel: string;
   dateOfBirth: string;
+  cspspDivision: string;
 }
 
 interface FormErrors {
@@ -68,6 +71,7 @@ const initialFormData: FormData = {
   course: "",
   yearLevel: "",
   dateOfBirth: "",
+  cspspDivision: "",
 };
 
 const roleOptions = [
@@ -75,6 +79,8 @@ const roleOptions = [
   { value: "office", label: "Office" },
   { value: "department", label: "Department" },
   { value: "club", label: "Club" },
+  { value: "csg_lgu", label: "CSG LGU" },
+  { value: "cspsp_division", label: "CSPSP Division" },
   { value: "admin", label: "Admin" },
 ];
 
@@ -105,12 +111,15 @@ export function UserFormModal({
   const [clubs, setClubs] = useState<{ id: string; name: string; code: string; type: string }[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [selectedClubs, setSelectedClubs] = useState<string[]>([]);
+  const [cspspDivisions, setCspspDivisions] = useState<CspspDivision[]>([]);
+  const [studentType, setStudentType] = useState<"regular" | "csp">("regular");
 
-  // Fetch departments and clubs when modal opens for student role
+  // Fetch departments, clubs, and divisions when modal opens for student role
   useEffect(() => {
     if (isOpen && formData.role === "student") {
       getAllDepartments().then(data => setDepartments(data.filter(d => d.status === "active")));
       getAllClubs().then(data => setClubs(data.filter(c => c.status === "active")));
+      getAllCspspDivisions().then(data => setCspspDivisions(data.filter(d => d.status === "active")));
     }
   }, [isOpen, formData.role]);
 
@@ -130,8 +139,17 @@ export function UserFormModal({
         course: user.course || "",
         yearLevel: user.year_level || "",
         dateOfBirth: user.date_of_birth || "",
+        cspspDivision: user.cspsp_division || "",
       });
       setSelectedClubs(user.enrolled_clubs ? user.enrolled_clubs.split(",") : []);
+      // Set student type based on existing data
+      if (user.role === "student") {
+        if (user.cspsp_division || user.department === "CSP") {
+          setStudentType("csp");
+        } else {
+          setStudentType("regular");
+        }
+      }
       // Load courses for the student's department
       if (user.role === "student" && user.department) {
         getAllDepartments().then(depts => {
@@ -143,6 +161,7 @@ export function UserFormModal({
       setFormData(initialFormData);
       setSelectedClubs([]);
       setCourses([]);
+      setStudentType("regular");
     }
     setErrors({});
   }, [mode, user, isOpen]);
@@ -265,6 +284,9 @@ export function UserFormModal({
           dateOfBirth: formData.role === "student" && formData.dateOfBirth
             ? formData.dateOfBirth
             : undefined,
+          cspspDivision: formData.role === "student" && formData.cspspDivision
+            ? formData.cspspDivision
+            : undefined,
         };
 
         await createUser(userData);
@@ -286,6 +308,9 @@ export function UserFormModal({
             : null,
           date_of_birth: formData.role === "student" && formData.dateOfBirth
             ? formData.dateOfBirth
+            : null,
+          cspsp_division: formData.role === "student" && formData.cspspDivision
+            ? formData.cspspDivision
             : null,
         };
 
@@ -470,16 +495,70 @@ export function UserFormModal({
                 onChange={handleChange}
                 helperText="Optional"
               />
+
+              {/* Student Type Selector */}
               <Select
-                label="Department"
-                name="department"
-                value={formData.department}
-                onChange={handleDepartmentChange}
+                label="Student Type"
+                name="studentType"
+                value={studentType}
+                onChange={(e) => {
+                  const type = e.target.value as "regular" | "csp";
+                  setStudentType(type);
+                  if (type === "csp") {
+                    setFormData(prev => ({ ...prev, department: "CSP", course: "", cspspDivision: "" }));
+                    // Load courses for CSP department
+                    const cspDept = departments.find(d => d.code === "CSP");
+                    if (cspDept) getCoursesByDepartmentId(cspDept.id).then(setCourses);
+                    else setCourses([]);
+                  } else {
+                    setFormData(prev => ({ ...prev, department: "", course: "", cspspDivision: "" }));
+                    setCourses([]);
+                  }
+                }}
                 options={[
-                  { value: "", label: "Select Department" },
-                  ...departments.map(d => ({ value: d.code, label: d.name })),
+                  { value: "regular", label: "Regular College Student" },
+                  { value: "csp", label: "College of Special Programs (CSP) Student" },
                 ]}
               />
+
+              {/* Regular Student: Department dropdown (excludes CSP) */}
+              {studentType === "regular" && (
+                <Select
+                  label="Department"
+                  name="department"
+                  value={formData.department}
+                  onChange={handleDepartmentChange}
+                  options={[
+                    { value: "", label: "Select Department" },
+                    ...departments.filter(d => d.code !== "CSP").map(d => ({ value: d.code, label: d.name })),
+                  ]}
+                />
+              )}
+
+              {/* CSP Student: Department is auto-set to CSP, show Division dropdown */}
+              {studentType === "csp" && (
+                <>
+                  <Input
+                    label="Department"
+                    name="department"
+                    value="College of Special Programs (CSP)"
+                    disabled
+                    onChange={() => {}}
+                  />
+                  <Select
+                    label="CSPSP Division"
+                    name="cspspDivision"
+                    value={formData.cspspDivision}
+                    onChange={handleChange}
+                    options={[
+                      { value: "", label: "Select Division" },
+                      ...cspspDivisions.map(d => ({ value: d.code, label: `${d.code} — ${d.name}` })),
+                    ]}
+                    required
+                  />
+                </>
+              )}
+
               <div className="grid grid-cols-2 gap-4">
                 <Select
                   label="Course"
