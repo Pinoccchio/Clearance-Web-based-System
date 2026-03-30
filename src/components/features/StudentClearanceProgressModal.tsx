@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { GraduationCap, Building2, Users, Loader2 } from "lucide-react";
+import { GraduationCap, Building2, Users, Loader2, Landmark, Flag } from "lucide-react";
 import { Modal } from "@/components/ui/modal";
 import { Badge } from "@/components/ui/Badge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -13,10 +13,14 @@ import {
   OfficeWithHead,
   ClubWithAdviser,
   Department,
+  CsgLgu,
+  CspspDivision,
   getClearanceItemsForStudent,
   getAllOffices,
   getAllClubs,
   getDepartmentByCode,
+  getCsgLguByDepartmentCode,
+  getCspspDivisionByCode,
 } from "@/lib/supabase";
 
 type ItemStatus = ClearanceItem["status"];
@@ -60,6 +64,8 @@ export function StudentClearanceProgressModal({
   const [offices, setOffices] = useState<OfficeWithHead[]>([]);
   const [clubs, setClubs] = useState<ClubWithAdviser[]>([]);
   const [studentDept, setStudentDept] = useState<Department | null>(null);
+  const [studentCsgLgu, setStudentCsgLgu] = useState<CsgLgu | null>(null);
+  const [studentCspspDiv, setStudentCspspDiv] = useState<CspspDivision | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -70,11 +76,13 @@ export function StudentClearanceProgressModal({
 
     (async () => {
       try {
-        const [itemsData, officesData, clubsData, deptData] = await Promise.all([
+        const [itemsData, officesData, clubsData, deptData, csgLguData, cspspDivData] = await Promise.all([
           getClearanceItemsForStudent(student.id),
           getAllOffices(),
           getAllClubs(),
           student.department ? getDepartmentByCode(student.department) : Promise.resolve(null),
+          student.department && student.department !== "CSP" ? getCsgLguByDepartmentCode(student.department) : Promise.resolve(null),
+          student.cspsp_division ? getCspspDivisionByCode(student.cspsp_division) : Promise.resolve(null),
         ]);
 
         if (cancelled) return;
@@ -83,6 +91,8 @@ export function StudentClearanceProgressModal({
         setOffices(officesData.filter((o) => o.status === "active"));
         setClubs(clubsData.filter((c) => c.status === "active"));
         setStudentDept(deptData);
+        setStudentCsgLgu(csgLguData);
+        setStudentCspspDiv(cspspDivData);
       } catch (err) {
         console.error("Failed to load clearance progress:", err);
       } finally {
@@ -105,7 +115,8 @@ export function StudentClearanceProgressModal({
   const enrolledClubs = clubs.filter((c) => enrolledClubIds.includes(c.id));
 
   // Total sources
-  const totalSources = (studentDept ? 1 : 0) + offices.length + enrolledClubs.length;
+  const totalSources = (studentDept ? 1 : 0) + offices.length + enrolledClubs.length
+    + (studentCsgLgu ? 1 : 0) + (studentCspspDiv ? 1 : 0);
 
   // Find item for a specific source
   const getItemForSource = (sourceType: string, sourceId: string) => {
@@ -215,6 +226,40 @@ export function StudentClearanceProgressModal({
                       {getStatusBadge(getItemForSource("club", club.id)?.status)}
                     </div>
                   ))}
+                </div>
+              </div>
+            )}
+
+            {/* CSG LGU */}
+            {studentCsgLgu && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  <Landmark className="w-4 h-4" />
+                  CSG LGU (1)
+                </div>
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <p className="font-medium text-cjc-navy text-sm">{studentCsgLgu.name}</p>
+                    <p className="text-xs text-gray-400">{studentCsgLgu.code}</p>
+                  </div>
+                  {getStatusBadge(getItemForSource("csg_lgu", studentCsgLgu.id)?.status)}
+                </div>
+              </div>
+            )}
+
+            {/* CSPSP Division */}
+            {studentCspspDiv && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  <Flag className="w-4 h-4" />
+                  CSPSP Division (1)
+                </div>
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <p className="font-medium text-cjc-navy text-sm">{studentCspspDiv.name}</p>
+                    <p className="text-xs text-gray-400">{studentCspspDiv.code}</p>
+                  </div>
+                  {getStatusBadge(getItemForSource("cspsp_division", studentCspspDiv.id)?.status)}
                 </div>
               </div>
             )}

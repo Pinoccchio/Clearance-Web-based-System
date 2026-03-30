@@ -292,7 +292,7 @@ export default function AdminDashboard() {
 
       <div className="p-6 space-y-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="card p-4 text-center">
             <Users className="w-8 h-8 text-cjc-blue mx-auto mb-2" />
             <p className="text-2xl font-bold text-cjc-navy">{stats.totalUsers}</p>
@@ -320,57 +320,57 @@ export default function AdminDashboard() {
           <CardHeader>
             <CardTitle>System Overview</CardTitle>
           </CardHeader>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
-            <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4">
+            <div className="flex items-center gap-3 p-2 sm:p-3 bg-green-50 rounded-lg">
               <GraduationCap className="w-5 h-5 text-green-600" />
               <div>
                 <p className="text-lg font-bold text-green-700">{stats.students}</p>
                 <p className="text-xs text-green-600">Students</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-cjc-blue/5 rounded-lg">
+            <div className="flex items-center gap-3 p-2 sm:p-3 bg-cjc-blue/5 rounded-lg">
               <Building2 className="w-5 h-5 text-cjc-blue" />
               <div>
                 <p className="text-lg font-bold text-cjc-navy">{stats.departmentHeads}</p>
                 <p className="text-xs text-cjc-blue">Dept Heads</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-amber-50 rounded-lg">
+            <div className="flex items-center gap-3 p-2 sm:p-3 bg-amber-50 rounded-lg">
               <Building2 className="w-5 h-5 text-amber-600" />
               <div>
                 <p className="text-lg font-bold text-amber-700">{stats.officeHeads}</p>
                 <p className="text-xs text-amber-600">Office Heads</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
+            <div className="flex items-center gap-3 p-2 sm:p-3 bg-purple-50 rounded-lg">
               <UsersRound className="w-5 h-5 text-purple-600" />
               <div>
                 <p className="text-lg font-bold text-purple-700">{stats.clubAdvisers}</p>
                 <p className="text-xs text-purple-600">Club Advisers</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-indigo-50 rounded-lg">
+            <div className="flex items-center gap-3 p-2 sm:p-3 bg-indigo-50 rounded-lg">
               <Shield className="w-5 h-5 text-indigo-600" />
               <div>
                 <p className="text-lg font-bold text-indigo-700">{stats.csgLguHeads}</p>
                 <p className="text-xs text-indigo-600">CSG LGU Heads</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-teal-50 rounded-lg">
+            <div className="flex items-center gap-3 p-2 sm:p-3 bg-teal-50 rounded-lg">
               <GraduationCap className="w-5 h-5 text-teal-600" />
               <div>
                 <p className="text-lg font-bold text-teal-700">{stats.cspspDivisionHeads}</p>
                 <p className="text-xs text-teal-600">CSPSP Div Heads</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-red-50 rounded-lg">
+            <div className="flex items-center gap-3 p-2 sm:p-3 bg-red-50 rounded-lg">
               <Shield className="w-5 h-5 text-red-600" />
               <div>
                 <p className="text-lg font-bold text-red-700">{stats.admins}</p>
                 <p className="text-xs text-red-600">Admins</p>
               </div>
             </div>
-            <div className="flex items-center gap-3 p-3 bg-cyan-50 rounded-lg">
+            <div className="flex items-center gap-3 p-2 sm:p-3 bg-cyan-50 rounded-lg">
               <Megaphone className="w-5 h-5 text-cyan-600" />
               <div>
                 <p className="text-lg font-bold text-cyan-700">{stats.activeAnnouncements}</p>
@@ -395,25 +395,25 @@ export default function AdminDashboard() {
               {recentUsers.map((user) => (
                 <div
                   key={user.id}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                  className="flex items-center justify-between gap-2 p-3 bg-gray-50 rounded-lg"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
                     <Avatar
                       src={user.avatar_url ?? undefined}
                       name={`${user.first_name} ${user.last_name}`}
                       size="sm"
                       variant="primary"
                     />
-                    <div>
-                      <p className="font-medium text-cjc-navy text-sm">
+                    <div className="min-w-0">
+                      <p className="font-medium text-cjc-navy text-sm truncate">
                         {user.first_name} {user.last_name}
                       </p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-gray-400 truncate">
                         {user.email} • {new Date(user.created_at).toLocaleDateString()}
                       </p>
                     </div>
                   </div>
-                  {getRoleBadge(user.role)}
+                  <span className="shrink-0">{getRoleBadge(user.role)}</span>
                 </div>
               ))}
             </div>

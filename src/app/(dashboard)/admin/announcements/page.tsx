@@ -256,7 +256,7 @@ export default function AdminAnnouncementsPage() {
 
       <div className="p-6 space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           <div className="card p-4 text-center">
             <p className="text-2xl font-bold text-cjc-navy">{stats.total}</p>
             <p className="text-sm text-warm-muted">Total</p>
@@ -333,25 +333,25 @@ export default function AdminAnnouncementsPage() {
         {!isLoading && filteredAnnouncements.length > 0 && (
           <div className="card overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[500px]">
                 <thead className="bg-surface-warm border-b border-border-warm">
                   <tr>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy">
+                    <th className="text-left py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy">
                       Announcement
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy">
+                    <th className="hidden md:table-cell text-left py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy">
                       Scope
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy">
+                    <th className="hidden lg:table-cell text-left py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy">
                       Posted By
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy">
+                    <th className="hidden sm:table-cell text-left py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy whitespace-nowrap">
                       Status
                     </th>
-                    <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy">
+                    <th className="hidden lg:table-cell text-left py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy">
                       Created
                     </th>
-                    <th className="text-right py-3 px-4 text-sm font-medium text-cjc-navy">
+                    <th className="text-right py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy">
                       Actions
                     </th>
                   </tr>
@@ -367,17 +367,17 @@ export default function AdminAnnouncementsPage() {
                         key={announcement.id}
                         className="hover:bg-surface-warm transition-colors"
                       >
-                        <td className="py-3 px-4">
-                          <div className="max-w-md">
+                        <td className="py-3 px-2 sm:px-4">
+                          <div className="min-w-0">
                             <div className="flex items-center gap-2">
                               <span
-                                className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                                className={`text-xs px-2 py-0.5 rounded-full font-medium whitespace-nowrap shrink-0 ${
                                   priorityColors[announcement.priority]
                                 }`}
                               >
                                 {priorityLabels[announcement.priority]}
                               </span>
-                              <p className="font-medium text-cjc-navy truncate">
+                              <p className="font-medium text-cjc-navy line-clamp-1">
                                 {announcement.title}
                               </p>
                             </div>
@@ -402,15 +402,15 @@ export default function AdminAnnouncementsPage() {
                             )}
                           </div>
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="hidden md:table-cell py-3 px-2 sm:px-4">
                           <span
-                            className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium ${scope.color}`}
+                            className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full font-medium whitespace-nowrap ${scope.color}`}
                           >
                             <ScopeIcon className="w-3 h-3" />
                             {scope.label}
                           </span>
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="hidden lg:table-cell py-3 px-2 sm:px-4">
                           <div className="flex items-center gap-2">
                             <Avatar
                               src={announcement.posted_by?.avatar_url || undefined}
@@ -430,7 +430,7 @@ export default function AdminAnnouncementsPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="hidden sm:table-cell py-3 px-2 sm:px-4">
                           {expired ? (
                             <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-500 font-medium">
                               <Clock className="w-3 h-3" />
@@ -446,12 +446,12 @@ export default function AdminAnnouncementsPage() {
                             </span>
                           )}
                         </td>
-                        <td className="py-3 px-4">
-                          <p className="text-sm text-warm-muted">
+                        <td className="hidden lg:table-cell py-3 px-2 sm:px-4">
+                          <p className="text-sm text-warm-muted whitespace-nowrap">
                             {formatDate(announcement.created_at)}
                           </p>
                         </td>
-                        <td className="py-3 px-4">
+                        <td className="py-3 px-2 sm:px-4">
                           <div className="flex items-center justify-end gap-1">
                             <button
                               onClick={() => handleEditAnnouncement(announcement)}

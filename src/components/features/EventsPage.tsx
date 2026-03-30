@@ -101,38 +101,38 @@ export default function EventsPage({ sourceType, sourceId, admin }: EventsPagePr
           <table className="w-full">
             <thead className="bg-gray-50">
               <tr>
-                <th className="text-left px-6 py-3 text-xs font-medium text-gray-500 uppercase">Event</th>
-                {admin && <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Source</th>}
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Date</th>
-                <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">Requirement</th>
-                <th className="text-center px-4 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
-                <th className="text-right px-6 py-3 text-xs font-medium text-gray-500 uppercase">Actions</th>
+                <th className="text-left px-2 sm:px-6 py-3 text-xs font-medium text-gray-500 uppercase">Event</th>
+                {admin && <th className="hidden sm:table-cell text-left px-2 sm:px-4 py-3 text-xs font-medium text-gray-500 uppercase">Source</th>}
+                <th className="hidden sm:table-cell text-left px-2 sm:px-4 py-3 text-xs font-medium text-gray-500 uppercase">Date</th>
+                <th className="hidden lg:table-cell text-left px-2 sm:px-4 py-3 text-xs font-medium text-gray-500 uppercase">Requirement</th>
+                <th className="hidden md:table-cell text-center px-2 sm:px-4 py-3 text-xs font-medium text-gray-500 uppercase">Status</th>
+                <th className="text-right px-2 sm:px-6 py-3 text-xs font-medium text-gray-500 uppercase">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
               {events.map(event => (
                 <tr key={event.id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4">
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">{event.name}</p>
+                  <td className="px-2 sm:px-6 py-4">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-gray-900 line-clamp-1">{event.name}</p>
                       {event.description && <p className="text-xs text-gray-500 mt-0.5 line-clamp-1">{event.description}</p>}
                     </div>
                   </td>
                   {admin && (
-                    <td className="px-4 py-4">
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 capitalize">
+                    <td className="hidden sm:table-cell px-2 sm:px-4 py-4">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 capitalize whitespace-nowrap">
                         {event.source_type}: {event.source_name || "—"}
                       </span>
                     </td>
                   )}
-                  <td className="px-4 py-4 text-sm text-gray-600">{formatDate(event.event_date)}</td>
-                  <td className="px-4 py-4 text-sm text-gray-600">{event.requirement?.name || "—"}</td>
-                  <td className="px-4 py-4 text-center">
+                  <td className="hidden sm:table-cell px-2 sm:px-4 py-4 text-sm text-gray-600 whitespace-nowrap">{formatDate(event.event_date)}</td>
+                  <td className="hidden lg:table-cell px-2 sm:px-4 py-4 text-sm text-gray-600">{event.requirement?.name || "—"}</td>
+                  <td className="hidden md:table-cell px-2 sm:px-4 py-4 text-center">
                     <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${event.is_active ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"}`}>
                       {event.is_active ? "Active" : "Inactive"}
                     </span>
                   </td>
-                  <td className="px-6 py-4">
+                  <td className="px-2 sm:px-6 py-4">
                     <div className="flex items-center justify-end gap-2">
                       <button onClick={() => setViewAttendanceEvent(event)} className="p-1.5 text-gray-400 hover:text-cjc-red rounded-lg hover:bg-gray-100" title="View Attendance">
                         <Users className="w-4 h-4" />

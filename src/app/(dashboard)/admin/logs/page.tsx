@@ -181,7 +181,7 @@ export default function AdminLogsPage() {
 
       <div className="p-6 space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
           <div className="card p-4 text-center">
             <p className="text-2xl font-bold text-cjc-navy">{logs.length}</p>
             <p className="text-sm text-warm-muted">Total Logs</p>
@@ -265,7 +265,7 @@ export default function AdminLogsPage() {
               {filteredLogs.map((log) => (
                 <div
                   key={log.id}
-                  className="flex items-start gap-4 p-4 rounded-lg bg-surface-warm"
+                  className="flex items-start gap-3 sm:gap-4 p-3 sm:p-4 rounded-lg bg-surface-warm"
                 >
                   <div className="w-9 h-9 rounded-full bg-white flex items-center justify-center flex-shrink-0 border border-border-warm">
                     {getActionIcon(log.to_status)}

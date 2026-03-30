@@ -66,7 +66,7 @@ const TableHead = forwardRef<
   <th
     ref={ref}
     className={cn(
-      "h-11 px-4 text-left align-middle font-medium text-gray-500 text-xs uppercase tracking-wide",
+      "h-11 px-2 sm:px-4 text-left align-middle font-medium text-gray-500 text-xs uppercase tracking-wide",
       className
     )}
     {...props}
@@ -81,7 +81,7 @@ const TableCell = forwardRef<
 >(({ className, ...props }, ref) => (
   <td
     ref={ref}
-    className={cn("py-3 px-4 align-middle text-cjc-navy", className)}
+    className={cn("py-3 px-2 sm:px-4 align-middle text-cjc-navy", className)}
     {...props}
   />
 ));

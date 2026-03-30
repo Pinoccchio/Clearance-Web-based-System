@@ -187,18 +187,18 @@ export default function AdminUsersPage() {
     }
   };
 
-  const getRoleLabel = (role: string) => {
+  const getRoleLabel = (role: string, short = false) => {
     switch (role) {
       case "office":
-        return "Office";
+        return short ? "Office" : "Office";
       case "department":
-        return "Department";
+        return short ? "Dept" : "Department";
       case "club":
-        return "Club";
+        return short ? "Club" : "Club";
       case "csg_lgu":
-        return "CSG LGU";
+        return short ? "CSG" : "CSG LGU";
       case "cspsp_division":
-        return "CSPSP Division";
+        return short ? "CSPSP" : "CSPSP Division";
       default:
         return role.charAt(0).toUpperCase() + role.slice(1);
     }
@@ -279,7 +279,7 @@ export default function AdminUsersPage() {
 
       <div className="p-6 space-y-6">
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
           <Card padding="sm" className="text-center">
             <p className="text-2xl font-bold text-cjc-navy">
               {isLoading ? "..." : users.length}
@@ -363,7 +363,7 @@ export default function AdminUsersPage() {
         </div>
 
         {/* Users Table */}
-        <Card padding="none">
+        <Card padding="none" className="overflow-x-auto">
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="w-8 h-8 text-cjc-navy animate-spin" />
@@ -373,12 +373,12 @@ export default function AdminUsersPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>User</TableHead>
-                  <TableHead>Role</TableHead>
-                  <TableHead>Linked To</TableHead>
-                  <TableHead>Status</TableHead>
-                  <TableHead>Joined</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="w-auto">User</TableHead>
+                  <TableHead className="w-20 sm:w-auto">Role</TableHead>
+                  <TableHead className="hidden md:table-cell">Linked To</TableHead>
+                  <TableHead className="hidden lg:table-cell">Status</TableHead>
+                  <TableHead className="hidden lg:table-cell">Joined</TableHead>
+                  <TableHead className="w-20 text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -386,7 +386,7 @@ export default function AdminUsersPage() {
                   <TableRow>
                     <TableCell
                       colSpan={6}
-                      className="text-center py-8 text-gray-500"
+                      className="text-center py-8 text-gray-500 [&]:table-cell"
                     >
                       No users found
                     </TableCell>
@@ -406,11 +406,11 @@ export default function AdminUsersPage() {
                               className={user.avatar_url ? "cursor-pointer" : ""}
                               onClick={() => user.avatar_url && setPreviewUrl(user.avatar_url)}
                             />
-                            <div>
-                              <p className="font-medium text-cjc-navy">
+                            <div className="min-w-0">
+                              <p className="font-medium text-cjc-navy truncate">
                                 {fullName}
                               </p>
-                              <p className="text-xs text-gray-500">
+                              <p className="text-xs text-gray-500 truncate">
                                 {user.email}
                               </p>
                             </div>
@@ -421,10 +421,11 @@ export default function AdminUsersPage() {
                             variant={getRoleBadgeVariant(user.role)}
                             size="sm"
                           >
-                            {getRoleLabel(user.role)}
+                            <span className="sm:hidden">{getRoleLabel(user.role, true)}</span>
+                            <span className="hidden sm:inline">{getRoleLabel(user.role)}</span>
                           </Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden md:table-cell">
                           {user.role === "department" ? (
                             user.linkedDepartment ? (
                               <div className="flex items-center gap-2">
@@ -528,7 +529,7 @@ export default function AdminUsersPage() {
                             <span className="text-sm text-gray-400">-</span>
                           )}
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden lg:table-cell">
                           <Badge
                             variant={
                               user.status === "active" ? "success" : "neutral"
@@ -543,7 +544,7 @@ export default function AdminUsersPage() {
                             <span className="capitalize">{user.status}</span>
                           </Badge>
                         </TableCell>
-                        <TableCell>
+                        <TableCell className="hidden lg:table-cell">
                           <span className="text-sm text-gray-500">
                             {new Date(user.created_at).toLocaleDateString()}
                           </span>

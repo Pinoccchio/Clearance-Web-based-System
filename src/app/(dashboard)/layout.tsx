@@ -80,6 +80,18 @@ export default function DashboardLayout({
     setIsMobileOpen(false);
   }, [pathname]);
 
+  // Lock body scroll when mobile sidebar is open
+  useEffect(() => {
+    if (isMobileOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isMobileOpen]);
+
   // Route protection via useEffect - handles redirects after auth state is determined
   useEffect(() => {
     if (!isLoading) {
