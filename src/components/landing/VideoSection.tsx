@@ -101,15 +101,19 @@ export function VideoSection() {
               referrerPolicy="strict-origin-when-cross-origin"
               allowFullScreen
             />
-            <button
-              onClick={() => setActiveVideoId(null)}
-              className="absolute top-3 left-1/2 -translate-x-1/2 z-40 flex h-9 items-center gap-2 px-4 rounded-full bg-black/80 text-white/80 text-sm font-medium shadow-lg hover:bg-black hover:text-white transition-colors"
-              aria-label="Close video"
-            >
-              <X className="h-4 w-4" />
-              Close
-            </button>
           </div>
+        )}
+
+        {/* Close button — sits above the video overlay, anchored to top-right of section */}
+        {activeVideoId && (
+          <button
+            onClick={() => setActiveVideoId(null)}
+            className="absolute -top-11 right-3 z-40 flex h-9 items-center gap-2 px-4 rounded-full bg-black/80 text-white/80 text-sm font-medium shadow-lg hover:bg-black hover:text-white transition-colors"
+            aria-label="Close video"
+          >
+            <X className="h-4 w-4" />
+            Close
+          </button>
         )}
 
         {/* Prev / Next arrows — DLSU style: outlined circles at edges */}
