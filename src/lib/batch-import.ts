@@ -1,5 +1,5 @@
 import * as XLSX from 'xlsx';
-import { Department, Course, Club } from './supabase';
+import { Department, Course, Club, CspsgDivision } from './supabase';
 
 // ==========================================
 // Types
@@ -17,6 +17,8 @@ export interface StudentRow {
   yearLevel: string;
   enrolledClubs?: string;      // Club IDs for database
   enrolledClubCodes?: string;  // Club codes for display
+  cspsgDivision?: string;      // Division ID for CSP students
+  cspsgDivisionCode?: string;  // Division code for display
 }
 
 export interface ValidationError {
@@ -50,6 +52,7 @@ const EXPECTED_HEADERS = [
   'Course',
   'Year Level',
   'Enrolled Clubs',
+  'CSPSG Division',
 ];
 
 // ==========================================
@@ -93,7 +96,8 @@ export function validateRows(
   rows: Record<string, string>[],
   validDepartments: Department[],
   validCourses: Course[],
-  validClubs: Club[]
+  validClubs: Club[],
+  validCspsgDivisions: CspsgDivision[] = []
 ): ParsedData {
   const result: ParsedData = {
     rows: [],
@@ -107,6 +111,7 @@ export function validateRows(
   const deptCodeMap = new Map(validDepartments.map(d => [d.code.toUpperCase(), d]));
   const courseCodeMap = new Map(validCourses.map(c => [c.code.toUpperCase(), c]));
   const clubCodeMap = new Map(validClubs.map(c => [c.code.toUpperCase(), c]));
+  const divisionCodeMap = new Map(validCspsgDivisions.map(d => [d.code.toUpperCase(), d]));
 
   rows.forEach((row, index) => {
     const rowNum = index + 2; // Excel row (1-indexed, plus header)
@@ -123,6 +128,7 @@ export function validateRows(
     const course = (row['Course'] || '').trim().toUpperCase();
     const yearLevel = (row['Year Level'] || '').toString().trim();
     const enrolledClubs = (row['Enrolled Clubs'] || '').trim();
+    const cspsgDivisionCode = (row['CSPSG Division'] || '').trim().toUpperCase();
 
     // Skip completely empty rows
     if (!studentId && !firstName && !lastName && !email) {
@@ -213,6 +219,26 @@ export function validateRows(
       }
     }
 
+    // Validate CSPSG Division (required only if department = CSP)
+    let cspsgDivisionId: string | undefined;
+    let cspsgDivisionCodeResolved: string | undefined;
+    const isCsp = department === 'CSP';
+    if (isCsp) {
+      if (!cspsgDivisionCode) {
+        errors.push({ row: rowNum, field: 'CSPSG Division', message: 'Required for CSP students — use code from CSPSG Divisions table' });
+      } else {
+        const division = divisionCodeMap.get(cspsgDivisionCode);
+        if (!division) {
+          errors.push({ row: rowNum, field: 'CSPSG Division', message: `Unknown CSPSG Division code: ${cspsgDivisionCode}` });
+        } else {
+          cspsgDivisionId = division.id;
+          cspsgDivisionCodeResolved = division.code;
+        }
+      }
+    } else if (cspsgDivisionCode) {
+      errors.push({ row: rowNum, field: 'CSPSG Division', message: 'Only applicable for CSP students' });
+    }
+
     // If no errors, add to valid rows
     if (errors.length === 0) {
       result.rows.push({
@@ -227,6 +253,8 @@ export function validateRows(
         yearLevel,
         enrolledClubs: validClubIds.length > 0 ? validClubIds.join(',') : undefined,
         enrolledClubCodes: validClubCodes.length > 0 ? validClubCodes.join(', ') : undefined,
+        cspsgDivision: cspsgDivisionId,
+        cspsgDivisionCode: cspsgDivisionCodeResolved,
       });
     } else {
       result.errors.push(...errors);
@@ -336,7 +364,8 @@ function parseDate(dateStr: string): string | null {
 export function generateExcelTemplate(
   departments: Department[],
   courses: Course[],
-  clubs: Club[]
+  clubs: Club[],
+  cspsgDivisions: CspsgDivision[] = []
 ): ArrayBuffer {
   const workbook = XLSX.utils.book_new();
 
@@ -345,11 +374,12 @@ export function generateExcelTemplate(
     // Headers
     EXPECTED_HEADERS,
     // Sample rows - using DD/MM/YYYY format for dates
-    ['2021-0001-5', 'Juan', 'Santos', 'Dela Cruz', 'juan.delacruz@g.cjc.edu.ph', '15/01/2003', 'CCIS', 'BSCS', '3', ''],
-    ['2021-0002-3', 'Maria', 'Clara', 'Santos', 'maria.santos@g.cjc.edu.ph', '20/05/2003', 'CABE', 'BSA', '2', ''],
-    ['2022-0015-7', 'Pedro', 'Jose', 'Reyes', 'pedro.reyes@g.cjc.edu.ph', '10/03/2004', 'CHS', 'BSN', '1', ''],
-    ['2020-0088-2', 'Ana', '', 'Garcia', 'ana.garcia@g.cjc.edu.ph', '25/11/2002', 'CCIS', 'BSLIS', '4', ''],
-    ['2021-0099-1', 'Jose', 'Miguel', 'Cruz', 'jose.cruz@g.cjc.edu.ph', '08/07/2003', 'CCIS', 'BSIT', '3', ''],
+    // Last column = CSPSG Division (only for CSP students)
+    ['2021-0001-5', 'Juan', 'Santos', 'Dela Cruz', 'juan.delacruz@g.cjc.edu.ph', '15/01/2003', 'CCIS', 'BSCS', '3', '', ''],
+    ['2021-0002-3', 'Maria', 'Clara', 'Santos', 'maria.santos@g.cjc.edu.ph', '20/05/2003', 'CABE', 'BSA', '2', '', ''],
+    ['2022-0015-7', 'Pedro', 'Jose', 'Reyes', 'pedro.reyes@g.cjc.edu.ph', '10/03/2004', 'CHS', 'BSN', '1', '', ''],
+    ['2020-0088-2', 'Ana', '', 'Garcia', 'ana.garcia@g.cjc.edu.ph', '25/11/2002', 'CCIS', 'BSLIS', '4', '', ''],
+    ['2021-0099-1', 'Jose', 'Miguel', 'Cruz', 'jose.cruz@g.cjc.edu.ph', '08/07/2003', 'CSP', 'BSED', '3', '', 'DATCH'],
   ];
 
   const studentsSheet = XLSX.utils.aoa_to_sheet(studentsData);
@@ -366,6 +396,7 @@ export function generateExcelTemplate(
     { wch: 10 }, // Course
     { wch: 12 }, // Year Level
     { wch: 20 }, // Enrolled Clubs
+    { wch: 18 }, // CSPSG Division
   ];
 
   // Set Date of Birth column (F) to text format to prevent Excel auto-conversion
@@ -413,6 +444,14 @@ export function generateExcelTemplate(
   }
   referenceData.push([]);
 
+  // CSPSG Divisions section
+  referenceData.push(['CSPSG DIVISIONS (required for CSP students only)']);
+  referenceData.push(['Code', 'Name']);
+  for (const div of cspsgDivisions.filter(d => d.status === 'active')) {
+    referenceData.push([div.code, div.name]);
+  }
+  referenceData.push([]);
+
   // Year Levels
   referenceData.push(['YEAR LEVELS']);
   referenceData.push(['Value', 'Description']);
@@ -435,6 +474,7 @@ export function generateExcelTemplate(
   referenceData.push(['Course', 'Yes', 'Use code from Courses table']);
   referenceData.push(['Year Level', 'Yes', '1, 2, 3, or 4']);
   referenceData.push(['Enrolled Clubs', 'No', 'Comma-separated club codes (e.g., ACSS,CRCYC)']);
+  referenceData.push(['CSPSG Division', 'CSP only', 'Use code from CSPSG Divisions table (e.g., DATCH)']);
 
   const referenceSheet = XLSX.utils.aoa_to_sheet(referenceData);
 
@@ -458,9 +498,10 @@ export function generateExcelTemplate(
 export function downloadExcelTemplate(
   departments: Department[],
   courses: Course[],
-  clubs: Club[]
+  clubs: Club[],
+  cspsgDivisions: CspsgDivision[] = []
 ): void {
-  const buffer = generateExcelTemplate(departments, courses, clubs);
+  const buffer = generateExcelTemplate(departments, courses, clubs, cspsgDivisions);
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   const url = URL.createObjectURL(blob);
 

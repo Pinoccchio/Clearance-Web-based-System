@@ -19,11 +19,15 @@ import {
   getAllClubs,
   getAllCsgDepartmentLgus,
   getAllCspsgDivisions,
+  getAllCsg,
+  getAllCspsg,
   DepartmentWithHead,
   OfficeWithHead,
   ClubWithAdviser,
   CsgDepartmentLguWithHead,
   CspsgDivisionWithHead,
+  CsgWithHead,
+  CspsgWithHead,
 } from "@/lib/supabase";
 import { useToast } from "@/components/ui/Toast";
 
@@ -41,12 +45,14 @@ interface FormData {
   title: string;
   content: string;
   priority: AnnouncementPriority;
-  scope: "system" | "department" | "office" | "club" | "csg_department_lgu" | "cspsg_division";
+  scope: "system" | "department" | "office" | "club" | "csg_department_lgu" | "cspsg_division" | "csg" | "cspsg";
   department_id: string;
   office_id: string;
   club_id: string;
   csg_department_lgu_id: string;
   cspsg_division_id: string;
+  csg_id: string;
+  cspsg_id: string;
   event_date: string;
   event_location: string;
   expires_at: string;
@@ -70,6 +76,8 @@ const initialFormData: FormData = {
   club_id: "",
   csg_department_lgu_id: "",
   cspsg_division_id: "",
+  csg_id: "",
+  cspsg_id: "",
   event_date: "",
   event_location: "",
   expires_at: "",
@@ -108,6 +116,8 @@ export function AnnouncementFormModal({
   const [clubs, setClubs] = useState<ClubWithAdviser[]>([]);
   const [csgDepartmentLgus, setCsgDepartmentLgus] = useState<CsgDepartmentLguWithHead[]>([]);
   const [cspsgDivisions, setCspsgDivisions] = useState<CspsgDivisionWithHead[]>([]);
+  const [csgOrgs, setCsgOrgs] = useState<CsgWithHead[]>([]);
+  const [cspsgOrgs, setCspsgOrgs] = useState<CspsgWithHead[]>([]);
   const [loadingOptions, setLoadingOptions] = useState(false);
 
   const isAdmin = currentUser.role === "admin";
@@ -116,13 +126,15 @@ export function AnnouncementFormModal({
   useEffect(() => {
     if (isOpen && isAdmin) {
       setLoadingOptions(true);
-      Promise.all([getAllDepartments(), getAllOffices(), getAllClubs(), getAllCsgDepartmentLgus(), getAllCspsgDivisions()])
-        .then(([depts, offs, clbs, lgus, divs]) => {
+      Promise.all([getAllDepartments(), getAllOffices(), getAllClubs(), getAllCsgDepartmentLgus(), getAllCspsgDivisions(), getAllCsg(), getAllCspsg()])
+        .then(([depts, offs, clbs, lgus, divs, csgs, cspsgs]) => {
           setDepartments(depts.filter((d) => d.status === "active"));
           setOffices(offs.filter((o) => o.status === "active"));
           setClubs(clbs.filter((c) => c.status === "active"));
           setCsgDepartmentLgus(lgus.filter((l) => l.status === "active"));
           setCspsgDivisions(divs.filter((d) => d.status === "active"));
+          setCsgOrgs(csgs.filter((c) => c.status === "active"));
+          setCspsgOrgs(cspsgs.filter((c) => c.status === "active"));
         })
         .catch((error) => {
           console.error("Error fetching scope options:", error);
@@ -142,6 +154,8 @@ export function AnnouncementFormModal({
     if (ann.club_id) return "club";
     if (ann.csg_department_lgu_id) return "csg_department_lgu";
     if (ann.cspsg_division_id) return "cspsg_division";
+    if (ann.csg_id) return "csg";
+    if (ann.cspsg_id) return "cspsg";
     return "system";
   };
 
@@ -159,6 +173,8 @@ export function AnnouncementFormModal({
         club_id: announcement.club_id || "",
         csg_department_lgu_id: announcement.csg_department_lgu_id || "",
         cspsg_division_id: announcement.cspsg_division_id || "",
+        csg_id: announcement.csg_id || "",
+        cspsg_id: announcement.cspsg_id || "",
         event_date: announcement.event_date
           ? new Date(announcement.event_date).toISOString().slice(0, 16)
           : "",
@@ -170,7 +186,7 @@ export function AnnouncementFormModal({
       });
     } else {
       // Reset form for new announcement
-      const defaultScope = isAdmin ? "system" : currentUser.role === "department" ? "department" : currentUser.role === "office" ? "office" : currentUser.role === "csg_department_lgu" ? "csg_department_lgu" : currentUser.role === "cspsg_division" ? "cspsg_division" : "club";
+      const defaultScope = isAdmin ? "system" : currentUser.role === "department" ? "department" : currentUser.role === "office" ? "office" : currentUser.role === "csg_department_lgu" ? "csg_department_lgu" : currentUser.role === "cspsg_division" ? "cspsg_division" : currentUser.role === "csg" ? "csg" : currentUser.role === "cspsg" ? "cspsg" : "club";
       setFormData({
         ...initialFormData,
         scope: defaultScope as FormData["scope"],
@@ -209,6 +225,8 @@ export function AnnouncementFormModal({
       club_id: "",
       csg_department_lgu_id: "",
       cspsg_division_id: "",
+      csg_id: "",
+      cspsg_id: "",
     }));
   };
 
@@ -235,6 +253,10 @@ export function AnnouncementFormModal({
         newErrors.scope = "Please select a LGU";
       } else if (formData.scope === "cspsg_division" && !formData.cspsg_division_id) {
         newErrors.scope = "Please select a CSPSG Division";
+      } else if (formData.scope === "csg" && !formData.csg_id) {
+        newErrors.scope = "Please select a CSG";
+      } else if (formData.scope === "cspsg" && !formData.cspsg_id) {
+        newErrors.scope = "Please select a CSPSG";
       }
     }
 
@@ -259,6 +281,8 @@ export function AnnouncementFormModal({
       let club_id: string | null = null;
       let csg_department_lgu_id: string | null = null;
       let cspsg_division_id: string | null = null;
+      let csg_id: string | null = null;
+      let cspsg_id: string | null = null;
       let is_system_wide = false;
 
       if (isAdmin) {
@@ -280,6 +304,12 @@ export function AnnouncementFormModal({
             break;
           case "cspsg_division":
             cspsg_division_id = formData.cspsg_division_id;
+            break;
+          case "csg":
+            csg_id = formData.csg_id;
+            break;
+          case "cspsg":
+            cspsg_id = formData.cspsg_id;
             break;
         }
       } else {
@@ -315,6 +345,8 @@ export function AnnouncementFormModal({
           club_id,
           csg_department_lgu_id,
           cspsg_division_id,
+          csg_id,
+          cspsg_id,
           is_system_wide,
           priority: formData.priority,
           event_date: formData.event_date ? new Date(formData.event_date).toISOString() : null,
@@ -338,6 +370,8 @@ export function AnnouncementFormModal({
           club_id,
           csg_department_lgu_id,
           cspsg_division_id,
+          csg_id,
+          cspsg_id,
           is_system_wide,
           priority: formData.priority,
           event_date: formData.event_date ? new Date(formData.event_date).toISOString() : null,
@@ -374,6 +408,8 @@ export function AnnouncementFormModal({
     { value: "club", label: "Club" },
     { value: "csg_department_lgu", label: "LGU" },
     { value: "cspsg_division", label: "CSPSG Division" },
+    { value: "csg", label: "CSG (School-wide)" },
+    { value: "cspsg", label: "CSPSG (School-wide)" },
   ];
 
   const departmentOptions = [
@@ -399,6 +435,16 @@ export function AnnouncementFormModal({
   const cspsgDivisionOptions = [
     { value: "", label: "Select a CSPSG Division" },
     ...cspsgDivisions.map((d) => ({ value: d.id, label: d.name })),
+  ];
+
+  const csgOptions = [
+    { value: "", label: "Select CSG" },
+    ...csgOrgs.map((c) => ({ value: c.id, label: c.name })),
+  ];
+
+  const cspsgOptions = [
+    { value: "", label: "Select CSPSG" },
+    ...cspsgOrgs.map((c) => ({ value: c.id, label: c.name })),
   ];
 
   return (
@@ -539,6 +585,30 @@ export function AnnouncementFormModal({
                   value={formData.cspsg_division_id}
                   onChange={handleChange}
                   options={cspsgDivisionOptions}
+                  error={errors.scope}
+                  disabled={loadingOptions}
+                />
+              )}
+
+              {formData.scope === "csg" && (
+                <Select
+                  label="Select CSG"
+                  name="csg_id"
+                  value={formData.csg_id}
+                  onChange={handleChange}
+                  options={csgOptions}
+                  error={errors.scope}
+                  disabled={loadingOptions}
+                />
+              )}
+
+              {formData.scope === "cspsg" && (
+                <Select
+                  label="Select CSPSG"
+                  name="cspsg_id"
+                  value={formData.cspsg_id}
+                  onChange={handleChange}
+                  options={cspsgOptions}
                   error={errors.scope}
                   disabled={loadingOptions}
                 />

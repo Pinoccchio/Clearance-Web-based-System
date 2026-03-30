@@ -1864,6 +1864,8 @@ export interface CreateAnnouncementData {
   club_id?: string | null;
   csg_department_lgu_id?: string | null;
   cspsg_division_id?: string | null;
+  csg_id?: string | null;
+  cspsg_id?: string | null;
   is_system_wide?: boolean;
   priority?: AnnouncementPriority;
   event_date?: string | null;
@@ -1880,6 +1882,8 @@ export interface UpdateAnnouncementData {
   club_id?: string | null;
   csg_department_lgu_id?: string | null;
   cspsg_division_id?: string | null;
+  csg_id?: string | null;
+  cspsg_id?: string | null;
   is_system_wide?: boolean;
   priority?: AnnouncementPriority;
   event_date?: string | null;
@@ -1901,7 +1905,9 @@ export async function getAllAnnouncements(): Promise<AnnouncementWithRelations[]
       office:offices!announcements_office_id_fkey(*),
       club:clubs!announcements_club_id_fkey(*),
       csg_department_lgu:csg_department_lgus!announcements_csg_department_lgu_id_fkey(*),
-      cspsg_division:cspsg_divisions!announcements_cspsg_division_id_fkey(*)
+      cspsg_division:cspsg_divisions!announcements_cspsg_division_id_fkey(*),
+      csg:csg!announcements_csg_id_fkey(*),
+      cspsg:cspsg!announcements_cspsg_id_fkey(*)
     `)
     .order("created_at", { ascending: false });
 
@@ -1925,7 +1931,9 @@ export async function getActiveAnnouncements(): Promise<AnnouncementWithRelation
       office:offices!announcements_office_id_fkey(*),
       club:clubs!announcements_club_id_fkey(*),
       csg_department_lgu:csg_department_lgus!announcements_csg_department_lgu_id_fkey(*),
-      cspsg_division:cspsg_divisions!announcements_cspsg_division_id_fkey(*)
+      cspsg_division:cspsg_divisions!announcements_cspsg_division_id_fkey(*),
+      csg:csg!announcements_csg_id_fkey(*),
+      cspsg:cspsg!announcements_cspsg_id_fkey(*)
     `)
     .eq("is_active", true)
     .or(`expires_at.is.null,expires_at.gt.${new Date().toISOString()}`)
@@ -1983,6 +1991,8 @@ export async function createAnnouncement(
       club_id: data.club_id || null,
       csg_department_lgu_id: data.csg_department_lgu_id || null,
       cspsg_division_id: data.cspsg_division_id || null,
+      csg_id: data.csg_id || null,
+      cspsg_id: data.cspsg_id || null,
       is_system_wide: data.is_system_wide || false,
       priority: data.priority || "normal",
       event_date: data.event_date || null,
@@ -2018,6 +2028,8 @@ export async function updateAnnouncement(
   if (data.club_id !== undefined) updates.club_id = data.club_id;
   if (data.csg_department_lgu_id !== undefined) updates.csg_department_lgu_id = data.csg_department_lgu_id;
   if (data.cspsg_division_id !== undefined) updates.cspsg_division_id = data.cspsg_division_id;
+  if (data.csg_id !== undefined) updates.csg_id = data.csg_id;
+  if (data.cspsg_id !== undefined) updates.cspsg_id = data.cspsg_id;
   if (data.is_system_wide !== undefined) updates.is_system_wide = data.is_system_wide;
   if (data.priority !== undefined) updates.priority = data.priority;
   if (data.event_date !== undefined) updates.event_date = data.event_date;
@@ -2125,6 +2137,36 @@ export async function getAnnouncementsByCsgDepartmentLgu(
       csg_department_lgu:csg_department_lgus!announcements_csg_department_lgu_id_fkey(*)
     `)
     .eq('csg_department_lgu_id', csgLguId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data as AnnouncementWithRelations[]) || [];
+}
+
+export async function getAnnouncementsByCsg(csgId: string): Promise<AnnouncementWithRelations[]> {
+  const { data, error } = await supabase
+    .from('announcements')
+    .select(`
+      *,
+      posted_by:profiles!announcements_posted_by_id_fkey(*),
+      csg:csg!announcements_csg_id_fkey(*)
+    `)
+    .eq('csg_id', csgId)
+    .order('created_at', { ascending: false });
+
+  if (error) throw error;
+  return (data as AnnouncementWithRelations[]) || [];
+}
+
+export async function getAnnouncementsByCspsg(cspsgId: string): Promise<AnnouncementWithRelations[]> {
+  const { data, error } = await supabase
+    .from('announcements')
+    .select(`
+      *,
+      posted_by:profiles!announcements_posted_by_id_fkey(*),
+      cspsg:cspsg!announcements_cspsg_id_fkey(*)
+    `)
+    .eq('cspsg_id', cspsgId)
     .order('created_at', { ascending: false });
 
   if (error) throw error;

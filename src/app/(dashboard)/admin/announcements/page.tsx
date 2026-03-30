@@ -30,7 +30,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useToast } from "@/components/ui/Toast";
 import { Avatar } from "@/components/ui/Avatar";
 
-type FilterType = "all" | "system" | "department" | "office" | "club" | "csg_department_lgu" | "cspsg_division";
+type FilterType = "all" | "system" | "department" | "office" | "club" | "csg_department_lgu" | "cspsg_division" | "csg" | "cspsg";
 
 const priorityColors = {
   low: "bg-gray-100 text-gray-600",
@@ -102,6 +102,8 @@ export default function AdminAnnouncementsPage() {
     if (announcement.club_id) return "club";
     if (announcement.csg_department_lgu_id) return "csg_department_lgu";
     if (announcement.cspsg_division_id) return "cspsg_division";
+    if (announcement.csg_id) return "csg";
+    if (announcement.cspsg_id) return "cspsg";
     return "system";
   };
 
@@ -125,11 +127,23 @@ export default function AdminAnnouncementsPage() {
     if (announcement.cspsg_division) {
       return { label: announcement.cspsg_division.name, icon: Building2, color: "text-teal-600 bg-teal-100" };
     }
+    if (announcement.csg) {
+      return { label: announcement.csg.name, icon: Shield, color: "text-indigo-600 bg-indigo-100" };
+    }
+    if (announcement.cspsg) {
+      return { label: announcement.cspsg.name, icon: Shield, color: "text-purple-600 bg-purple-100" };
+    }
     if (announcement.csg_department_lgu_id) {
       return { label: "LGU", icon: Shield, color: "text-indigo-600 bg-indigo-100" };
     }
     if (announcement.cspsg_division_id) {
       return { label: "CSPSG Division", icon: Building2, color: "text-teal-600 bg-teal-100" };
+    }
+    if (announcement.csg_id) {
+      return { label: "CSG", icon: Shield, color: "text-indigo-600 bg-indigo-100" };
+    }
+    if (announcement.cspsg_id) {
+      return { label: "CSPSG", icon: Shield, color: "text-purple-600 bg-purple-100" };
     }
     return { label: "Unknown", icon: Globe, color: "text-gray-600 bg-gray-100" };
   };
@@ -232,6 +246,8 @@ export default function AdminAnnouncementsPage() {
     { value: "club", label: "Club" },
     { value: "csg_department_lgu", label: "LGU" },
     { value: "cspsg_division", label: "CSPSG Div" },
+    { value: "csg", label: "CSG" },
+    { value: "cspsg", label: "CSPSG" },
   ];
 
   if (!currentUser) {

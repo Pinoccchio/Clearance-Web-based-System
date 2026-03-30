@@ -26,9 +26,11 @@ import {
   supabase,
   getAllDepartments,
   getAllClubs,
+  getAllCspsgDivisions,
   Department,
   Club,
   Course,
+  CspsgDivision,
 } from "@/lib/supabase";
 import { useToast } from "@/components/ui/Toast";
 
@@ -68,6 +70,7 @@ export function BatchImportModal({
   const [departments, setDepartments] = useState<Department[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [clubs, setClubs] = useState<Club[]>([]);
+  const [cspsgDivisions, setCspsgDivisions] = useState<CspsgDivision[]>([]);
   const [loadingRef, setLoadingRef] = useState(true);
 
   // Fetch reference data when modal opens
@@ -80,13 +83,15 @@ export function BatchImportModal({
   const fetchReferenceData = async () => {
     setLoadingRef(true);
     try {
-      const [deptsData, clubsData] = await Promise.all([
+      const [deptsData, clubsData, divsData] = await Promise.all([
         getAllDepartments(),
         getAllClubs(),
+        getAllCspsgDivisions(),
       ]);
 
       setDepartments(deptsData.filter(d => d.status === "active"));
       setClubs(clubsData.filter(c => c.status === "active"));
+      setCspsgDivisions(divsData.filter(d => d.status === "active"));
 
       // Fetch all courses for all active departments
       const allCourses: Course[] = [];
@@ -145,7 +150,7 @@ export function BatchImportModal({
       const { data } = parseExcelFile(buffer);
 
       // Validate rows
-      const result = validateRows(data, departments, courses, clubs);
+      const result = validateRows(data, departments, courses, clubs, cspsgDivisions);
       setValidRows(result.rows);
       setValidationErrors(result.errors);
 
@@ -161,7 +166,7 @@ export function BatchImportModal({
 
   // Download template
   const handleDownloadTemplate = () => {
-    downloadExcelTemplate(departments, courses, clubs);
+    downloadExcelTemplate(departments, courses, clubs, cspsgDivisions);
     showToast("success", "Template Downloaded", "Check your downloads folder");
   };
 
@@ -375,6 +380,7 @@ export function BatchImportModal({
                   <th className="px-3 py-2 text-left font-medium text-gray-600 text-xs">Course</th>
                   <th className="px-3 py-2 text-left font-medium text-gray-600 text-xs">Year</th>
                   <th className="px-3 py-2 text-left font-medium text-gray-600 text-xs">Clubs</th>
+                  <th className="px-3 py-2 text-left font-medium text-gray-600 text-xs">CSPSG Div</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -390,11 +396,12 @@ export function BatchImportModal({
                     <td className="px-3 py-2 text-xs">{row.course}</td>
                     <td className="px-3 py-2 text-xs">{row.yearLevel}</td>
                     <td className="px-3 py-2 text-xs text-gray-500">{row.enrolledClubCodes || '-'}</td>
+                    <td className="px-3 py-2 text-xs text-gray-500">{row.cspsgDivisionCode || '-'}</td>
                   </tr>
                 ))}
                 {validRows.length > 10 && (
                   <tr>
-                    <td colSpan={10} className="px-3 py-2 text-center text-gray-500 text-xs">
+                    <td colSpan={11} className="px-3 py-2 text-center text-gray-500 text-xs">
                       ... and {validRows.length - 10} more students
                     </td>
                   </tr>
