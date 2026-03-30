@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { Facebook, Smartphone, Phone, Mail, MapPin } from "lucide-react";
+import { Facebook, Globe, Smartphone, Phone, Mail, MapPin } from "lucide-react";
 
 export function LandingFooter() {
   return (
@@ -31,11 +31,9 @@ export function LandingFooter() {
               </div>
             </div>
             <p className="text-white font-bold text-lg mb-1">Cor Jesu College</p>
-            <p className="text-sm mb-4">
-              Sacred Heart Avenue, Digos City
-            </p>
+            <p className="text-sm mb-4">Sacred Heart Avenue, Digos City</p>
             <p className="text-sm leading-relaxed max-w-md mx-auto md:mx-0">
-              A digital clearance tracking system for students, departments, offices, and organizations of Cor Jesu College.
+              A digital clearance tracking system for students, departments, offices, organizations, and student governments of Cor Jesu College.
             </p>
           </div>
 
@@ -43,12 +41,12 @@ export function LandingFooter() {
           <div>
             <h4 className="text-white font-bold mb-4">Colleges</h4>
             <ul className="space-y-2.5 text-sm">
-              <li>CABE</li>
-              <li>CEDAS</li>
-              <li>CCIS</li>
-              <li>CHS</li>
-              <li>COE</li>
-              <li>CSP</li>
+              <li>College of Accountancy &amp; Business Education</li>
+              <li>College of Education, Arts &amp; Sciences</li>
+              <li>College of Computing &amp; Information Sciences</li>
+              <li>College of Health Sciences</li>
+              <li>College of Engineering</li>
+              <li>College of Special Programs</li>
             </ul>
           </div>
 
@@ -80,13 +78,24 @@ export function LandingFooter() {
             <h4 className="text-white font-bold mb-4">Follow CJC</h4>
             <div className="flex gap-3 justify-center md:justify-start">
               <a
-                href="https://facebook.com/CorJesuCollegeDigos"
+                href="https://www.facebook.com/corjesucollege"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors"
                 aria-label="Facebook"
+                title="Facebook"
               >
                 <Facebook className="w-4 h-4" />
+              </a>
+              <a
+                href="https://www.cjc.edu.ph"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-9 h-9 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition-colors"
+                aria-label="Official Website"
+                title="Official Website"
+              >
+                <Globe className="w-4 h-4" />
               </a>
             </div>
           </div>
@@ -98,7 +107,7 @@ export function LandingFooter() {
             &copy; {new Date().getFullYear()} Cor Jesu College. All rights reserved.
           </p>
           <p className="text-white/50">
-            Student Clearance System
+            Developed by College of Computing &amp; Information Sciences (CCIS)
           </p>
         </div>
       </div>

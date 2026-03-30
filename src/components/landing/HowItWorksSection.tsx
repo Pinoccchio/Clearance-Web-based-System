@@ -9,17 +9,17 @@ const STEPS = [
   {
     step: "02",
     title: "Initiate Your Clearance Request",
-    desc: "Start a semester clearance request from your dashboard. The system automatically generates clearance items for your department, all school offices, and the clubs you are enrolled in.",
+    desc: "Start a semester clearance request from your dashboard. The system automatically generates clearance items for your department, all school offices, the clubs you are enrolled in, and your student government (CSG or CSPSG depending on your program).",
   },
   {
     step: "03",
     title: "Submit Requirements Per Source",
-    desc: "For each department, office, or club, upload the required documents or attachments. Each source reviews your submission and will mark your item as Approved, Rejected, or On Hold.",
+    desc: "For each clearance source — department, office, club, LGU, or student government — upload the required documents or attachments. Some requirements are fulfilled automatically when staff scan your ID at an event using the attendance scanner — no upload needed for those.",
   },
   {
     step: "04",
     title: "View Your Completed Clearance",
-    desc: "Once every department, office, and club has approved your items, your overall clearance status becomes Completed. You are fully cleared for the semester.",
+    desc: "Once every department, office, club, LGU, and student government has approved your items, your overall clearance status becomes Completed. You are fully cleared for the semester.",
   },
 ];
 

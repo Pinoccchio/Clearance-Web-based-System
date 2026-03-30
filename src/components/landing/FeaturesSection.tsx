@@ -1,11 +1,11 @@
 "use client";
 
 import Image from "next/image";
-import { CheckCircle2, Users, FileCheck } from "lucide-react";
+import { CheckCircle2, Users, FileCheck, ScanLine } from "lucide-react";
 
 interface ClearanceSource {
   name: string;
-  type: "department" | "office" | "club";
+  type: "department" | "office" | "club" | "csg" | "cspsg" | "csg_department_lgu" | "cspsg_division";
   logo_url: string | null;
 }
 
@@ -30,7 +30,7 @@ export function FeaturesSection({ clearanceSources }: FeaturesSectionProps) {
               All your clearance sources
             </h3>
             <p className="text-white/70 text-lg leading-relaxed max-w-2xl">
-              See your status across every department, office, and club. Check what you still need to settle before heading to each one.
+              See your status across every department, office, club, student government, and organization. Check what you still need to settle before heading to each one.
             </p>
           </div>
 
@@ -57,7 +57,11 @@ export function FeaturesSection({ clearanceSources }: FeaturesSectionProps) {
                           ? "text-cjc-gold"
                           : source.type === "office"
                             ? "text-cjc-crimson-light"
-                            : "text-green-400"
+                            : source.type === "club"
+                              ? "text-green-400"
+                              : source.type === "csg" || source.type === "cspsg"
+                                ? "text-blue-300"
+                                : "text-purple-300"
                       }`}
                     />
                   )}
@@ -78,8 +82,8 @@ export function FeaturesSection({ clearanceSources }: FeaturesSectionProps) {
           </div>
         </div>
 
-        {/* Two-Column Feature Cards */}
-        <div className="grid md:grid-cols-2 gap-6">
+        {/* Three-Column Feature Cards */}
+        <div className="grid md:grid-cols-3 gap-6">
           {/* Role-Based Access */}
           <div className="bg-card rounded-lg p-6 shadow-sm border border-border hover:shadow-md transition-shadow duration-200 text-center md:text-left fade-in-up fade-in-up-delay-2">
             <div className="w-12 h-12 rounded-lg bg-cjc-red-dark flex items-center justify-center mb-5 mx-auto md:mx-0">
@@ -103,6 +107,19 @@ export function FeaturesSection({ clearanceSources }: FeaturesSectionProps) {
             </h3>
             <p className="text-muted-foreground text-sm leading-relaxed">
               Upload required documents online. Your files are saved securely so you won&apos;t lose them.
+            </p>
+          </div>
+
+          {/* Attendance Scanner */}
+          <div className="bg-card rounded-lg p-6 shadow-sm border border-border hover:shadow-md transition-shadow duration-200 text-center md:text-left fade-in-up fade-in-up-delay-3">
+            <div className="w-12 h-12 rounded-lg bg-cjc-red-dark flex items-center justify-center mb-5 mx-auto md:mx-0">
+              <ScanLine className="w-6 h-6 text-white" />
+            </div>
+            <h3 className="text-lg font-display font-bold text-foreground mb-2">
+              Attendance Scanner
+            </h3>
+            <p className="text-muted-foreground text-sm leading-relaxed">
+              Some requirements are fulfilled automatically when staff scan your ID at an event. No upload needed — attendance is recorded on the spot.
             </p>
           </div>
         </div>

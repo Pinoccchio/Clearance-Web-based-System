@@ -25,8 +25,14 @@ const CampusMapSection = dynamic(
 
 interface ClearanceSource {
   name: string;
-  type: "department" | "office" | "club";
+  type: "department" | "office" | "club" | "csg" | "cspsg" | "csg_department_lgu" | "cspsg_division";
   logo_url: string | null;
+}
+
+interface SystemSettings {
+  academic_year: string | null;
+  current_semester: string | null;
+  semester_deadline: string | null;
 }
 
 export default function LandingPage() {
@@ -39,7 +45,10 @@ export default function LandingPage() {
     departments: 0,
     offices: 0,
     clubs: 0,
+    requirements: 0,
+    events: 0,
   });
+  const [systemSettings, setSystemSettings] = useState<SystemSettings | null>(null);
   const [clearanceSources, setClearanceSources] = useState<ClearanceSource[]>([]);
   const [announcements, setAnnouncements] = useState<AnnouncementWithRelations[]>([]);
   const [selectedAnnouncement, setSelectedAnnouncement] = useState<AnnouncementWithRelations | null>(null);
@@ -55,28 +64,46 @@ export default function LandingPage() {
   useEffect(() => {
     async function fetchStats() {
       try {
-        const [deptResult, officeResult, clubResult] = await Promise.all([
+        const [deptResult, officeResult, clubResult, reqResult, eventResult] = await Promise.all([
           supabase.from("departments").select("id", { count: "exact", head: true }).eq("status", "active"),
           supabase.from("offices").select("id", { count: "exact", head: true }).eq("status", "active"),
           supabase.from("clubs").select("id", { count: "exact", head: true }).eq("status", "active"),
+          supabase.from("requirements").select("id", { count: "exact", head: true }),
+          supabase.from("events").select("id", { count: "exact", head: true }),
         ]);
 
         setStats({
           departments: deptResult.count || 0,
           offices: officeResult.count || 0,
           clubs: clubResult.count || 0,
+          requirements: reqResult.count || 0,
+          events: eventResult.count || 0,
         });
 
-        const [depts, offices, clubs] = await Promise.all([
+        const [depts, offices, clubs, lgus, cspsgDivisions, csgRows, cspsgRows] = await Promise.all([
           supabase.from("departments").select("name, logo_url").eq("status", "active").order("name"),
           supabase.from("offices").select("name, logo_url").eq("status", "active").order("name"),
           supabase.from("clubs").select("name, logo_url").eq("status", "active").order("name"),
+          supabase.from("csg_department_lgus").select("name, logo_url").eq("status", "active").order("name"),
+          supabase.from("cspsg_divisions").select("name, logo_url").eq("status", "active").order("name"),
+          supabase.from("csg").select("name, logo_url").eq("status", "active").order("name"),
+          supabase.from("cspsg").select("name, logo_url").eq("status", "active").order("name"),
         ]);
+
+        const settingsResult = await supabase
+          .from("system_settings")
+          .select("academic_year, current_semester, semester_deadline")
+          .maybeSingle();
+        if (settingsResult.data) setSystemSettings(settingsResult.data);
 
         const sources: ClearanceSource[] = [
           ...(depts.data || []).map((d) => ({ name: d.name, type: "department" as const, logo_url: d.logo_url })),
           ...(offices.data || []).map((o) => ({ name: o.name, type: "office" as const, logo_url: o.logo_url })),
           ...(clubs.data || []).map((c) => ({ name: c.name, type: "club" as const, logo_url: c.logo_url })),
+          ...(lgus.data || []).map((l) => ({ name: l.name, type: "csg_department_lgu" as const, logo_url: l.logo_url })),
+          ...(cspsgDivisions.data || []).map((d) => ({ name: d.name, type: "cspsg_division" as const, logo_url: d.logo_url })),
+          ...(csgRows.data || []).map((c) => ({ name: c.name, type: "csg" as const, logo_url: c.logo_url })),
+          ...(cspsgRows.data || []).map((c) => ({ name: c.name, type: "cspsg" as const, logo_url: c.logo_url })),
         ];
         setClearanceSources(sources);
 
@@ -112,7 +139,7 @@ export default function LandingPage() {
     <>
       <div className="min-h-screen bg-background">
         <LandingHeader onSignIn={openAuthModal} />
-        <HeroSection stats={stats} onSignIn={openAuthModal} />
+        <HeroSection stats={stats} systemSettings={systemSettings} onSignIn={openAuthModal} />
         <FeaturesSection clearanceSources={clearanceSources} />
         <AnnouncementsSection
           announcements={announcements}
