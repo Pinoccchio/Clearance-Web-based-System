@@ -273,6 +273,7 @@ export default function StudentAnnouncementsPage() {
           <Select
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value)}
+            containerClassName="sm:w-44"
             options={[
               { value: "all", label: "All Priorities" },
               { value: "urgent", label: "Urgent" },

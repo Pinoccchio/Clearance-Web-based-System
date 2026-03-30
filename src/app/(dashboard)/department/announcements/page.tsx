@@ -301,6 +301,7 @@ export default function DepartmentAnnouncementsPage() {
               <Select
                 value={priorityFilter}
                 onChange={(e) => setPriorityFilter(e.target.value)}
+                containerClassName="sm:w-44"
                 options={[
                   { value: "all", label: "All Priorities" },
                   { value: "low", label: "Low" },
@@ -453,6 +454,7 @@ export default function DepartmentAnnouncementsPage() {
               <Select
                 value={priorityFilter}
                 onChange={(e) => setPriorityFilter(e.target.value)}
+                containerClassName="sm:w-44"
                 options={[
                   { value: "all", label: "All Priorities" },
                   { value: "low", label: "Low" },
