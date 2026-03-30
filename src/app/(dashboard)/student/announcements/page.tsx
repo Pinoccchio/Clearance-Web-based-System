@@ -16,7 +16,7 @@ import {
   Users,
   Shield,
 } from "lucide-react";
-import { AnnouncementWithRelations, getActiveAnnouncements } from "@/lib/supabase";
+import { AnnouncementWithRelations, getActiveAnnouncements, getCsgDepartmentLguByDepartmentCode, getCspsgDivisionByCode } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth-context";
 import { AnnouncementDetailModal } from "@/components/features/AnnouncementDetailModal";
 import { Select } from "@/components/ui/Select";
@@ -52,7 +52,7 @@ export default function StudentAnnouncementsPage() {
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [priorityFilter, setPriorityFilter] = useState("all");
-  const [scopeFilter, setScopeFilter] = useState<"all" | "system" | "department" | "office" | "club" | "csg_department_lgu" | "cspsg_division">("all");
+  const [scopeFilter, setScopeFilter] = useState<"all" | "system" | "department" | "office" | "club" | "csg" | "csg_department_lgu" | "cspsg" | "cspsg_division">("all");
 
   // Detail modal state
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
@@ -70,8 +70,22 @@ export default function StudentAnnouncementsPage() {
       const enrolledClubIds = profile.enrolled_clubs
         ? profile.enrolled_clubs.split(",").map((id) => id.trim()).filter(Boolean)
         : [];
-      // Show system-wide announcements, department-specific, or club-specific
-      // CSP students see CSPSG Division announcements only; regular students see LGU only
+
+      // Look up the student's LGU id (regular students) or division id (CSP students)
+      // to filter org-specific announcements correctly
+      let studentLguId: string | null = null;
+      let studentDivisionId: string | null = null;
+      if (!isCsp && profile.department) {
+        const lgu = await getCsgDepartmentLguByDepartmentCode(profile.department);
+        studentLguId = lgu?.id ?? null;
+      }
+      if (isCsp && profile.cspsg_division) {
+        const div = await getCspsgDivisionByCode(profile.cspsg_division);
+        studentDivisionId = div?.id ?? null;
+      }
+
+      // Show system-wide announcements, department-specific, office (all offices apply to all students),
+      // enrolled clubs, CSG school-wide (non-CSP), this student's LGU only, CSPSG school-wide (CSP), this student's division only
       const visible = all.filter(
         (a) =>
           a.is_system_wide ||
@@ -79,9 +93,9 @@ export default function StudentAnnouncementsPage() {
           (a.office_id) ||
           (a.club_id && enrolledClubIds.includes(a.club_id)) ||
           (a.csg_id && !isCsp) ||
-          (a.csg_department_lgu_id && !isCsp) ||
+          (a.csg_department_lgu_id && !isCsp && studentLguId && a.csg_department_lgu_id === studentLguId) ||
           (a.cspsg_id && isCsp) ||
-          (a.cspsg_division_id && isCsp)
+          (a.cspsg_division_id && isCsp && studentDivisionId && a.cspsg_division_id === studentDivisionId)
       );
       // Sort by priority then date
       visible.sort((a, b) => {
@@ -104,12 +118,14 @@ export default function StudentAnnouncementsPage() {
 
   useRealtimeRefresh('announcements', loadData);
 
-  const getAnnouncementScope = (a: AnnouncementWithRelations): "system" | "department" | "office" | "club" | "csg_department_lgu" | "cspsg_division" => {
+  const getAnnouncementScope = (a: AnnouncementWithRelations): "system" | "department" | "office" | "club" | "csg" | "csg_department_lgu" | "cspsg" | "cspsg_division" => {
     if (a.is_system_wide) return "system";
     if (a.department_id) return "department";
     if (a.office_id) return "office";
     if (a.club_id) return "club";
+    if (a.csg_id) return "csg";
     if (a.csg_department_lgu_id) return "csg_department_lgu";
+    if (a.cspsg_id) return "cspsg";
     if (a.cspsg_division_id) return "cspsg_division";
     return "system";
   };
@@ -130,8 +146,10 @@ export default function StudentAnnouncementsPage() {
     deptSpecific: announcements.filter((a) => !a.is_system_wide && a.department_id).length,
     officeSpecific: announcements.filter((a) => !a.is_system_wide && a.office_id).length,
     clubSpecific: announcements.filter((a) => !a.is_system_wide && a.club_id).length,
+    csgSpecific: announcements.filter((a) => !a.is_system_wide && a.csg_id).length,
     csgLguSpecific: announcements.filter((a) => !a.is_system_wide && a.csg_department_lgu_id).length,
-    cspsgSpecific: announcements.filter((a) => !a.is_system_wide && a.cspsg_division_id).length,
+    cspsgSpecific: announcements.filter((a) => !a.is_system_wide && a.cspsg_id).length,
+    cspsgDivSpecific: announcements.filter((a) => !a.is_system_wide && a.cspsg_division_id).length,
   };
 
   const formatDate = (dateString: string) =>
@@ -152,7 +170,8 @@ export default function StudentAnnouncementsPage() {
 
   const roleLabel: Record<string, string> = {
     admin: "Admin", department: "Department", office: "Office",
-    club: "Club", student: "Student", csg_department_lgu: "LGU", cspsg_division: "CSPSG Division",
+    club: "Club", student: "Student", csg: "CSG", csg_department_lgu: "LGU",
+    cspsg: "CSPSG", cspsg_division: "CSPSG Division",
   };
   const getPostedByName = (a: AnnouncementWithRelations) => {
     if (!a.posted_by) return "Unknown";
@@ -192,7 +211,7 @@ export default function StudentAnnouncementsPage() {
         )}
 
         {/* Stats Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 sm:gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4">
           <div className="card p-4 text-center">
             <p className="text-2xl font-bold text-cjc-navy">{stats.total}</p>
             <p className="text-sm text-warm-muted">Total</p>
@@ -219,13 +238,25 @@ export default function StudentAnnouncementsPage() {
           </div>
           {!isCsp && (
             <div className="card p-4 text-center">
-              <p className="text-2xl font-bold text-indigo-500">{stats.csgLguSpecific}</p>
+              <p className="text-2xl font-bold text-indigo-500">{stats.csgSpecific}</p>
+              <p className="text-sm text-warm-muted">CSG</p>
+            </div>
+          )}
+          {!isCsp && (
+            <div className="card p-4 text-center">
+              <p className="text-2xl font-bold text-indigo-400">{stats.csgLguSpecific}</p>
               <p className="text-sm text-warm-muted">LGU</p>
             </div>
           )}
           {isCsp && (
             <div className="card p-4 text-center">
               <p className="text-2xl font-bold text-teal-500">{stats.cspsgSpecific}</p>
+              <p className="text-sm text-warm-muted">CSPSG</p>
+            </div>
+          )}
+          {isCsp && (
+            <div className="card p-4 text-center">
+              <p className="text-2xl font-bold text-teal-400">{stats.cspsgDivSpecific}</p>
               <p className="text-sm text-warm-muted">CSPSG Div</p>
             </div>
           )}
@@ -239,8 +270,10 @@ export default function StudentAnnouncementsPage() {
             { value: "department" as const, label: "Department", count: stats.deptSpecific },
             { value: "office" as const, label: "Offices", count: stats.officeSpecific },
             { value: "club" as const, label: "Clubs", count: stats.clubSpecific },
+            ...(!isCsp ? [{ value: "csg" as const, label: "CSG", count: stats.csgSpecific }] : []),
             ...(!isCsp ? [{ value: "csg_department_lgu" as const, label: "LGU", count: stats.csgLguSpecific }] : []),
-            ...(isCsp ? [{ value: "cspsg_division" as const, label: "CSPSG Div", count: stats.cspsgSpecific }] : []),
+            ...(isCsp ? [{ value: "cspsg" as const, label: "CSPSG", count: stats.cspsgSpecific }] : []),
+            ...(isCsp ? [{ value: "cspsg_division" as const, label: "CSPSG Div", count: stats.cspsgDivSpecific }] : []),
           ]).map((tab) => (
             <button
               key={tab.value}
@@ -332,13 +365,23 @@ export default function StudentAnnouncementsPage() {
                           <Users className="w-3 h-3" />
                           {a.club?.name ?? "Club"}
                         </span>
-                      ) : a.csg_department_lgu_id ? (
+                      ) : a.csg_id ? (
                         <span className="inline-flex items-center gap-1 text-xs text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full">
+                          <Shield className="w-3 h-3" />
+                          {a.csg?.name ?? "CSG"}
+                        </span>
+                      ) : a.csg_department_lgu_id ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-full">
                           <Shield className="w-3 h-3" />
                           {a.csg_department_lgu?.name ?? "LGU"}
                         </span>
-                      ) : a.cspsg_division_id ? (
+                      ) : a.cspsg_id ? (
                         <span className="inline-flex items-center gap-1 text-xs text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full">
+                          <Shield className="w-3 h-3" />
+                          {a.cspsg?.name ?? "CSPSG"}
+                        </span>
+                      ) : a.cspsg_division_id ? (
+                        <span className="inline-flex items-center gap-1 text-xs text-teal-500 bg-teal-50 px-2 py-0.5 rounded-full">
                           <Building2 className="w-3 h-3" />
                           {a.cspsg_division?.name ?? "CSPSG Division"}
                         </span>

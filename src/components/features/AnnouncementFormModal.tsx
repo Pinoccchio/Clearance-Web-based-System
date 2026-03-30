@@ -195,6 +195,8 @@ export function AnnouncementFormModal({
         ...(currentUser.role === "club" && departmentId ? { club_id: departmentId } : {}),
         ...(currentUser.role === "csg_department_lgu" && departmentId ? { csg_department_lgu_id: departmentId } : {}),
         ...(currentUser.role === "cspsg_division" && departmentId ? { cspsg_division_id: departmentId } : {}),
+        ...(currentUser.role === "csg" && departmentId ? { csg_id: departmentId } : {}),
+        ...(currentUser.role === "cspsg" && departmentId ? { cspsg_id: departmentId } : {}),
       });
     }
     setErrors({});
@@ -313,9 +315,7 @@ export function AnnouncementFormModal({
             break;
         }
       } else {
-        // Non-admin users post to their linked entity
-        // This would need to be set based on their actual linked entity
-        // For now, we'll rely on the backend to enforce this
+        // Non-admin org heads post to their own linked entity
         switch (currentUser.role) {
           case "department":
             department_id = formData.department_id || departmentId || null;
@@ -331,6 +331,12 @@ export function AnnouncementFormModal({
             break;
           case "cspsg_division":
             cspsg_division_id = formData.cspsg_division_id || departmentId || null;
+            break;
+          case "csg":
+            csg_id = formData.csg_id || departmentId || null;
+            break;
+          case "cspsg":
+            cspsg_id = formData.cspsg_id || departmentId || null;
             break;
         }
       }
