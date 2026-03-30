@@ -25,8 +25,8 @@ import {
   getAllDepartments,
   getAllOffices,
   getAllClubs,
-  getAllCsgLgus,
-  getAllCspspDivisions,
+  getAllCsgDepartmentLgus,
+  getAllCspsgDivisions,
   StudentAttendanceWithEvent,
 } from "@/lib/supabase";
 
@@ -49,21 +49,21 @@ export default function StudentEventsPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const [attendance, depts, offices, clubs, csgLgus, cspspDivisions] = await Promise.all([
+      const [attendance, depts, offices, clubs, csgDepartmentLgus, cspsgDivisions] = await Promise.all([
         getStudentAttendanceWithEvents(profile.id),
         getAllDepartments(),
         getAllOffices(),
         getAllClubs(),
-        getAllCsgLgus(),
-        getAllCspspDivisions(),
+        getAllCsgDepartmentLgus(),
+        getAllCspsgDivisions(),
       ]);
 
       const names: Record<string, { name: string; code: string; logo_url: string | null }> = {};
       for (const d of depts) names[d.id] = { name: d.name, code: d.code, logo_url: d.logo_url ?? null };
       for (const o of offices) names[o.id] = { name: o.name, code: o.code, logo_url: o.logo_url ?? null };
       for (const c of clubs) names[c.id] = { name: c.name, code: c.code, logo_url: c.logo_url ?? null };
-      for (const l of csgLgus) names[l.id] = { name: l.name, code: l.code, logo_url: l.logo_url ?? null };
-      for (const d of cspspDivisions) names[d.id] = { name: d.name, code: d.code, logo_url: d.logo_url ?? null };
+      for (const l of csgDepartmentLgus) names[l.id] = { name: l.name, code: l.code, logo_url: l.logo_url ?? null };
+      for (const d of cspsgDivisions) names[d.id] = { name: d.name, code: d.code, logo_url: d.logo_url ?? null };
       setSourceNames(names);
       setRecords(attendance);
     } catch (err) {
@@ -181,9 +181,9 @@ export default function StudentEventsPage() {
                   ? Building2
                   : group.sourceType === "department"
                   ? GraduationCap
-                  : group.sourceType === "csg_lgu"
+                  : group.sourceType === "csg_department_lgu"
                   ? Shield
-                  : group.sourceType === "cspsp_division"
+                  : group.sourceType === "cspsg_division"
                   ? GraduationCap
                   : Users;
               const fallbackBg =
@@ -191,9 +191,9 @@ export default function StudentEventsPage() {
                   ? "bg-blue-100 text-blue-600"
                   : group.sourceType === "department"
                   ? "bg-amber-100 text-amber-600"
-                  : group.sourceType === "csg_lgu"
+                  : group.sourceType === "csg_department_lgu"
                   ? "bg-purple-100 text-purple-600"
-                  : group.sourceType === "cspsp_division"
+                  : group.sourceType === "cspsg_division"
                   ? "bg-teal-100 text-teal-600"
                   : "bg-green-100 text-green-600";
 

@@ -46,7 +46,7 @@ export default function LandingPage() {
   // Auto-redirect authenticated users to their dashboard
   useEffect(() => {
     if (!isLoading && isAuthenticated && profile) {
-      const rolePathMap: Record<string, string> = { csg_lgu: 'csg-lgu', cspsp_division: 'cspsp-division' };
+      const rolePathMap: Record<string, string> = { csg_department_lgu: 'csg-department-lgu', cspsg_division: 'cspsg-division' };
       router.push(`/${rolePathMap[profile.role] ?? profile.role}`);
     }
   }, [isLoading, isAuthenticated, profile, router]);

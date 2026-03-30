@@ -13,14 +13,18 @@ import {
   OfficeWithHead,
   ClubWithAdviser,
   Department,
-  CsgLgu,
-  CspspDivision,
+  CsgDepartmentLgu,
+  CspsgDivision,
+  Csg,
+  Cspsg,
   getClearanceItemsForStudent,
   getAllOffices,
   getAllClubs,
   getDepartmentByCode,
-  getCsgLguByDepartmentCode,
-  getCspspDivisionByCode,
+  getCsgDepartmentLguByDepartmentCode,
+  getCspsgDivisionByCode,
+  getActiveCsg,
+  getActiveCspsg,
 } from "@/lib/supabase";
 
 type ItemStatus = ClearanceItem["status"];
@@ -64,8 +68,10 @@ export function StudentClearanceProgressModal({
   const [offices, setOffices] = useState<OfficeWithHead[]>([]);
   const [clubs, setClubs] = useState<ClubWithAdviser[]>([]);
   const [studentDept, setStudentDept] = useState<Department | null>(null);
-  const [studentCsgLgu, setStudentCsgLgu] = useState<CsgLgu | null>(null);
-  const [studentCspspDiv, setStudentCspspDiv] = useState<CspspDivision | null>(null);
+  const [studentCsgDepartmentLgu, setStudentCsgDepartmentLgu] = useState<CsgDepartmentLgu | null>(null);
+  const [studentCspsgDiv, setStudentCspsgDiv] = useState<CspsgDivision | null>(null);
+  const [studentCsg, setStudentCsg] = useState<Csg | null>(null);
+  const [studentCspsg, setStudentCspsg] = useState<Cspsg | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
@@ -76,13 +82,16 @@ export function StudentClearanceProgressModal({
 
     (async () => {
       try {
-        const [itemsData, officesData, clubsData, deptData, csgLguData, cspspDivData] = await Promise.all([
+        const isCsp = student.department === "CSP";
+        const [itemsData, officesData, clubsData, deptData, csgDepartmentLguData, cspsgDivData, csgData, cspsgData] = await Promise.all([
           getClearanceItemsForStudent(student.id),
           getAllOffices(),
           getAllClubs(),
           student.department ? getDepartmentByCode(student.department) : Promise.resolve(null),
-          student.department && student.department !== "CSP" ? getCsgLguByDepartmentCode(student.department) : Promise.resolve(null),
-          student.cspsp_division ? getCspspDivisionByCode(student.cspsp_division) : Promise.resolve(null),
+          student.department && !isCsp ? getCsgDepartmentLguByDepartmentCode(student.department) : Promise.resolve(null),
+          student.cspsg_division ? getCspsgDivisionByCode(student.cspsg_division) : Promise.resolve(null),
+          !isCsp ? getActiveCsg() : Promise.resolve(null),
+          isCsp ? getActiveCspsg() : Promise.resolve(null),
         ]);
 
         if (cancelled) return;
@@ -91,8 +100,10 @@ export function StudentClearanceProgressModal({
         setOffices(officesData.filter((o) => o.status === "active"));
         setClubs(clubsData.filter((c) => c.status === "active"));
         setStudentDept(deptData);
-        setStudentCsgLgu(csgLguData);
-        setStudentCspspDiv(cspspDivData);
+        setStudentCsgDepartmentLgu(csgDepartmentLguData);
+        setStudentCspsgDiv(cspsgDivData);
+        setStudentCsg(csgData);
+        setStudentCspsg(cspsgData);
       } catch (err) {
         console.error("Failed to load clearance progress:", err);
       } finally {
@@ -116,7 +127,8 @@ export function StudentClearanceProgressModal({
 
   // Total sources
   const totalSources = (studentDept ? 1 : 0) + offices.length + enrolledClubs.length
-    + (studentCsgLgu ? 1 : 0) + (studentCspspDiv ? 1 : 0);
+    + (studentCsg ? 1 : 0) + (studentCsgDepartmentLgu ? 1 : 0)
+    + (studentCspsg ? 1 : 0) + (studentCspsgDiv ? 1 : 0);
 
   // Find item for a specific source
   const getItemForSource = (sourceType: string, sourceId: string) => {
@@ -230,36 +242,70 @@ export function StudentClearanceProgressModal({
               </div>
             )}
 
-            {/* CSG LGU */}
-            {studentCsgLgu && (
+            {/* CSG */}
+            {studentCsg && (
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
                   <Landmark className="w-4 h-4" />
-                  CSG LGU (1)
+                  CSG (1)
                 </div>
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
-                    <p className="font-medium text-cjc-navy text-sm">{studentCsgLgu.name}</p>
-                    <p className="text-xs text-gray-400">{studentCsgLgu.code}</p>
+                    <p className="font-medium text-cjc-navy text-sm">{studentCsg.name}</p>
+                    <p className="text-xs text-gray-400">{studentCsg.code}</p>
                   </div>
-                  {getStatusBadge(getItemForSource("csg_lgu", studentCsgLgu.id)?.status)}
+                  {getStatusBadge(getItemForSource("csg", studentCsg.id)?.status)}
                 </div>
               </div>
             )}
 
-            {/* CSPSP Division */}
-            {studentCspspDiv && (
+            {/* LGU */}
+            {studentCsgDepartmentLgu && (
               <div className="space-y-2">
                 <div className="flex items-center gap-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
-                  <Flag className="w-4 h-4" />
-                  CSPSP Division (1)
+                  <Landmark className="w-4 h-4" />
+                  LGU (1)
                 </div>
                 <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                   <div>
-                    <p className="font-medium text-cjc-navy text-sm">{studentCspspDiv.name}</p>
-                    <p className="text-xs text-gray-400">{studentCspspDiv.code}</p>
+                    <p className="font-medium text-cjc-navy text-sm">{studentCsgDepartmentLgu.name}</p>
+                    <p className="text-xs text-gray-400">{studentCsgDepartmentLgu.code}</p>
                   </div>
-                  {getStatusBadge(getItemForSource("cspsp_division", studentCspspDiv.id)?.status)}
+                  {getStatusBadge(getItemForSource("csg_department_lgu", studentCsgDepartmentLgu.id)?.status)}
+                </div>
+              </div>
+            )}
+
+            {/* CSPSG */}
+            {studentCspsg && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  <Flag className="w-4 h-4" />
+                  CSPSG (1)
+                </div>
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <p className="font-medium text-cjc-navy text-sm">{studentCspsg.name}</p>
+                    <p className="text-xs text-gray-400">{studentCspsg.code}</p>
+                  </div>
+                  {getStatusBadge(getItemForSource("cspsg", studentCspsg.id)?.status)}
+                </div>
+              </div>
+            )}
+
+            {/* CSPSG Division */}
+            {studentCspsgDiv && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  <Flag className="w-4 h-4" />
+                  CSPSG Division (1)
+                </div>
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <p className="font-medium text-cjc-navy text-sm">{studentCspsgDiv.name}</p>
+                    <p className="text-xs text-gray-400">{studentCspsgDiv.code}</p>
+                  </div>
+                  {getStatusBadge(getItemForSource("cspsg_division", studentCspsgDiv.id)?.status)}
                 </div>
               </div>
             )}

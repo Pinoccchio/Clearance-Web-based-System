@@ -416,9 +416,14 @@ export default function OfficeClearancePage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <span className="text-sm text-gray-700">
-                          {s?.course ?? "—"} · Year {s?.year_level ?? "—"}
-                        </span>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm text-gray-700">
+                            {s?.course ?? "—"} · Year {s?.year_level ?? "—"}
+                          </span>
+                          <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${s?.department === "CSP" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"}`}>
+                            {s?.department === "CSP" ? "CSP" : "Regular"}
+                          </span>
+                        </div>
                       </TableCell>
                       <TableCell>
                         <TypeBadge type={item.request?.type ?? "semester"} />
@@ -537,6 +542,9 @@ export default function OfficeClearancePage() {
                   {student?.course ?? "—"} · Year {student?.year_level ?? "—"}
                 </p>
                 <div className="flex items-center gap-2 mt-2 flex-wrap">
+                  <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${student?.department === "CSP" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"}`}>
+                    {student?.department === "CSP" ? "CSP Student" : "Regular Student"}
+                  </span>
                   <TypeBadge type={request?.type ?? "semester"} />
                   <span className="text-xs text-gray-500">
                     {request

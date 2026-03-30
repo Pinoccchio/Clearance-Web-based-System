@@ -22,7 +22,7 @@ import {
 
 // Bottom nav items per role — max 4 + "More"
 function getBottomNavItems(role: UserRole) {
-  const roleToPath: Record<string, string> = { csg_lgu: "csg-lgu", cspsp_division: "cspsp-division" };
+  const roleToPath: Record<string, string> = { csg_department_lgu: "csg-department-lgu", cspsg_division: "cspsg-division" };
   const base = roleToPath[role] ?? role;
 
   switch (role) {
@@ -99,8 +99,8 @@ export default function DashboardLayout({
         router.push('/');
         return;
       }
-      const roleToPath: Record<string, string> = { csg_lgu: 'csg-lgu', cspsp_division: 'cspsp-division' };
-      const pathToRole: Record<string, string> = { 'csg-lgu': 'csg_lgu', 'cspsp-division': 'cspsp_division' };
+      const roleToPath: Record<string, string> = { csg_department_lgu: 'csg-department-lgu', cspsg_division: 'cspsg-division' };
+      const pathToRole: Record<string, string> = { 'csg-department-lgu': 'csg_department_lgu', 'cspsg-division': 'cspsg_division' };
       const pathSegment = pathname.split('/')[1];
       const roleFromPath = pathToRole[pathSegment] ?? pathSegment;
       if (profile && roleFromPath !== profile.role) {
@@ -134,7 +134,7 @@ export default function DashboardLayout({
 
   const role = profile.role as UserRole;
   const userName = `${profile.first_name} ${profile.last_name}`;
-  const isCsp = !!(profile.cspsp_division || profile.department === "CSP");
+  const isCsp = !!(profile.cspsg_division || profile.department === "CSP");
   const bottomNavItems = getBottomNavItems(role);
 
   const handleLogout = async () => {

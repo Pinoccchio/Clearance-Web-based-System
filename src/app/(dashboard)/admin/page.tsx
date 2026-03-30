@@ -27,8 +27,8 @@ import {
   getAllDepartments,
   getAllOffices,
   getAllClubs,
-  getAllCsgLgus,
-  getAllCspspDivisions,
+  getAllCsgDepartmentLgus,
+  getAllCspsgDivisions,
   getSystemSettings,
   getAllAnnouncements,
   SystemSettings,
@@ -36,8 +36,8 @@ import {
   DepartmentWithHead,
   OfficeWithHead,
   ClubWithAdviser,
-  CsgLguWithHead,
-  CspspDivisionWithHead,
+  CsgDepartmentLguWithHead,
+  CspsgDivisionWithHead,
 } from "@/lib/supabase";
 
 interface AdminStats {
@@ -50,9 +50,9 @@ interface AdminStats {
   clubs: number;
   clubAdvisers: number;
   csgLguHeads: number;
-  cspspDivisionHeads: number;
-  csgLgus: number;
-  cspspDivisions: number;
+  cspsgDivisionHeads: number;
+  csgDepartmentLgus: number;
+  cspsgDivisions: number;
   admins: number;
   activeAnnouncements: number;
 }
@@ -69,10 +69,14 @@ function getRoleBadge(role: string) {
       return <Badge variant="warning" size="sm"><Building2 className="w-3 h-3" /> Office Head</Badge>;
     case "club":
       return <Badge variant="neutral" size="sm"><UsersRound className="w-3 h-3" /> Club Adviser</Badge>;
-    case "csg_lgu":
-      return <Badge variant="info" size="sm"><Shield className="w-3 h-3" /> CSG LGU</Badge>;
-    case "cspsp_division":
-      return <Badge variant="neutral" size="sm"><GraduationCap className="w-3 h-3" /> CSPSP Div</Badge>;
+    case "csg":
+      return <Badge variant="warning" size="sm"><Shield className="w-3 h-3" /> CSG</Badge>;
+    case "csg_department_lgu":
+      return <Badge variant="info" size="sm"><Shield className="w-3 h-3" /> LGU</Badge>;
+    case "cspsg":
+      return <Badge variant="pending" size="sm"><GraduationCap className="w-3 h-3" /> CSPSG</Badge>;
+    case "cspsg_division":
+      return <Badge variant="neutral" size="sm"><GraduationCap className="w-3 h-3" /> CSPSG Div</Badge>;
     default:
       return <Badge variant="neutral" size="sm">{role}</Badge>;
   }
@@ -91,9 +95,9 @@ export default function AdminDashboard() {
     clubs: 0,
     clubAdvisers: 0,
     csgLguHeads: 0,
-    cspspDivisionHeads: 0,
-    csgLgus: 0,
-    cspspDivisions: 0,
+    cspsgDivisionHeads: 0,
+    csgDepartmentLgus: 0,
+    cspsgDivisions: 0,
     admins: 0,
     activeAnnouncements: 0,
   });
@@ -107,13 +111,13 @@ export default function AdminDashboard() {
       setError(null);
 
       // Parallel fetch all data
-      const [profiles, departments, offices, clubs, csgLgusData, cspspDivisionsData, announcements, settingsData] = await Promise.all([
+      const [profiles, departments, offices, clubs, csgDepartmentLgusData, cspsgDivisionsData, announcements, settingsData] = await Promise.all([
         getAllProfiles(),
         getAllDepartments(),
         getAllOffices(),
         getAllClubs(),
-        getAllCsgLgus(),
-        getAllCspspDivisions(),
+        getAllCsgDepartmentLgus(),
+        getAllCspsgDivisions(),
         getAllAnnouncements(),
         getSystemSettings(),
       ]);
@@ -126,7 +130,7 @@ export default function AdminDashboard() {
       let officeHeads = 0;
       let clubAdvisers = 0;
       let csgLguHeads = 0;
-      let cspspDivisionHeads = 0;
+      let cspsgDivisionHeads = 0;
       let admins = 0;
 
       for (const user of profiles) {
@@ -143,11 +147,11 @@ export default function AdminDashboard() {
           case "club":
             clubAdvisers++;
             break;
-          case "csg_lgu":
+          case "csg_department_lgu":
             csgLguHeads++;
             break;
-          case "cspsp_division":
-            cspspDivisionHeads++;
+          case "cspsg_division":
+            cspsgDivisionHeads++;
             break;
           case "admin":
             admins++;
@@ -159,8 +163,8 @@ export default function AdminDashboard() {
       const activeDepartments = departments.filter((d) => d.status === "active").length;
       const activeOffices = offices.filter((o) => o.status === "active").length;
       const activeClubs = clubs.filter((c) => c.status === "active").length;
-      const activeCsgLgus = csgLgusData.filter((l) => l.status === "active").length;
-      const activeCspspDivisions = cspspDivisionsData.filter((d) => d.status === "active").length;
+      const activeCsgDepartmentLgus = csgDepartmentLgusData.filter((l) => l.status === "active").length;
+      const activeCspsgDivisions = cspsgDivisionsData.filter((d) => d.status === "active").length;
 
       // Count active announcements (not expired)
       const now = new Date();
@@ -179,9 +183,9 @@ export default function AdminDashboard() {
         clubs: activeClubs,
         clubAdvisers,
         csgLguHeads,
-        cspspDivisionHeads,
-        csgLgus: activeCsgLgus,
-        cspspDivisions: activeCspspDivisions,
+        cspsgDivisionHeads,
+        csgDepartmentLgus: activeCsgDepartmentLgus,
+        cspsgDivisions: activeCspsgDivisions,
         admins,
         activeAnnouncements,
       });
@@ -353,14 +357,14 @@ export default function AdminDashboard() {
               <Shield className="w-5 h-5 text-indigo-600" />
               <div>
                 <p className="text-lg font-bold text-indigo-700">{stats.csgLguHeads}</p>
-                <p className="text-xs text-indigo-600">CSG LGU Heads</p>
+                <p className="text-xs text-indigo-600">LGU Heads</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-2 sm:p-3 bg-teal-50 rounded-lg">
               <GraduationCap className="w-5 h-5 text-teal-600" />
               <div>
-                <p className="text-lg font-bold text-teal-700">{stats.cspspDivisionHeads}</p>
-                <p className="text-xs text-teal-600">CSPSP Div Heads</p>
+                <p className="text-lg font-bold text-teal-700">{stats.cspsgDivisionHeads}</p>
+                <p className="text-xs text-teal-600">CSPSG Div Heads</p>
               </div>
             </div>
             <div className="flex items-center gap-3 p-2 sm:p-3 bg-red-50 rounded-lg">
@@ -434,7 +438,7 @@ export default function AdminDashboard() {
             {stats.totalUsers} Users
           </span>
           <span className="px-3 py-1 bg-white border border-gray-200 rounded-full">
-            {stats.departments + stats.offices + stats.clubs + stats.csgLgus + stats.cspspDivisions} Entities
+            {stats.departments + stats.offices + stats.clubs + stats.csgDepartmentLgus + stats.cspsgDivisions} Entities
           </span>
         </div>
       </div>

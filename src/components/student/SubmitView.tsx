@@ -48,7 +48,7 @@ interface Source {
 }
 
 interface Props {
-  sourceType: "department" | "office" | "club" | "csg_lgu" | "cspsp_division";
+  sourceType: "department" | "office" | "club" | "csg_department_lgu" | "cspsg_division" | "csg" | "cspsg";
   sources: Source[];
   studentId: string;
   systemSettings: SystemSettings | null;

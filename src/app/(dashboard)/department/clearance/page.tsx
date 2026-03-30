@@ -416,9 +416,14 @@ export default function DepartmentClearancePage() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <span className="text-sm text-gray-700">
-                          {s?.course ?? "—"} · Year {s?.year_level ?? "—"}
-                        </span>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm text-gray-700">
+                            {s?.course ?? "—"} · Year {s?.year_level ?? "—"}
+                          </span>
+                          <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${s?.department === "CSP" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"}`}>
+                            {s?.department === "CSP" ? "CSP" : "Regular"}
+                          </span>
+                        </div>
                       </TableCell>
                       <TableCell>
                         <TypeBadge type={item.request?.type ?? "semester"} />
@@ -533,8 +538,11 @@ export default function DepartmentClearancePage() {
                   {student ? `${student.first_name} ${student.last_name}` : "Unknown"}
                 </h2>
                 <p className="text-sm text-gray-500 font-mono">{student?.student_id ?? "—"}</p>
-                <p className="text-sm text-gray-600 mt-0.5">
-                  {student?.course ?? "—"} · Year {student?.year_level ?? "—"}
+                <p className="text-sm text-gray-600 mt-0.5 flex items-center flex-wrap gap-2">
+                  <span>{student?.course ?? "—"} · Year {student?.year_level ?? "—"}</span>
+                  <span className={`text-xs px-1.5 py-0.5 rounded font-medium ${student?.department === "CSP" ? "bg-purple-100 text-purple-700" : "bg-blue-100 text-blue-700"}`}>
+                    {student?.department === "CSP" ? "CSP Student" : "Regular Student"}
+                  </span>
                 </p>
                 <div className="flex items-center gap-2 mt-2 flex-wrap">
                   <TypeBadge type={request?.type ?? "semester"} />

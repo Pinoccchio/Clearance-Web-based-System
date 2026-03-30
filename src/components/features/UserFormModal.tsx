@@ -14,8 +14,8 @@ import {
   CreateUserData,
   getAllDepartments,
   getAllClubs,
-  getAllCspspDivisions,
-  CspspDivision,
+  getAllCspsgDivisions,
+  CspsgDivision,
   getCoursesByDepartmentId,
   Course,
 } from "@/lib/supabase";
@@ -42,7 +42,7 @@ interface FormData {
   course: string;
   yearLevel: string;
   dateOfBirth: string;
-  cspspDivision: string;
+  cspsgDivision: string;
 }
 
 interface FormErrors {
@@ -71,7 +71,7 @@ const initialFormData: FormData = {
   course: "",
   yearLevel: "",
   dateOfBirth: "",
-  cspspDivision: "",
+  cspsgDivision: "",
 };
 
 const roleOptions = [
@@ -79,8 +79,10 @@ const roleOptions = [
   { value: "office", label: "Office" },
   { value: "department", label: "Department" },
   { value: "club", label: "Club" },
-  { value: "csg_lgu", label: "CSG LGU" },
-  { value: "cspsp_division", label: "CSPSP Division" },
+  { value: "csg", label: "CSG" },
+  { value: "csg_department_lgu", label: "LGU" },
+  { value: "cspsg", label: "CSPSG" },
+  { value: "cspsg_division", label: "CSPSG Division" },
   { value: "admin", label: "Admin" },
 ];
 
@@ -111,7 +113,7 @@ export function UserFormModal({
   const [clubs, setClubs] = useState<{ id: string; name: string; code: string; type: string }[]>([]);
   const [courses, setCourses] = useState<Course[]>([]);
   const [selectedClubs, setSelectedClubs] = useState<string[]>([]);
-  const [cspspDivisions, setCspspDivisions] = useState<CspspDivision[]>([]);
+  const [cspsgDivisions, setCspsgDivisions] = useState<CspsgDivision[]>([]);
   const [studentType, setStudentType] = useState<"regular" | "csp">("regular");
 
   // Fetch departments, clubs, and divisions when modal opens for student role
@@ -119,7 +121,7 @@ export function UserFormModal({
     if (isOpen && formData.role === "student") {
       getAllDepartments().then(data => setDepartments(data.filter(d => d.status === "active")));
       getAllClubs().then(data => setClubs(data.filter(c => c.status === "active")));
-      getAllCspspDivisions().then(data => setCspspDivisions(data.filter(d => d.status === "active")));
+      getAllCspsgDivisions().then(data => setCspsgDivisions(data.filter(d => d.status === "active")));
     }
   }, [isOpen, formData.role]);
 
@@ -139,12 +141,12 @@ export function UserFormModal({
         course: user.course || "",
         yearLevel: user.year_level || "",
         dateOfBirth: user.date_of_birth || "",
-        cspspDivision: user.cspsp_division || "",
+        cspsgDivision: user.cspsg_division || "",
       });
       setSelectedClubs(user.enrolled_clubs ? user.enrolled_clubs.split(",") : []);
       // Set student type based on existing data
       if (user.role === "student") {
-        if (user.cspsp_division || user.department === "CSP") {
+        if (user.cspsg_division || user.department === "CSP") {
           setStudentType("csp");
         } else {
           setStudentType("regular");
@@ -284,8 +286,8 @@ export function UserFormModal({
           dateOfBirth: formData.role === "student" && formData.dateOfBirth
             ? formData.dateOfBirth
             : undefined,
-          cspspDivision: formData.role === "student" && formData.cspspDivision
-            ? formData.cspspDivision
+          cspsgDivision: formData.role === "student" && formData.cspsgDivision
+            ? formData.cspsgDivision
             : undefined,
         };
 
@@ -309,8 +311,8 @@ export function UserFormModal({
           date_of_birth: formData.role === "student" && formData.dateOfBirth
             ? formData.dateOfBirth
             : null,
-          cspsp_division: formData.role === "student" && formData.cspspDivision
-            ? formData.cspspDivision
+          cspsg_division: formData.role === "student" && formData.cspsgDivision
+            ? formData.cspsgDivision
             : null,
         };
 
@@ -505,13 +507,13 @@ export function UserFormModal({
                   const type = e.target.value as "regular" | "csp";
                   setStudentType(type);
                   if (type === "csp") {
-                    setFormData(prev => ({ ...prev, department: "CSP", course: "", cspspDivision: "" }));
+                    setFormData(prev => ({ ...prev, department: "CSP", course: "", cspsgDivision: "" }));
                     // Load courses for CSP department
                     const cspDept = departments.find(d => d.code === "CSP");
                     if (cspDept) getCoursesByDepartmentId(cspDept.id).then(setCourses);
                     else setCourses([]);
                   } else {
-                    setFormData(prev => ({ ...prev, department: "", course: "", cspspDivision: "" }));
+                    setFormData(prev => ({ ...prev, department: "", course: "", cspsgDivision: "" }));
                     setCourses([]);
                   }
                 }}
@@ -546,13 +548,13 @@ export function UserFormModal({
                     onChange={() => {}}
                   />
                   <Select
-                    label="CSPSP Division"
-                    name="cspspDivision"
-                    value={formData.cspspDivision}
+                    label="CSPSG Division"
+                    name="cspsgDivision"
+                    value={formData.cspsgDivision}
                     onChange={handleChange}
                     options={[
                       { value: "", label: "Select Division" },
-                      ...cspspDivisions.map(d => ({ value: d.code, label: `${d.code} — ${d.name}` })),
+                      ...cspsgDivisions.map(d => ({ value: d.code, label: `${d.code} — ${d.name}` })),
                     ]}
                     required
                   />

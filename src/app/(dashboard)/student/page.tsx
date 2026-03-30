@@ -26,16 +26,20 @@ import {
   getClearanceItemsForStudent,
   getAllOffices,
   getAllClubs,
-  getCsgLguWithHeadByDepartmentCode,
-  getCspspDivisionWithHeadByCode,
+  getCsgDepartmentLguWithHeadByDepartmentCode,
+  getCspsgDivisionWithHeadByCode,
+  getActiveCsg,
+  getActiveCspsg,
   getSystemSettings,
   getDepartmentByCode,
   ClearanceItem,
   ClearanceRequest,
   OfficeWithHead,
   ClubWithAdviser,
-  CsgLguWithHead,
-  CspspDivisionWithHead,
+  CsgDepartmentLguWithHead,
+  CspsgDivisionWithHead,
+  Csg,
+  Cspsg,
   SystemSettings,
   Department,
 } from "@/lib/supabase";
@@ -53,14 +57,16 @@ export default function StudentDashboardPage() {
   const [studentDept, setStudentDept] = useState<Department | null>(null);
   const [offices, setOffices] = useState<OfficeWithHead[]>([]);
   const [clubs, setClubs] = useState<ClubWithAdviser[]>([]);
-  const [csgLgus, setCsgLgus] = useState<CsgLguWithHead[]>([]);
-  const [cspspDivisions, setCspspDivisions] = useState<CspspDivisionWithHead[]>([]);
+  const [csgDepartmentLgus, setCsgDepartmentLgus] = useState<CsgDepartmentLguWithHead[]>([]);
+  const [cspsgDivisions, setCspsgDivisions] = useState<CspsgDivisionWithHead[]>([]);
+  const [csgOrg, setCsgOrg] = useState<Csg | null>(null);
+  const [cspsgOrg, setCspsgOrg] = useState<Cspsg | null>(null);
   const [settings, setSettings] = useState<SystemSettings | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const isCsp = !!(profile?.cspsp_division || profile?.department === "CSP");
+  const isCsp = !!(profile?.cspsg_division || profile?.department === "CSP");
 
   const loadData = useCallback(async () => {
     if (!profile?.id) return;
@@ -74,24 +80,36 @@ export default function StudentDashboardPage() {
         getSystemSettings(),
       ]);
 
-      // CSP students see CSPSP Division only; regular students see CSG LGU only
-      let csgLgusData: CsgLguWithHead[] = [];
-      let cspspDivisionsData: CspspDivisionWithHead[] = [];
+      // CSP students see CSPSG + CSPSG Division; regular students see CSG + LGU
+      let csgDepartmentLgusData: CsgDepartmentLguWithHead[] = [];
+      let cspsgDivisionsData: CspsgDivisionWithHead[] = [];
+      let csgData: Csg | null = null;
+      let cspsgData: Cspsg | null = null;
 
-      if (isCsp && profile.cspsp_division) {
-        const div = await getCspspDivisionWithHeadByCode(profile.cspsp_division);
-        if (div) cspspDivisionsData = [div];
-      } else if (!isCsp && profile.department) {
-        const lgu = await getCsgLguWithHeadByDepartmentCode(profile.department);
-        if (lgu) csgLgusData = [lgu];
+      if (isCsp) {
+        const [div, cspsgResult] = await Promise.all([
+          profile.cspsg_division ? getCspsgDivisionWithHeadByCode(profile.cspsg_division) : Promise.resolve(null),
+          getActiveCspsg(),
+        ]);
+        if (div) cspsgDivisionsData = [div];
+        cspsgData = cspsgResult;
+      } else {
+        const [lgu, csgResult] = await Promise.all([
+          profile.department ? getCsgDepartmentLguWithHeadByDepartmentCode(profile.department) : Promise.resolve(null),
+          getActiveCsg(),
+        ]);
+        if (lgu) csgDepartmentLgusData = [lgu];
+        csgData = csgResult;
       }
 
       setItems(itemsData as ClearanceItemWithRequest[]);
       setStudentDept(deptsData);
       setOffices(officesData.filter((o) => o.status === "active"));
       setClubs(clubsData.filter((c) => c.status === "active"));
-      setCsgLgus(csgLgusData);
-      setCspspDivisions(cspspDivisionsData);
+      setCsgDepartmentLgus(csgDepartmentLgusData);
+      setCspsgDivisions(cspsgDivisionsData);
+      setCsgOrg(csgData);
+      setCspsgOrg(cspsgData);
       setSettings(settingsData);
     } catch (err) {
       console.error("Failed to load dashboard data:", err);
@@ -100,7 +118,7 @@ export default function StudentDashboardPage() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [profile?.id, profile?.department, profile?.cspsp_division, isCsp]);
+  }, [profile?.id, profile?.department, profile?.cspsg_division, isCsp]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -146,8 +164,8 @@ export default function StudentDashboardPage() {
   const onHoldCount = currentItems.filter((i) => i.status === "on_hold").length;
   const actionRequiredCount = rejectedCount + onHoldCount;
 
-  // Total sources: 1 department + all offices + enrolled clubs + CSG LGUs + CSPSP divisions
-  const totalSources = (studentDept ? 1 : 0) + offices.length + enrolledClubs.length + csgLgus.length + cspspDivisions.length;
+  // Total sources: 1 department + all offices + enrolled clubs + CSG/CSPSG + LGUs/Divisions
+  const totalSources = (studentDept ? 1 : 0) + offices.length + enrolledClubs.length + csgDepartmentLgus.length + cspsgDivisions.length + (csgOrg ? 1 : 0) + (cspsgOrg ? 1 : 0);
 
   // Build source name lookup map
   const sourceNameMap: Record<string, string> = {};
@@ -160,11 +178,17 @@ export default function StudentDashboardPage() {
   for (const c of clubs) {
     sourceNameMap[`club:${c.id}`] = c.name;
   }
-  for (const l of csgLgus) {
-    sourceNameMap[`csg_lgu:${l.id}`] = l.name;
+  if (csgOrg) {
+    sourceNameMap[`csg:${csgOrg.id}`] = csgOrg.name;
   }
-  for (const d of cspspDivisions) {
-    sourceNameMap[`cspsp_division:${d.id}`] = d.name;
+  for (const l of csgDepartmentLgus) {
+    sourceNameMap[`csg_department_lgu:${l.id}`] = l.name;
+  }
+  if (cspsgOrg) {
+    sourceNameMap[`cspsg:${cspsgOrg.id}`] = cspsgOrg.name;
+  }
+  for (const d of cspsgDivisions) {
+    sourceNameMap[`cspsg_division:${d.id}`] = d.name;
   }
 
   // Group items by source_type for display (current period only)
@@ -395,23 +419,45 @@ export default function StudentDashboardPage() {
               </div>
             )}
 
-              {/* CSG LGU */}
-              {csgLgus.length > 0 && (
+            {/* CSG */}
+            {csgOrg && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  <Shield className="w-4 h-4" />
+                  CSG (1)
+                </div>
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <p className="font-medium text-cjc-navy text-sm">{csgOrg.name}</p>
+                    <p className="text-xs text-gray-400">{csgOrg.code}</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {getStatusBadge(getItemsForSource("csg", csgOrg.id)?.status)}
+                    <Link href="/student/csg/submit">
+                      <ArrowRight className="w-4 h-4 text-gray-400 hover:text-cjc-navy transition-colors" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
+
+              {/* LGU */}
+              {csgDepartmentLgus.length > 0 && (
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
                     <Shield className="w-4 h-4" />
-                    CSG LGU ({csgLgus.length})
+                    LGU ({csgDepartmentLgus.length})
                   </div>
                   <div className="space-y-2">
-                    {csgLgus.map((lgu) => (
+                    {csgDepartmentLgus.map((lgu) => (
                       <div key={lgu.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <div>
                           <p className="font-medium text-cjc-navy text-sm">{lgu.name}</p>
                           <p className="text-xs text-gray-400">{lgu.code}</p>
                         </div>
                         <div className="flex items-center gap-3">
-                          {getStatusBadge(getItemsForSource("csg_lgu", lgu.id)?.status)}
-                          <Link href="/student/csg-lgu/submit">
+                          {getStatusBadge(getItemsForSource("csg_department_lgu", lgu.id)?.status)}
+                          <Link href="/student/csg-department-lgu/submit">
                             <ArrowRight className="w-4 h-4 text-gray-400 hover:text-cjc-navy transition-colors" />
                           </Link>
                         </div>
@@ -421,23 +467,45 @@ export default function StudentDashboardPage() {
                 </div>
               )}
 
-              {/* CSPSP Division */}
-              {cspspDivisions.length > 0 && (
+            {/* CSPSG */}
+            {cspsgOrg && (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
+                  <Shield className="w-4 h-4" />
+                  CSPSG (1)
+                </div>
+                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <p className="font-medium text-cjc-navy text-sm">{cspsgOrg.name}</p>
+                    <p className="text-xs text-gray-400">{cspsgOrg.code}</p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    {getStatusBadge(getItemsForSource("cspsg", cspsgOrg.id)?.status)}
+                    <Link href="/student/cspsg/submit">
+                      <ArrowRight className="w-4 h-4 text-gray-400 hover:text-cjc-navy transition-colors" />
+                    </Link>
+                  </div>
+                </div>
+              </div>
+            )}
+
+              {/* CSPSG Division */}
+              {cspsgDivisions.length > 0 && (
                 <div className="space-y-2">
                   <div className="flex items-center gap-2 text-xs font-medium text-gray-500 uppercase tracking-wide">
                     <GraduationCap className="w-4 h-4" />
-                    CSPSP Division ({cspspDivisions.length})
+                    CSPSG Division ({cspsgDivisions.length})
                   </div>
                   <div className="space-y-2">
-                    {cspspDivisions.map((div) => (
+                    {cspsgDivisions.map((div) => (
                       <div key={div.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                         <div>
                           <p className="font-medium text-cjc-navy text-sm">{div.name}</p>
                           <p className="text-xs text-gray-400">{div.code}</p>
                         </div>
                         <div className="flex items-center gap-3">
-                          {getStatusBadge(getItemsForSource("cspsp_division", div.id)?.status)}
-                          <Link href="/student/cspsp-division/submit">
+                          {getStatusBadge(getItemsForSource("cspsg_division", div.id)?.status)}
+                          <Link href="/student/cspsg-division/submit">
                             <ArrowRight className="w-4 h-4 text-gray-400 hover:text-cjc-navy transition-colors" />
                           </Link>
                         </div>

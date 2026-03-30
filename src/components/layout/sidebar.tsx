@@ -54,13 +54,25 @@ const adminNavSections: NavSection[] = [
     ],
   },
   {
-    title: "Clearance Sources",
+    title: "Common Sources",
     items: [
       { label: "Departments", href: "/admin/departments", icon: <GraduationCap className="w-5 h-5" /> },
       { label: "Offices", href: "/admin/offices", icon: <Building2 className="w-5 h-5" /> },
       { label: "Clubs", href: "/admin/clubs", icon: <Users className="w-5 h-5" /> },
-      { label: "CSG LGUs", href: "/admin/csg-lgus", icon: <Shield className="w-5 h-5" /> },
-      { label: "CSPSP Divisions", href: "/admin/cspsp-divisions", icon: <GraduationCap className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Regular Student Gov",
+    items: [
+      { label: "CSG", href: "/admin/csg", icon: <Shield className="w-5 h-5" /> },
+      { label: "LGUs", href: "/admin/csg-department-lgus", icon: <Shield className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "CSP Student Gov",
+    items: [
+      { label: "CSPSG", href: "/admin/cspsg", icon: <GraduationCap className="w-5 h-5" /> },
+      { label: "CSPSG Divisions", href: "/admin/cspsg-divisions", icon: <GraduationCap className="w-5 h-5" /> },
     ],
   },
   {
@@ -76,7 +88,7 @@ const adminNavSections: NavSection[] = [
 
 // Dashboard-only navigation for other roles (placeholder)
 const getDashboardOnlyNav = (role: UserRole): NavSection[] => {
-  const rolePathMap: Record<string, string> = { csg_lgu: 'csg-lgu', cspsp_division: 'cspsp-division' };
+  const rolePathMap: Record<string, string> = { csg_department_lgu: 'csg-department-lgu', cspsg_division: 'cspsg-division' };
   const path = rolePathMap[role] ?? role;
   return [
     {
@@ -207,84 +219,166 @@ const clubNavSections: NavSection[] = [
   },
 ];
 
-const csgLguNavSections: NavSection[] = [
+const csgDepartmentLguNavSections: NavSection[] = [
   {
     title: "Main",
     items: [
-      { label: "Dashboard", href: "/csg-lgu", icon: <LayoutDashboard className="w-5 h-5" /> },
+      { label: "Dashboard", href: "/csg-department-lgu", icon: <LayoutDashboard className="w-5 h-5" /> },
     ],
   },
   {
     title: "Clearance",
     items: [
-      { label: "Clearance Queue", href: "/csg-lgu/clearance", icon: <ClipboardList className="w-5 h-5" /> },
-      { label: "Requirements", href: "/csg-lgu/requirements", icon: <CheckSquare className="w-5 h-5" /> },
-      { label: "History", href: "/csg-lgu/history", icon: <History className="w-5 h-5" /> },
+      { label: "Clearance Queue", href: "/csg-department-lgu/clearance", icon: <ClipboardList className="w-5 h-5" /> },
+      { label: "Requirements", href: "/csg-department-lgu/requirements", icon: <CheckSquare className="w-5 h-5" /> },
+      { label: "History", href: "/csg-department-lgu/history", icon: <History className="w-5 h-5" /> },
     ],
   },
   {
     title: "Events",
     items: [
-      { label: "Events", href: "/csg-lgu/events", icon: <Calendar className="w-5 h-5" /> },
+      { label: "Events", href: "/csg-department-lgu/events", icon: <Calendar className="w-5 h-5" /> },
     ],
   },
   {
     title: "Management",
     items: [
-      { label: "Students", href: "/csg-lgu/students", icon: <Users className="w-5 h-5" /> },
+      { label: "Students", href: "/csg-department-lgu/students", icon: <Users className="w-5 h-5" /> },
     ],
   },
   {
     title: "Communication",
     items: [
-      { label: "Announcements", href: "/csg-lgu/announcements", icon: <Megaphone className="w-5 h-5" /> },
+      { label: "Announcements", href: "/csg-department-lgu/announcements", icon: <Megaphone className="w-5 h-5" /> },
     ],
   },
   {
     title: "Account",
     items: [
-      { label: "Profile", href: "/csg-lgu/profile", icon: <User className="w-5 h-5" /> },
+      { label: "Profile", href: "/csg-department-lgu/profile", icon: <User className="w-5 h-5" /> },
     ],
   },
 ];
 
-const cspspDivisionNavSections: NavSection[] = [
+const csgNavSections: NavSection[] = [
   {
     title: "Main",
     items: [
-      { label: "Dashboard", href: "/cspsp-division", icon: <LayoutDashboard className="w-5 h-5" /> },
+      { label: "Dashboard", href: "/csg", icon: <LayoutDashboard className="w-5 h-5" /> },
     ],
   },
   {
     title: "Clearance",
     items: [
-      { label: "Clearance Queue", href: "/cspsp-division/clearance", icon: <ClipboardList className="w-5 h-5" /> },
-      { label: "Requirements", href: "/cspsp-division/requirements", icon: <CheckSquare className="w-5 h-5" /> },
-      { label: "History", href: "/cspsp-division/history", icon: <History className="w-5 h-5" /> },
+      { label: "Clearance Queue", href: "/csg/clearance", icon: <ClipboardList className="w-5 h-5" /> },
+      { label: "Requirements", href: "/csg/requirements", icon: <CheckSquare className="w-5 h-5" /> },
+      { label: "History", href: "/csg/history", icon: <History className="w-5 h-5" /> },
     ],
   },
   {
     title: "Events",
     items: [
-      { label: "Events", href: "/cspsp-division/events", icon: <Calendar className="w-5 h-5" /> },
+      { label: "Events", href: "/csg/events", icon: <Calendar className="w-5 h-5" /> },
     ],
   },
   {
     title: "Management",
     items: [
-      { label: "Students", href: "/cspsp-division/students", icon: <Users className="w-5 h-5" /> },
+      { label: "Students", href: "/csg/students", icon: <Users className="w-5 h-5" /> },
     ],
   },
   {
     title: "Communication",
     items: [
-      { label: "Announcements", href: "/cspsp-division/announcements", icon: <Megaphone className="w-5 h-5" /> },
+      { label: "Announcements", href: "/csg/announcements", icon: <Megaphone className="w-5 h-5" /> },
     ],
   },
   {
     title: "Account",
     items: [
-      { label: "Profile", href: "/cspsp-division/profile", icon: <User className="w-5 h-5" /> },
+      { label: "Profile", href: "/csg/profile", icon: <User className="w-5 h-5" /> },
+    ],
+  },
+];
+
+const cspsgNavSections: NavSection[] = [
+  {
+    title: "Main",
+    items: [
+      { label: "Dashboard", href: "/cspsg", icon: <LayoutDashboard className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Clearance",
+    items: [
+      { label: "Clearance Queue", href: "/cspsg/clearance", icon: <ClipboardList className="w-5 h-5" /> },
+      { label: "Requirements", href: "/cspsg/requirements", icon: <CheckSquare className="w-5 h-5" /> },
+      { label: "History", href: "/cspsg/history", icon: <History className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Events",
+    items: [
+      { label: "Events", href: "/cspsg/events", icon: <Calendar className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Management",
+    items: [
+      { label: "Students", href: "/cspsg/students", icon: <Users className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Communication",
+    items: [
+      { label: "Announcements", href: "/cspsg/announcements", icon: <Megaphone className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Account",
+    items: [
+      { label: "Profile", href: "/cspsg/profile", icon: <User className="w-5 h-5" /> },
+    ],
+  },
+];
+
+const cspsgDivisionNavSections: NavSection[] = [
+  {
+    title: "Main",
+    items: [
+      { label: "Dashboard", href: "/cspsg-division", icon: <LayoutDashboard className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Clearance",
+    items: [
+      { label: "Clearance Queue", href: "/cspsg-division/clearance", icon: <ClipboardList className="w-5 h-5" /> },
+      { label: "Requirements", href: "/cspsg-division/requirements", icon: <CheckSquare className="w-5 h-5" /> },
+      { label: "History", href: "/cspsg-division/history", icon: <History className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Events",
+    items: [
+      { label: "Events", href: "/cspsg-division/events", icon: <Calendar className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Management",
+    items: [
+      { label: "Students", href: "/cspsg-division/students", icon: <Users className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Communication",
+    items: [
+      { label: "Announcements", href: "/cspsg-division/announcements", icon: <Megaphone className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "Account",
+    items: [
+      { label: "Profile", href: "/cspsg-division/profile", icon: <User className="w-5 h-5" /> },
     ],
   },
 ];
@@ -324,19 +418,35 @@ const studentNavSections: NavSection[] = [
     ],
   },
   {
-    title: "CSG LGU",
+    title: "CSG",
     items: [
-      { label: "Clearance Status", href: "/student/csg-lgu/clearance",   icon: <ClipboardList className="w-5 h-5" /> },
-      { label: "Requirements",     href: "/student/csg-lgu/requirements", icon: <CheckSquare className="w-5 h-5" /> },
-      { label: "Submit Clearance", href: "/student/csg-lgu/submit",       icon: <Upload className="w-5 h-5" /> },
+      { label: "Clearance Status", href: "/student/csg/clearance",   icon: <ClipboardList className="w-5 h-5" /> },
+      { label: "Requirements",     href: "/student/csg/requirements", icon: <CheckSquare className="w-5 h-5" /> },
+      { label: "Submit Clearance", href: "/student/csg/submit",       icon: <Upload className="w-5 h-5" /> },
     ],
   },
   {
-    title: "CSPSP Division",
+    title: "LGU",
     items: [
-      { label: "Clearance Status", href: "/student/cspsp-division/clearance",   icon: <ClipboardList className="w-5 h-5" /> },
-      { label: "Requirements",     href: "/student/cspsp-division/requirements", icon: <CheckSquare className="w-5 h-5" /> },
-      { label: "Submit Clearance", href: "/student/cspsp-division/submit",       icon: <Upload className="w-5 h-5" /> },
+      { label: "Clearance Status", href: "/student/csg-department-lgu/clearance",   icon: <ClipboardList className="w-5 h-5" /> },
+      { label: "Requirements",     href: "/student/csg-department-lgu/requirements", icon: <CheckSquare className="w-5 h-5" /> },
+      { label: "Submit Clearance", href: "/student/csg-department-lgu/submit",       icon: <Upload className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "CSPSG",
+    items: [
+      { label: "Clearance Status", href: "/student/cspsg/clearance",   icon: <ClipboardList className="w-5 h-5" /> },
+      { label: "Requirements",     href: "/student/cspsg/requirements", icon: <CheckSquare className="w-5 h-5" /> },
+      { label: "Submit Clearance", href: "/student/cspsg/submit",       icon: <Upload className="w-5 h-5" /> },
+    ],
+  },
+  {
+    title: "CSPSG Division",
+    items: [
+      { label: "Clearance Status", href: "/student/cspsg-division/clearance",   icon: <ClipboardList className="w-5 h-5" /> },
+      { label: "Requirements",     href: "/student/cspsg-division/requirements", icon: <CheckSquare className="w-5 h-5" /> },
+      { label: "Submit Clearance", href: "/student/cspsg-division/submit",       icon: <Upload className="w-5 h-5" /> },
     ],
   },
   {
@@ -358,8 +468,10 @@ const roleLabels: Record<UserRole, string> = {
   office: "Office Staff",
   department: "Department",
   club: "Club Officer",
-  csg_lgu: "CSG LGU Head",
-  cspsp_division: "CSPSP Division Head",
+  csg_department_lgu: "LGU Head",
+  cspsg_division: "CSPSG Division Head",
+  csg: "CSG Head",
+  cspsg: "CSPSG Head",
   admin: "Administrator",
 };
 
@@ -380,12 +492,12 @@ interface SidebarProps {
 export default function Sidebar({ role, userName, userEmail, userAvatar, isCollapsed, onToggleCollapse, onLogout, orgLogo, orgName, isCsp, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
 
-  const roleToPath: Record<string, string> = { csg_lgu: 'csg-lgu', cspsp_division: 'cspsp-division' };
+  const roleToPath: Record<string, string> = { csg_department_lgu: 'csg-department-lgu', cspsg_division: 'cspsg-division' };
   const effectiveRole = roleToPath[role] ?? role;
 
   const getStudentNav = (): NavSection[] => {
-    const excludeTitle = isCsp ? "CSG LGU" : "CSPSP Division";
-    return studentNavSections.filter((section) => section.title !== excludeTitle);
+    const excludeTitles = isCsp ? ["CSG", "LGU"] : ["CSPSG", "CSPSG Division"];
+    return studentNavSections.filter((section) => !excludeTitles.includes(section.title));
   };
 
   const navSections =
@@ -393,8 +505,10 @@ export default function Sidebar({ role, userName, userEmail, userAvatar, isColla
     role === "department" ? departmentNavSections :
     role === "office" ? officeNavSections :
     role === "club" ? clubNavSections :
-    role === "csg_lgu" ? csgLguNavSections :
-    role === "cspsp_division" ? cspspDivisionNavSections :
+    role === "csg_department_lgu" ? csgDepartmentLguNavSections :
+    role === "csg" ? csgNavSections :
+    role === "cspsg_division" ? cspsgDivisionNavSections :
+    role === "cspsg" ? cspsgNavSections :
     role === "student" ? getStudentNav() :
     getDashboardOnlyNav(role);
 
@@ -413,7 +527,7 @@ export default function Sidebar({ role, userName, userEmail, userAvatar, isColla
           <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 bg-white/10 p-0.5">
             <Image
               src={
-                (role === "office" || role === "department" || role === "club" || role === "csg_lgu" || role === "cspsp_division")
+                (role === "office" || role === "department" || role === "club" || role === "csg_department_lgu" || role === "cspsg_division" || role === "csg" || role === "cspsg")
                   ? (orgLogo || "/images/logos/cjc-logo.jpeg")
                   : "/images/logos/cjc-logo.jpeg"
               }
@@ -427,7 +541,7 @@ export default function Sidebar({ role, userName, userEmail, userAvatar, isColla
             <div>
               <p className="text-white font-semibold">CJC Clearance</p>
               <p className="text-white/50 text-xs truncate max-w-[140px]">
-                {(role === "office" || role === "department" || role === "club" || role === "csg_lgu" || role === "cspsp_division") && orgName
+                {(role === "office" || role === "department" || role === "club" || role === "csg_department_lgu" || role === "cspsg_division" || role === "csg" || role === "cspsg") && orgName
                   ? orgName
                   : "Clearance System"}
               </p>
@@ -461,7 +575,7 @@ export default function Sidebar({ role, userName, userEmail, userAvatar, isColla
               {section.items.map((item) => {
                 const isActive =
                   pathname === item.href ||
-                  (item.href !== `/${effectiveRole}` && pathname.startsWith(item.href));
+                  (item.href !== `/${effectiveRole}` && (pathname.startsWith(item.href + "/")));
                 return (
                   <Link
                     key={item.href}

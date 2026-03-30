@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from "react";
 import { User } from "@supabase/supabase-js";
-import { supabase, Profile, signIn as supabaseSignIn, signOut as supabaseSignOut, getCurrentProfile, getProfileById, getOfficeByHeadId, getDepartmentByHeadId, getClubByAdviserId, getCsgLguByHeadId, getCspspDivisionByHeadId } from "@/lib/supabase";
+import { supabase, Profile, signIn as supabaseSignIn, signOut as supabaseSignOut, getCurrentProfile, getProfileById, getOfficeByHeadId, getDepartmentByHeadId, getClubByAdviserId, getCsgDepartmentLguByHeadId, getCspsgDivisionByHeadId, getCsgByHeadId, getCspsgByHeadId } from "@/lib/supabase";
 
 interface AuthContextType {
   user: User | null;
@@ -29,11 +29,17 @@ async function fetchOrgForProfile(profile: Profile): Promise<{ logo: string | nu
   } else if (profile.role === "club") {
     const org = await getClubByAdviserId(profile.id);
     return { logo: org?.logo_url ?? null, name: org?.name ?? null, id: org?.id ?? null };
-  } else if (profile.role === "csg_lgu") {
-    const org = await getCsgLguByHeadId(profile.id);
+  } else if (profile.role === "csg_department_lgu") {
+    const org = await getCsgDepartmentLguByHeadId(profile.id);
     return { logo: org?.logo_url ?? null, name: org?.name ?? null, id: org?.id ?? null };
-  } else if (profile.role === "cspsp_division") {
-    const org = await getCspspDivisionByHeadId(profile.id);
+  } else if (profile.role === "cspsg_division") {
+    const org = await getCspsgDivisionByHeadId(profile.id);
+    return { logo: org?.logo_url ?? null, name: org?.name ?? null, id: org?.id ?? null };
+  } else if (profile.role === "csg") {
+    const org = await getCsgByHeadId(profile.id);
+    return { logo: org?.logo_url ?? null, name: org?.name ?? null, id: org?.id ?? null };
+  } else if (profile.role === "cspsg") {
+    const org = await getCspsgByHeadId(profile.id);
     return { logo: org?.logo_url ?? null, name: org?.name ?? null, id: org?.id ?? null };
   }
   return { logo: null, name: null, id: null };

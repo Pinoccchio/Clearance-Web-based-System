@@ -35,8 +35,10 @@ import {
   Department,
   Office,
   Club,
-  CsgLgu,
-  CspspDivision,
+  CsgDepartmentLgu,
+  CspsgDivision,
+  Csg,
+  Cspsg,
 } from "@/lib/supabase";
 import { UserFormModal } from "@/components/features/UserFormModal";
 import { BatchImportModal } from "@/components/features/BatchImportModal";
@@ -47,8 +49,10 @@ interface UserWithStatus extends Profile {
   linkedDepartment?: Department | null;
   linkedOffice?: Office | null;
   linkedClub?: Club | null;
-  linkedCsgLgu?: CsgLgu | null;
-  linkedCspspDivision?: CspspDivision | null;
+  linkedCsgDepartmentLgu?: CsgDepartmentLgu | null;
+  linkedCspsgDivision?: CspsgDivision | null;
+  linkedCsg?: Csg | null;
+  linkedCspsg?: Cspsg | null;
 }
 
 export default function AdminUsersPage() {
@@ -76,7 +80,7 @@ export default function AdminUsersPage() {
       setError(null);
 
       // Fetch users, departments, offices, and clubs in parallel
-      const [usersResponse, departmentsResponse, officesResponse, clubsResponse, csgLgusResponse, cspspDivisionsResponse] = await Promise.all([
+      const [usersResponse, departmentsResponse, officesResponse, clubsResponse, csgDepartmentLgusResponse, cspsgDivisionsResponse, csgResponse, cspsgResponse] = await Promise.all([
         supabase
           .from("profiles")
           .select("*")
@@ -91,10 +95,16 @@ export default function AdminUsersPage() {
           .from("clubs")
           .select("*"),
         supabase
-          .from("csg_lgus")
+          .from("csg_department_lgus")
           .select("*"),
         supabase
-          .from("cspsp_divisions")
+          .from("cspsg_divisions")
+          .select("*"),
+        supabase
+          .from("csg")
+          .select("*"),
+        supabase
+          .from("cspsg")
           .select("*"),
       ]);
 
@@ -105,8 +115,8 @@ export default function AdminUsersPage() {
       const departments = departmentsResponse.data || [];
       const offices = officesResponse.data || [];
       const clubs = clubsResponse.data || [];
-      const csgLgus = csgLgusResponse.data || [];
-      const cspspDivisions = cspspDivisionsResponse.data || [];
+      const csgDepartmentLgus = csgDepartmentLgusResponse.data || [];
+      const cspsgDivisions = cspsgDivisionsResponse.data || [];
 
       // Create maps of head_id to department/office for quick lookup
       const headToDepartmentMap = new Map<string, Department>();
@@ -130,17 +140,33 @@ export default function AdminUsersPage() {
         }
       });
 
-      const headToCsgLguMap = new Map<string, CsgLgu>();
-      csgLgus.forEach((lgu: CsgLgu) => {
+      const headToCsgDepartmentLguMap = new Map<string, CsgDepartmentLgu>();
+      csgDepartmentLgus.forEach((lgu: CsgDepartmentLgu) => {
         if (lgu.head_id) {
-          headToCsgLguMap.set(lgu.head_id, lgu);
+          headToCsgDepartmentLguMap.set(lgu.head_id, lgu);
         }
       });
 
-      const headToCspspDivisionMap = new Map<string, CspspDivision>();
-      cspspDivisions.forEach((div: CspspDivision) => {
+      const headToCspsgDivisionMap = new Map<string, CspsgDivision>();
+      cspsgDivisions.forEach((div: CspsgDivision) => {
         if (div.head_id) {
-          headToCspspDivisionMap.set(div.head_id, div);
+          headToCspsgDivisionMap.set(div.head_id, div);
+        }
+      });
+
+      const csgOrgs = csgResponse.data || [];
+      const headToCsgMap = new Map<string, Csg>();
+      csgOrgs.forEach((org: Csg) => {
+        if (org.head_id) {
+          headToCsgMap.set(org.head_id, org);
+        }
+      });
+
+      const cspsgOrgs = cspsgResponse.data || [];
+      const headToCspsgMap = new Map<string, Cspsg>();
+      cspsgOrgs.forEach((org: Cspsg) => {
+        if (org.head_id) {
+          headToCspsgMap.set(org.head_id, org);
         }
       });
 
@@ -151,8 +177,10 @@ export default function AdminUsersPage() {
         linkedDepartment: headToDepartmentMap.get(user.id) || null,
         linkedOffice: headToOfficeMap.get(user.id) || null,
         linkedClub: adviserToClubMap.get(user.id) || null,
-        linkedCsgLgu: headToCsgLguMap.get(user.id) || null,
-        linkedCspspDivision: headToCspspDivisionMap.get(user.id) || null,
+        linkedCsgDepartmentLgu: headToCsgDepartmentLguMap.get(user.id) || null,
+        linkedCspsgDivision: headToCspsgDivisionMap.get(user.id) || null,
+        linkedCsg: headToCsgMap.get(user.id) || null,
+        linkedCspsg: headToCspsgMap.get(user.id) || null,
       }));
 
       setUsers(usersWithStatus);
@@ -178,9 +206,13 @@ export default function AdminUsersPage() {
         return "info";
       case "club":
         return "gold";
-      case "csg_lgu":
+      case "csg":
+        return "warning";
+      case "csg_department_lgu":
         return "info";
-      case "cspsp_division":
+      case "cspsg":
+        return "pending";
+      case "cspsg_division":
         return "neutral";
       default:
         return "pending";
@@ -189,18 +221,26 @@ export default function AdminUsersPage() {
 
   const getRoleLabel = (role: string, short = false) => {
     switch (role) {
+      case "student":
+        return "Student";
       case "office":
-        return short ? "Office" : "Office";
+        return "Office";
       case "department":
         return short ? "Dept" : "Department";
       case "club":
-        return short ? "Club" : "Club";
-      case "csg_lgu":
-        return short ? "CSG" : "CSG LGU";
-      case "cspsp_division":
-        return short ? "CSPSP" : "CSPSP Division";
+        return "Club";
+      case "csg":
+        return "CSG";
+      case "csg_department_lgu":
+        return "LGU";
+      case "cspsg":
+        return "CSPSG";
+      case "cspsg_division":
+        return short ? "CSPSG Div" : "CSPSG Division";
+      case "admin":
+        return "Admin";
       default:
-        return role.charAt(0).toUpperCase() + role.slice(1);
+        return role.toUpperCase();
     }
   };
 
@@ -219,8 +259,10 @@ export default function AdminUsersPage() {
     { value: "office", label: "Office" },
     { value: "department", label: "Department" },
     { value: "club", label: "Club" },
-    { value: "csg_lgu", label: "CSG LGU" },
-    { value: "cspsp_division", label: "CSPSP Division" },
+    { value: "csg", label: "CSG" },
+    { value: "csg_department_lgu", label: "LGU" },
+    { value: "cspsg", label: "CSPSG" },
+    { value: "cspsg_division", label: "CSPSG Division" },
     { value: "admin", label: "Admin" },
   ];
 
@@ -307,7 +349,7 @@ export default function AdminUsersPage() {
               {isLoading
                 ? "..."
                 : users.filter(
-                    (u) => u.role === "department" || u.role === "club" || u.role === "csg_lgu" || u.role === "cspsp_division"
+                    (u) => u.role === "department" || u.role === "club" || u.role === "csg_department_lgu" || u.role === "cspsg_division"
                   ).length}
             </p>
             <p className="text-sm text-gray-500">Dept/Clubs/Orgs</p>
@@ -483,15 +525,15 @@ export default function AdminUsersPage() {
                                 </span>
                               </div>
                             )
-                          ) : user.role === "csg_lgu" ? (
-                            user.linkedCsgLgu ? (
+                          ) : user.role === "csg_department_lgu" ? (
+                            user.linkedCsgDepartmentLgu ? (
                               <div className="flex items-center gap-2">
                                 <UserCheck className="w-4 h-4 text-green-500" />
                                 <Badge variant="info" size="sm">
-                                  {user.linkedCsgLgu.code}
+                                  {user.linkedCsgDepartmentLgu.code}
                                 </Badge>
                                 <span className="text-sm text-gray-600">
-                                  {user.linkedCsgLgu.name}
+                                  {user.linkedCsgDepartmentLgu.name}
                                 </span>
                               </div>
                             ) : (
@@ -502,15 +544,53 @@ export default function AdminUsersPage() {
                                 </span>
                               </div>
                             )
-                          ) : user.role === "cspsp_division" ? (
-                            user.linkedCspspDivision ? (
+                          ) : user.role === "cspsg_division" ? (
+                            user.linkedCspsgDivision ? (
                               <div className="flex items-center gap-2">
                                 <UserCheck className="w-4 h-4 text-green-500" />
                                 <Badge variant="gold" size="sm">
-                                  {user.linkedCspspDivision.code}
+                                  {user.linkedCspsgDivision.code}
                                 </Badge>
                                 <span className="text-sm text-gray-600">
-                                  {user.linkedCspspDivision.name}
+                                  {user.linkedCspsgDivision.name}
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <UserX className="w-4 h-4 text-gray-400" />
+                                <span className="text-sm text-gray-400 italic">
+                                  Not linked
+                                </span>
+                              </div>
+                            )
+                          ) : user.role === "csg" ? (
+                            user.linkedCsg ? (
+                              <div className="flex items-center gap-2">
+                                <UserCheck className="w-4 h-4 text-green-500" />
+                                <Badge variant="warning" size="sm">
+                                  {user.linkedCsg.code}
+                                </Badge>
+                                <span className="text-sm text-gray-600">
+                                  {user.linkedCsg.name}
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                <UserX className="w-4 h-4 text-gray-400" />
+                                <span className="text-sm text-gray-400 italic">
+                                  Not linked
+                                </span>
+                              </div>
+                            )
+                          ) : user.role === "cspsg" ? (
+                            user.linkedCspsg ? (
+                              <div className="flex items-center gap-2">
+                                <UserCheck className="w-4 h-4 text-green-500" />
+                                <Badge variant="pending" size="sm">
+                                  {user.linkedCspsg.code}
+                                </Badge>
+                                <span className="text-sm text-gray-600">
+                                  {user.linkedCspsg.name}
                                 </span>
                               </div>
                             ) : (

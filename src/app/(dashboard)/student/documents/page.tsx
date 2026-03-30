@@ -25,8 +25,8 @@ import {
   getAllDepartments,
   getAllOffices,
   getAllClubs,
-  getAllCsgLgus,
-  getAllCspspDivisions,
+  getAllCsgDepartmentLgus,
+  getAllCspsgDivisions,
   StudentDocument,
 } from "@/lib/supabase";
 
@@ -100,21 +100,21 @@ export default function StudentDocumentsPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const [documents, depts, offices, clubs, csgLgus, cspspDivisions] = await Promise.all([
+      const [documents, depts, offices, clubs, csgDepartmentLgus, cspsgDivisions] = await Promise.all([
         getStudentDocuments(profile.id),
         getAllDepartments(),
         getAllOffices(),
         getAllClubs(),
-        getAllCsgLgus(),
-        getAllCspspDivisions(),
+        getAllCsgDepartmentLgus(),
+        getAllCspsgDivisions(),
       ]);
 
       const names: Record<string, string> = {};
       for (const d of depts) names[d.id] = `${d.code} — ${d.name}`;
       for (const o of offices) names[o.id] = `${o.code} — ${o.name}`;
       for (const c of clubs) names[c.id] = `${c.code} — ${c.name}`;
-      for (const l of csgLgus) names[l.id] = `${l.code} — ${l.name}`;
-      for (const d of cspspDivisions) names[d.id] = `${d.code} — ${d.name}`;
+      for (const l of csgDepartmentLgus) names[l.id] = `${l.code} — ${l.name}`;
+      for (const d of cspsgDivisions) names[d.id] = `${d.code} — ${d.name}`;
       setSourceNames(names);
       setDocs(documents);
     } catch (err) {
@@ -238,7 +238,7 @@ export default function StudentDocumentsPage() {
                       </p>
                       <p className="text-xs text-gray-500 mt-0.5">
                         {sourceNames[doc.source_id] ?? doc.source_id} ·{" "}
-                        <span>{doc.source_type === "csg_lgu" ? "CSG LGU" : doc.source_type === "cspsp_division" ? "CSPSP Division" : doc.source_type.charAt(0).toUpperCase() + doc.source_type.slice(1)}</span>
+                        <span>{doc.source_type === "csg_department_lgu" ? "LGU" : doc.source_type === "cspsg_division" ? "CSPSG Division" : doc.source_type.charAt(0).toUpperCase() + doc.source_type.slice(1)}</span>
                       </p>
                     </div>
                     {statusBadge(doc.status)}
