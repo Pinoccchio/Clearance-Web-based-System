@@ -24,7 +24,7 @@ interface CreateUserRequestBody {
   firstName: string;
   lastName: string;
   middleName?: string;
-  role: "student" | "office" | "department" | "club" | "csg_department_lgu" | "cspsg_division" | "admin";
+  role: "student" | "office" | "department" | "club" | "csg_department_lgu" | "cspsg_division" | "csg" | "cspsg" | "admin";
   department?: string;
   studentId?: string;
   course?: string;
@@ -77,9 +77,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (requestingProfile.role !== "admin") {
+    const isAdmin = requestingProfile.role === "admin";
+    const isDepartmentHead = requestingProfile.role === "department";
+
+    if (!isAdmin && !isDepartmentHead) {
       return NextResponse.json(
-        { error: "Forbidden: Admin access required" },
+        { error: "Forbidden: Admin or department head access required" },
         { status: 403 }
       );
     }
@@ -93,6 +96,36 @@ export async function POST(request: NextRequest) {
         { error: "Missing required fields: email, password, firstName, lastName, role" },
         { status: 400 }
       );
+    }
+
+    // Department heads can only create students in their own department
+    if (isDepartmentHead) {
+      if (body.role !== "student") {
+        return NextResponse.json(
+          { error: "Forbidden: Department heads can only create student accounts" },
+          { status: 403 }
+        );
+      }
+      // Verify the department code matches their linked department
+      const { data: deptData } = await supabaseAdmin
+        .from("departments")
+        .select("code")
+        .eq("head_id", requestingUser.id)
+        .single();
+      if (!deptData) {
+        return NextResponse.json(
+          { error: "Forbidden: No department linked to your account" },
+          { status: 403 }
+        );
+      }
+      if (body.department && body.department.toUpperCase() !== deptData.code.toUpperCase()) {
+        return NextResponse.json(
+          { error: `Forbidden: You can only add students to the ${deptData.code} department` },
+          { status: 403 }
+        );
+      }
+      // Force department to their own
+      body.department = deptData.code;
     }
 
     // Create the user using admin API (does NOT create a session for the new user)

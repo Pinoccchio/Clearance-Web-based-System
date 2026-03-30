@@ -31,8 +31,10 @@ import {
   Eye,
   X,
   Download,
+  UserPlus,
 } from "lucide-react";
 import { StudentClearanceProgressModal } from "@/components/features/StudentClearanceProgressModal";
+import { UserFormModal } from "@/components/features/UserFormModal";
 import {
   Department,
   Profile,
@@ -184,6 +186,7 @@ export default function DepartmentStudentsPage() {
   const [systemSettings, setSystemSettings] = useState<SystemSettings | null>(null);
   const [periodFilter, setPeriodFilter] = useState("");
   const [distinctPeriods, setDistinctPeriods] = useState<DistinctPeriod[]>([]);
+  const [isAddStudentOpen, setIsAddStudentOpen] = useState(false);
 
   const loadData = useCallback(async () => {
     if (!profile?.id) return;
@@ -302,11 +305,19 @@ export default function DepartmentStudentsPage() {
   return (
     <div className="min-h-screen bg-surface-warm">
       <header className="bg-white border-b border-border-warm">
-        <div className="px-6 py-5">
-          <p className="text-sm text-warm-muted">
-            Department{department ? `: ${department.name}` : ""}
-          </p>
-          <h1 className="text-2xl font-display font-bold text-cjc-navy">Students</h1>
+        <div className="px-6 py-5 flex items-center justify-between gap-4">
+          <div>
+            <p className="text-sm text-warm-muted">
+              Department{department ? `: ${department.name}` : ""}
+            </p>
+            <h1 className="text-2xl font-display font-bold text-cjc-navy">Students</h1>
+          </div>
+          {department && (
+            <Button variant="gold" size="md" onClick={() => setIsAddStudentOpen(true)}>
+              <UserPlus className="w-4 h-4" />
+              Add Student
+            </Button>
+          )}
         </div>
       </header>
 
@@ -570,6 +581,21 @@ export default function DepartmentStudentsPage() {
         student={selectedStudent}
         latestRequest={selectedStudent?.latestRequest ?? null}
       />
+
+      {/* Add Student modal — department-scoped */}
+      {department && (
+        <UserFormModal
+          isOpen={isAddStudentOpen}
+          onClose={() => setIsAddStudentOpen(false)}
+          onSuccess={() => {
+            setIsAddStudentOpen(false);
+            loadData();
+          }}
+          mode="add"
+          forcedRole="student"
+          forcedDepartment={department.code}
+        />
+      )}
     </div>
   );
 }

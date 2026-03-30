@@ -27,6 +27,8 @@ interface UserFormModalProps {
   onSuccess: () => void;
   mode: "add" | "edit";
   user?: Profile;
+  forcedRole?: UserRole;       // Lock role (e.g. "student" for department heads)
+  forcedDepartment?: string;   // Lock department code (e.g. "CCIS")
 }
 
 interface FormData {
@@ -102,6 +104,8 @@ export function UserFormModal({
   onSuccess,
   mode,
   user,
+  forcedRole,
+  forcedDepartment,
 }: UserFormModalProps) {
   const { showToast } = useToast();
   const [formData, setFormData] = useState<FormData>(initialFormData);
@@ -119,11 +123,19 @@ export function UserFormModal({
   // Fetch departments, clubs, and divisions when modal opens for student role
   useEffect(() => {
     if (isOpen && formData.role === "student") {
-      getAllDepartments().then(data => setDepartments(data.filter(d => d.status === "active")));
+      getAllDepartments().then(depts => {
+        const active = depts.filter(d => d.status === "active");
+        setDepartments(active);
+        // Auto-load courses if department is forced/pre-filled
+        if (forcedDepartment) {
+          const dept = active.find(d => d.code === forcedDepartment);
+          if (dept) getCoursesByDepartmentId(dept.id).then(setCourses);
+        }
+      });
       getAllClubs().then(data => setClubs(data.filter(c => c.status === "active")));
       getAllCspsgDivisions().then(data => setCspsgDivisions(data.filter(d => d.status === "active")));
     }
-  }, [isOpen, formData.role]);
+  }, [isOpen, formData.role, forcedDepartment]);
 
   // Populate form when editing
   useEffect(() => {
@@ -160,13 +172,17 @@ export function UserFormModal({
         });
       }
     } else {
-      setFormData(initialFormData);
+      setFormData({
+        ...initialFormData,
+        role: forcedRole ?? "student",
+        department: forcedDepartment ?? "",
+      });
       setSelectedClubs([]);
       setCourses([]);
       setStudentType("regular");
     }
     setErrors({});
-  }, [mode, user, isOpen]);
+  }, [mode, user, isOpen, forcedRole, forcedDepartment]);
 
   const handleChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -466,16 +482,18 @@ export function UserFormModal({
             </>
           )}
 
-          {/* Role Selection */}
-          <Select
-            label="Role"
-            name="role"
-            value={formData.role}
-            onChange={handleChange}
-            options={roleOptions}
-            error={errors.role}
-            required
-          />
+          {/* Role Selection — hidden if role is forced */}
+          {!forcedRole && (
+            <Select
+              label="Role"
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              options={roleOptions}
+              error={errors.role}
+              required
+            />
+          )}
 
           {/* Student-specific fields */}
           {isStudent && (
@@ -498,8 +516,8 @@ export function UserFormModal({
                 helperText="Optional"
               />
 
-              {/* Student Type Selector */}
-              <Select
+              {/* Student Type Selector — hidden when department is forced (dept heads add regular students only) */}
+              {!forcedDepartment && <Select
                 label="Student Type"
                 name="studentType"
                 value={studentType}
@@ -521,20 +539,31 @@ export function UserFormModal({
                   { value: "regular", label: "Regular College Student" },
                   { value: "csp", label: "College of Special Programs (CSP) Student" },
                 ]}
-              />
+              />}
 
-              {/* Regular Student: Department dropdown (excludes CSP) */}
+              {/* Regular Student: Department dropdown (excludes CSP) — locked if forcedDepartment */}
               {studentType === "regular" && (
-                <Select
-                  label="Department"
-                  name="department"
-                  value={formData.department}
-                  onChange={handleDepartmentChange}
-                  options={[
-                    { value: "", label: "Select Department" },
-                    ...departments.filter(d => d.code !== "CSP").map(d => ({ value: d.code, label: d.name })),
-                  ]}
-                />
+                forcedDepartment ? (
+                  <Input
+                    label="Department"
+                    name="department"
+                    value={forcedDepartment}
+                    disabled
+                    onChange={() => {}}
+                    helperText="Department is set by your account"
+                  />
+                ) : (
+                  <Select
+                    label="Department"
+                    name="department"
+                    value={formData.department}
+                    onChange={handleDepartmentChange}
+                    options={[
+                      { value: "", label: "Select Department" },
+                      ...departments.filter(d => d.code !== "CSP").map(d => ({ value: d.code, label: d.name })),
+                    ]}
+                  />
+                )
               )}
 
               {/* CSP Student: Department is auto-set to CSP, show Division dropdown */}

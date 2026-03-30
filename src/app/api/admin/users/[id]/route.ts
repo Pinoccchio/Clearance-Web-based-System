@@ -212,7 +212,43 @@ export async function DELETE(
       console.error("Error removing club adviser:", clubAdviserError);
     }
 
-    // 9. Set updated_by to NULL in system_settings
+    // 9. Remove user from CSG head positions
+    const { error: csgHeadError } = await supabaseAdmin
+      .from("csg")
+      .update({ head_id: null })
+      .eq("head_id", userId);
+    if (csgHeadError) {
+      console.error("Error removing CSG head:", csgHeadError);
+    }
+
+    // 10. Remove user from CSPSG head positions
+    const { error: cspsgHeadError } = await supabaseAdmin
+      .from("cspsg")
+      .update({ head_id: null })
+      .eq("head_id", userId);
+    if (cspsgHeadError) {
+      console.error("Error removing CSPSG head:", cspsgHeadError);
+    }
+
+    // 11. Remove user from LGU head positions
+    const { error: lguHeadError } = await supabaseAdmin
+      .from("csg_department_lgus")
+      .update({ head_id: null })
+      .eq("head_id", userId);
+    if (lguHeadError) {
+      console.error("Error removing LGU head:", lguHeadError);
+    }
+
+    // 12. Remove user from CSPSG Division head positions
+    const { error: divisionHeadError } = await supabaseAdmin
+      .from("cspsg_divisions")
+      .update({ head_id: null })
+      .eq("head_id", userId);
+    if (divisionHeadError) {
+      console.error("Error removing CSPSG Division head:", divisionHeadError);
+    }
+
+    // 13. Set updated_by to NULL in system_settings
     const { error: settingsError } = await supabaseAdmin
       .from("system_settings")
       .update({ updated_by: null })
