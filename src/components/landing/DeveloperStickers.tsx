@@ -10,7 +10,7 @@ interface SocialLink {
 const developers = [
   {
     name: "Jan Miko A. Guevarra",
-    role: "Full-Stack Developer",
+    role: "Lead Developer",
     program: "BS Computer Science",
     colleges: ["College of Computing & Information Sciences (CCIS)", "College of Special Programs (CSP)"],
     image: "/images/devs_pics/guevarra/guevarra_profile-dev.jpg",
@@ -22,7 +22,7 @@ const developers = [
   },
   {
     name: "Jan Carlo Surig",
-    role: "Full-Stack Developer",
+    role: "Requirements Analyst & Developer",
     program: "BS Computer Science",
     colleges: ["College of Computing & Information Sciences (CCIS)", "College of Special Programs (CSP)"],
     image: "/images/devs_pics/surig/surig_profile-dev.jpg",

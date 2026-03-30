@@ -9,6 +9,7 @@ import {
   ExternalLink,
   Eye,
   EyeOff,
+  ScanLine,
 } from "lucide-react";
 import { RequirementFormModal } from "@/components/features/RequirementFormModal";
 import { useAuth } from "@/contexts/auth-context";
@@ -261,6 +262,9 @@ export default function CspsgRequirementsPage() {
                   <th className="px-4 py-3 text-left text-xs font-semibold text-warm-muted uppercase tracking-wider w-28">
                     Upload
                   </th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-warm-muted uppercase tracking-wider w-24">
+                    Scan
+                  </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-warm-muted uppercase tracking-wider w-28">
                     Link
                   </th>
@@ -312,6 +316,16 @@ export default function CspsgRequirementsPage() {
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
                           None
                         </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-4">
+                      {req.is_attendance ? (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-indigo-100 text-indigo-700">
+                          <ScanLine className="w-3 h-3" />
+                          Scan
+                        </span>
+                      ) : (
+                        <span className="text-warm-muted">—</span>
                       )}
                     </td>
                     <td className="px-4 py-4">
