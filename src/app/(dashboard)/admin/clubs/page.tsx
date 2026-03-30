@@ -224,22 +224,22 @@ export default function AdminClubsPage() {
             <table className="w-full">
               <thead className="bg-surface-warm border-b border-border-warm">
                 <tr>
-                  <th className="text-left py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy">
+                  <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy">
                     Club
                   </th>
-                  <th className="text-left py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy">
+                  <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy">
                     Code
                   </th>
-                  <th className="text-left py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy hidden sm:table-cell">
+                  <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy hidden sm:table-cell">
                     Type
                   </th>
-                  <th className="text-left py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy hidden md:table-cell">
+                  <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy hidden md:table-cell">
                     Adviser
                   </th>
-                  <th className="text-left py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy hidden sm:table-cell">
+                  <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy hidden sm:table-cell">
                     Status
                   </th>
-                  <th className="text-right py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy">
+                  <th className="text-right py-3 px-4 text-sm font-medium text-cjc-navy">
                     Actions
                   </th>
                 </tr>
@@ -250,7 +250,7 @@ export default function AdminClubsPage() {
                     key={club.id}
                     className="hover:bg-surface-warm transition-colors"
                   >
-                    <td className="py-3 px-2 sm:px-4">
+                    <td className="py-3 px-4">
                       <div className="flex items-center gap-3 min-w-0">
                         {club.logo_url ? (
                           <button
@@ -293,7 +293,7 @@ export default function AdminClubsPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-2 sm:px-4">
+                    <td className="py-3 px-4">
                       <span
                         className={`text-xs px-2 py-1 rounded font-mono ${
                           club.type === "academic"
@@ -304,7 +304,7 @@ export default function AdminClubsPage() {
                         {club.code}
                       </span>
                     </td>
-                    <td className="py-3 px-2 sm:px-4 hidden sm:table-cell">
+                    <td className="py-3 px-4 hidden sm:table-cell">
                       <span
                         className={`text-xs px-2.5 py-1 rounded-full font-medium ${
                           club.type === "academic"
@@ -315,7 +315,7 @@ export default function AdminClubsPage() {
                         {club.type === "academic" ? "Academic" : "Non-Academic"}
                       </span>
                     </td>
-                    <td className="py-3 px-2 sm:px-4 hidden md:table-cell">
+                    <td className="py-3 px-4 hidden md:table-cell">
                       {club.adviser ? (
                         <div className="flex items-center gap-2">
                           <Avatar
@@ -343,7 +343,7 @@ export default function AdminClubsPage() {
                         </div>
                       )}
                     </td>
-                    <td className="py-3 px-2 sm:px-4 hidden sm:table-cell">
+                    <td className="py-3 px-4 hidden sm:table-cell">
                       {club.status === "active" ? (
                         <span className="text-xs px-2.5 py-1 rounded-full bg-success/10 text-success font-medium">
                           Active
@@ -354,7 +354,7 @@ export default function AdminClubsPage() {
                         </span>
                       )}
                     </td>
-                    <td className="py-3 px-2 sm:px-4">
+                    <td className="py-3 px-4">
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => handleEditClub(club)}

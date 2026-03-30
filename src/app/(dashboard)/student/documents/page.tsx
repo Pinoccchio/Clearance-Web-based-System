@@ -256,7 +256,7 @@ export default function StudentDocumentsPage() {
                       return (
                         <div
                           key={idx}
-                          className="flex items-center gap-3 p-2 rounded-lg bg-gray-50 border border-gray-100 hover:bg-gray-100 transition-colors"
+                          className="flex items-center gap-2 sm:gap-3 p-2 rounded-lg bg-gray-50 border border-gray-100 hover:bg-gray-100 transition-colors"
                         >
                           {/* Thumbnail or PDF icon */}
                           {isPdf ? (

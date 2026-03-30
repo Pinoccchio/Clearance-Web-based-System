@@ -28,7 +28,8 @@ import { AnnouncementFormModal } from "@/components/features/AnnouncementFormMod
 import { AnnouncementDetailModal } from "@/components/features/AnnouncementDetailModal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useToast } from "@/components/ui/Toast";
-import { Avatar } from "@/components/ui/Avatar";
+import { Select } from "@/components/ui/Select";
+
 
 const priorityColors = {
   low: "bg-gray-100 text-gray-600",
@@ -267,7 +268,7 @@ export default function CsgLguAnnouncementsPage() {
         {activeTab === "manage" && (
           <>
             {/* Stats Row */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
               <div className="card p-4 text-center">
                 <p className="text-2xl font-bold text-cjc-navy">{stats.total}</p>
                 <p className="text-sm text-warm-muted">Total</p>
@@ -297,17 +298,17 @@ export default function CsgLguAnnouncementsPage() {
                   className="w-full h-10 pl-10 pr-3 border border-border-warm rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-cjc-blue/20 focus:border-cjc-blue"
                 />
               </div>
-              <select
+              <Select
                 value={priorityFilter}
                 onChange={(e) => setPriorityFilter(e.target.value)}
-                className="h-10 px-3 border border-border-warm rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-cjc-blue/20 focus:border-cjc-blue"
-              >
-                <option value="all">All Priorities</option>
-                <option value="low">Low</option>
-                <option value="normal">Normal</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
-              </select>
+                options={[
+                  { value: "all", label: "All Priorities" },
+                  { value: "low", label: "Low" },
+                  { value: "normal", label: "Normal" },
+                  { value: "high", label: "High" },
+                  { value: "urgent", label: "Urgent" },
+                ]}
+              />
               <div className="flex gap-2">
                 <button
                   onClick={fetchData}
@@ -332,110 +333,85 @@ export default function CsgLguAnnouncementsPage() {
               </div>
             )}
 
-            {/* Table */}
+            {/* Announcement Cards */}
             {!isLoading && filteredAnnouncements.length > 0 && (
-              <div className="card overflow-hidden">
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-surface-warm border-b border-border-warm">
-                      <tr>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy">Announcement</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy">Posted By</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy">Status</th>
-                        <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy">Created</th>
-                        <th className="text-right py-3 px-4 text-sm font-medium text-cjc-navy">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-border-warm">
-                      {filteredAnnouncements.map((announcement) => {
-                        const expired = isExpired(announcement);
-                        const canEdit = announcement.posted_by_id === profile.id;
-                        return (
-                          <tr key={announcement.id} className="hover:bg-surface-warm transition-colors">
-                            <td className="py-3 px-4">
-                              <div className="max-w-md">
-                                <div className="flex items-center gap-2">
-                                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${priorityColors[announcement.priority]}`}>
-                                    {priorityLabels[announcement.priority]}
-                                  </span>
-                                  <p className="font-medium text-cjc-navy truncate">{announcement.title}</p>
-                                </div>
-                                <p className="text-xs text-warm-muted line-clamp-1 mt-1">{announcement.content}</p>
-                                {(announcement.event_date || announcement.event_location) && (
-                                  <div className="flex items-center gap-3 mt-1 text-xs text-warm-muted">
-                                    {announcement.event_date && (
-                                      <span className="flex items-center gap-1">
-                                        <Calendar className="w-3 h-3" />
-                                        {formatDate(announcement.event_date)}
-                                      </span>
-                                    )}
-                                    {announcement.event_location && (
-                                      <span className="flex items-center gap-1">
-                                        <MapPin className="w-3 h-3" />
-                                        {announcement.event_location}
-                                      </span>
-                                    )}
-                                  </div>
-                                )}
-                              </div>
-                            </td>
-                            <td className="py-3 px-4">
-                              <div className="flex items-center gap-2">
-                                <Avatar
-                                  src={announcement.posted_by?.avatar_url || undefined}
-                                  name={getPostedByName(announcement)}
-                                  variant="primary"
-                                  size="sm"
-                                />
-                                <div>
-                                  <p className="text-sm text-cjc-navy font-medium">{getPostedByName(announcement)}</p>
-                                  <p className="text-xs text-warm-muted">{announcement.posted_by?.email}</p>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="py-3 px-4">
-                              {expired ? (
-                                <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-500 font-medium">
-                                  <Clock className="w-3 h-3" />
-                                  Expired
-                                </span>
-                              ) : announcement.is_active ? (
-                                <span className="text-xs px-2.5 py-1 rounded-full bg-success/10 text-success font-medium">Active</span>
-                              ) : (
-                                <span className="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-500 font-medium">Inactive</span>
-                              )}
-                            </td>
-                            <td className="py-3 px-4">
-                              <p className="text-sm text-warm-muted">{formatDate(announcement.created_at)}</p>
-                            </td>
-                            <td className="py-3 px-4">
-                              <div className="flex items-center justify-end gap-1">
-                                {canEdit && (
-                                  <>
-                                    <button
-                                      onClick={() => handleEditAnnouncement(announcement)}
-                                      className="p-2 hover:bg-surface-warm rounded-lg transition-colors"
-                                      title="Edit announcement"
-                                    >
-                                      <Edit2 className="w-4 h-4 text-warm-muted" />
-                                    </button>
-                                    <button
-                                      onClick={() => handleDeleteClick(announcement)}
-                                      className="p-2 hover:bg-danger/10 rounded-lg transition-colors"
-                                      title="Delete announcement"
-                                    >
-                                      <Trash2 className="w-4 h-4 text-danger" />
-                                    </button>
-                                  </>
-                                )}
-                              </div>
-                            </td>
-                          </tr>
-                        );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
+              <div className="space-y-3">
+                {filteredAnnouncements.map((announcement) => {
+                  const expired = isExpired(announcement);
+                  const canEdit = announcement.posted_by_id === profile.id;
+                  return (
+                    <div
+                      key={announcement.id}
+                      onClick={() => handleCardClick(announcement)}
+                      className={`card p-4 cursor-pointer hover:shadow-md transition-shadow ${priorityCardBorder[announcement.priority]}`}
+                    >
+                      {/* Meta row: badge + status + date */}
+                      <div className="flex items-center justify-between gap-2 mb-1.5">
+                        <div className="flex items-center gap-2">
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${priorityColors[announcement.priority]}`}>
+                            {priorityLabels[announcement.priority]}
+                          </span>
+                          {expired ? (
+                            <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 font-medium">
+                              <Clock className="w-3 h-3" />
+                              Expired
+                            </span>
+                          ) : announcement.is_active ? (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-success/10 text-success font-medium">Active</span>
+                          ) : (
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-gray-100 text-gray-500 font-medium">Inactive</span>
+                          )}
+                        </div>
+                        <span className="text-xs text-warm-muted shrink-0">{formatDateShort(announcement.created_at)}</span>
+                      </div>
+
+                      {/* Title + content */}
+                      <h3 className="font-semibold text-cjc-navy line-clamp-2">{announcement.title}</h3>
+                      <p className="text-sm text-warm-muted line-clamp-2 mt-0.5">{announcement.content}</p>
+
+                      {/* Event info */}
+                      {(announcement.event_date || announcement.event_location) && (
+                        <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-warm-muted">
+                          {announcement.event_date && (
+                            <span className="flex items-center gap-1">
+                              <Calendar className="w-3 h-3" />
+                              {formatDate(announcement.event_date)}
+                            </span>
+                          )}
+                          {announcement.event_location && (
+                            <span className="flex items-center gap-1">
+                              <MapPin className="w-3 h-3" />
+                              {announcement.event_location}
+                            </span>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Footer: author + actions */}
+                      <div className="flex items-center justify-between gap-2 mt-2 pt-2 border-t border-border-warm">
+                        <p className="text-xs text-warm-muted">{getPostedByName(announcement)}</p>
+                        {canEdit && (
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleEditAnnouncement(announcement); }}
+                              className="p-1.5 hover:bg-surface-warm rounded-lg transition-colors"
+                              title="Edit"
+                            >
+                              <Edit2 className="w-4 h-4 text-warm-muted" />
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); handleDeleteClick(announcement); }}
+                              className="p-1.5 hover:bg-danger/10 rounded-lg transition-colors"
+                              title="Delete"
+                            >
+                              <Trash2 className="w-4 h-4 text-danger" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
 
@@ -474,17 +450,17 @@ export default function CsgLguAnnouncementsPage() {
                   className="w-full h-10 pl-10 pr-3 border border-border-warm rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-cjc-blue/20 focus:border-cjc-blue"
                 />
               </div>
-              <select
+              <Select
                 value={priorityFilter}
                 onChange={(e) => setPriorityFilter(e.target.value)}
-                className="h-10 px-3 border border-border-warm rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-cjc-blue/20 focus:border-cjc-blue"
-              >
-                <option value="all">All Priorities</option>
-                <option value="low">Low</option>
-                <option value="normal">Normal</option>
-                <option value="high">High</option>
-                <option value="urgent">Urgent</option>
-              </select>
+                options={[
+                  { value: "all", label: "All Priorities" },
+                  { value: "low", label: "Low" },
+                  { value: "normal", label: "Normal" },
+                  { value: "high", label: "High" },
+                  { value: "urgent", label: "Urgent" },
+                ]}
+              />
               <button
                 onClick={fetchData}
                 disabled={isLoading}
@@ -512,43 +488,48 @@ export default function CsgLguAnnouncementsPage() {
                     onClick={() => handleCardClick(a)}
                     className={`card p-4 cursor-pointer hover:shadow-md transition-shadow ${priorityCardBorder[a.priority]}`}
                   >
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${priorityColors[a.priority]}`}>
-                            {priorityLabels[a.priority]}
+                    {/* Meta row: badge + date */}
+                    <div className="flex items-center justify-between gap-2 mb-1.5">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${priorityColors[a.priority]}`}>
+                          {priorityLabels[a.priority]}
+                        </span>
+                        <span className="text-xs text-warm-muted">System-wide</span>
+                      </div>
+                      <span className="text-xs text-warm-muted shrink-0">{formatDateShort(a.created_at)}</span>
+                    </div>
+
+                    {/* Title + content */}
+                    <h3 className="font-semibold text-cjc-navy line-clamp-2">{a.title}</h3>
+                    <p className="text-sm text-warm-muted line-clamp-2 mt-0.5">{a.content}</p>
+
+                    {/* Event info */}
+                    {(a.event_date || a.event_location) && (
+                      <div className="flex flex-wrap items-center gap-3 mt-2 text-xs text-warm-muted">
+                        {a.event_date && (
+                          <span className="flex items-center gap-1">
+                            <Calendar className="w-3 h-3" />
+                            {formatDate(a.event_date)}
                           </span>
-                          <span className="text-xs text-warm-muted">System-wide</span>
-                        </div>
-                        <h3 className="font-semibold text-cjc-navy truncate">{a.title}</h3>
-                        <p className="text-sm text-warm-muted line-clamp-2 mt-0.5">{a.content}</p>
-                        {(a.event_date || a.event_location) && (
-                          <div className="flex items-center gap-3 mt-2 text-xs text-warm-muted">
-                            {a.event_date && (
-                              <span className="flex items-center gap-1">
-                                <Calendar className="w-3 h-3" />
-                                {formatDate(a.event_date)}
-                              </span>
-                            )}
-                            {a.event_location && (
-                              <span className="flex items-center gap-1">
-                                <MapPin className="w-3 h-3" />
-                                {a.event_location}
-                              </span>
-                            )}
-                          </div>
+                        )}
+                        {a.event_location && (
+                          <span className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />
+                            {a.event_location}
+                          </span>
                         )}
                       </div>
-                      <div className="text-right text-xs text-warm-muted shrink-0">
-                        <p>{getPostedByName(a)}</p>
-                        <p className="mt-0.5">{formatDateShort(a.created_at)}</p>
-                        {a.expires_at && (
-                          <p className="text-warning mt-0.5 flex items-center gap-1 justify-end">
-                            <Clock className="w-3 h-3" />
-                            Exp. {formatDateShort(a.expires_at)}
-                          </p>
-                        )}
-                      </div>
+                    )}
+
+                    {/* Footer: author + expiry */}
+                    <div className="flex flex-wrap items-center justify-between gap-2 mt-2 pt-2 border-t border-border-warm">
+                      <p className="text-xs text-warm-muted">{getPostedByName(a)}</p>
+                      {a.expires_at && (
+                        <p className="text-xs text-warning flex items-center gap-1">
+                          <Clock className="w-3 h-3" />
+                          Exp. {formatDateShort(a.expires_at)}
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))}

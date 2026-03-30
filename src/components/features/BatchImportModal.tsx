@@ -554,7 +554,7 @@ export function BatchImportModal({
 
   return (
     <Modal isOpen={isOpen} onClose={handleClose} className="max-w-2xl">
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {/* Header */}
         <div className="mb-6 pr-8">
           <h2 className="text-xl font-bold text-cjc-navy">Import Students</h2>

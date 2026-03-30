@@ -209,19 +209,19 @@ export default function AdminOfficesPage() {
             <table className="w-full">
               <thead className="bg-surface-warm border-b border-border-warm">
                 <tr>
-                  <th className="text-left py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy">
+                  <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy">
                     Office
                   </th>
-                  <th className="text-left py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy">
+                  <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy">
                     Code
                   </th>
-                  <th className="text-left py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy hidden md:table-cell">
+                  <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy hidden md:table-cell">
                     Linked Account
                   </th>
-                  <th className="text-left py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy hidden sm:table-cell">
+                  <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy hidden sm:table-cell">
                     Status
                   </th>
-                  <th className="text-right py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy">
+                  <th className="text-right py-3 px-4 text-sm font-medium text-cjc-navy">
                     Actions
                   </th>
                 </tr>
@@ -232,7 +232,7 @@ export default function AdminOfficesPage() {
                     key={office.id}
                     className="hover:bg-surface-warm transition-colors"
                   >
-                    <td className="py-3 px-2 sm:px-4">
+                    <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
                         {office.logo_url ? (
                           <button
@@ -262,12 +262,12 @@ export default function AdminOfficesPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-2 sm:px-4">
+                    <td className="py-3 px-4">
                       <span className="text-xs px-2 py-1 rounded bg-cjc-blue text-white font-mono">
                         {office.code}
                       </span>
                     </td>
-                    <td className="py-3 px-2 sm:px-4 hidden md:table-cell">
+                    <td className="py-3 px-4 hidden md:table-cell">
                       {office.head ? (
                         <div className="flex items-center gap-2">
                           <Avatar
@@ -295,7 +295,7 @@ export default function AdminOfficesPage() {
                         </div>
                       )}
                     </td>
-                    <td className="py-3 px-2 sm:px-4 hidden sm:table-cell">
+                    <td className="py-3 px-4 hidden sm:table-cell">
                       {office.status === "active" ? (
                         <span className="text-xs px-2.5 py-1 rounded-full bg-success/10 text-success font-medium">
                           Active
@@ -306,7 +306,7 @@ export default function AdminOfficesPage() {
                         </span>
                       )}
                     </td>
-                    <td className="py-3 px-2 sm:px-4">
+                    <td className="py-3 px-4">
                       <div className="flex items-center justify-end gap-1">
                         <button
                           onClick={() => handleEditOffice(office)}

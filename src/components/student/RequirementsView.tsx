@@ -228,13 +228,13 @@ export default function RequirementsView({
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="bg-gray-50 text-xs text-gray-500 uppercase tracking-wide">
-                          <th className="px-6 py-3 text-left w-10">#</th>
-                          <th className="px-6 py-3 text-left">Requirement</th>
-                          <th className="px-6 py-3 text-left w-28">Type</th>
-                          <th className="px-6 py-3 text-left w-28">Upload</th>
-                          <th className="px-6 py-3 text-left w-36">Link</th>
+                          <th className="px-4 sm:px-6 py-3 text-left w-10 hidden sm:table-cell">#</th>
+                          <th className="px-4 sm:px-6 py-3 text-left">Requirement</th>
+                          <th className="px-4 sm:px-6 py-3 text-left w-28 hidden sm:table-cell">Type</th>
+                          <th className="px-4 sm:px-6 py-3 text-left w-28 hidden md:table-cell">Upload</th>
+                          <th className="px-4 sm:px-6 py-3 text-left w-36 hidden md:table-cell">Link</th>
                           {hasSubmissions && (
-                            <th className="px-6 py-3 text-left w-36">My Submission</th>
+                            <th className="px-4 sm:px-6 py-3 text-left w-36">My Submission</th>
                           )}
                         </tr>
                       </thead>
@@ -243,14 +243,14 @@ export default function RequirementsView({
                           const sub = subs.find((s) => s.requirement_id === req.id);
                           return (
                             <tr key={req.id} className="hover:bg-gray-50 transition-colors">
-                              <td className="px-6 py-4 text-gray-400 font-mono">{index + 1}</td>
-                              <td className="px-6 py-4">
-                                <p className="font-medium text-cjc-navy">{req.name}</p>
+                              <td className="px-4 sm:px-6 py-4 text-gray-400 font-mono hidden sm:table-cell">{index + 1}</td>
+                              <td className="px-4 sm:px-6 py-4 min-w-0">
+                                <p className="font-medium text-cjc-navy truncate">{req.name}</p>
                                 {req.description && (
-                                  <p className="text-xs text-gray-500 mt-0.5">{req.description}</p>
+                                  <p className="text-xs text-gray-500 mt-0.5 truncate">{req.description}</p>
                                 )}
                               </td>
-                              <td className="px-6 py-4">
+                              <td className="px-4 sm:px-6 py-4 hidden sm:table-cell">
                                 {req.is_required ? (
                                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                     Required
@@ -261,7 +261,7 @@ export default function RequirementsView({
                                   </span>
                                 )}
                               </td>
-                              <td className="px-6 py-4">
+                              <td className="px-4 sm:px-6 py-4 hidden md:table-cell">
                                 {req.requires_upload ? (
                                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-cjc-red/10 text-cjc-red">
                                     <Upload className="w-3 h-3" />
@@ -273,7 +273,7 @@ export default function RequirementsView({
                                   </span>
                                 )}
                               </td>
-                              <td className="px-6 py-4">
+                              <td className="px-4 sm:px-6 py-4 hidden md:table-cell">
                                 {(req.links ?? []).length > 0 ? (
                                   <div className="flex flex-col gap-1">
                                     {(req.links ?? []).map(link => (
@@ -289,7 +289,7 @@ export default function RequirementsView({
                                 )}
                               </td>
                               {hasSubmissions && (
-                                <td className="px-6 py-4">
+                                <td className="px-4 sm:px-6 py-4">
                                   <SubmissionStatusBadge sub={sub} itemStatus={item?.status} />
                                   {sub && (sub.file_urls?.length ?? 0) > 0 && (sub.file_urls ?? []).map((url, idx) => (
                                     <a

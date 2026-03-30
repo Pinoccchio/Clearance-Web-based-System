@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { CheckSquare, Plus, Pencil, Trash2, X, Check, ExternalLink, Eye, EyeOff, ScanLine } from "lucide-react";
+import { CheckSquare, Plus, Pencil, Trash2, ExternalLink, Eye, EyeOff } from "lucide-react";
 import { RequirementFormModal } from "@/components/features/RequirementFormModal";
 import { useAuth } from "@/contexts/auth-context";
 import { useRealtimeRefresh } from "@/lib/useRealtimeRefresh";
@@ -10,7 +10,6 @@ import {
   getRequirementsBySource,
   updateRequirement,
   deleteRequirement,
-  replaceRequirementLinks,
   Requirement,
   CspspDivision,
 } from "@/lib/supabase";
@@ -18,21 +17,6 @@ import { useToast } from "@/components/ui/Toast";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { formatDate } from "@/lib/utils";
 
-interface LinkEntry {
-  url: string;
-  label: string;
-}
-
-interface RequirementFormData {
-  name: string;
-  description: string;
-  is_required: boolean;
-  requires_upload: boolean;
-  is_attendance: boolean;
-  links: LinkEntry[];
-}
-
-const emptyForm: RequirementFormData = { name: "", description: "", is_required: true, requires_upload: false, is_attendance: false, links: [] };
 
 export default function CspspDivisionRequirementsPage() {
   const { profile } = useAuth();
@@ -47,10 +31,7 @@ export default function CspspDivisionRequirementsPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   // Edit state
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [editForm, setEditForm] = useState<RequirementFormData>(emptyForm);
-  const [editNameError, setEditNameError] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
+  const [editingRequirement, setEditingRequirement] = useState<Requirement | null>(null);
 
   // Delete state
   const [deleteTarget, setDeleteTarget] = useState<Requirement | null>(null);
@@ -86,55 +67,6 @@ export default function CspspDivisionRequirementsPage() {
   }, [loadData]);
 
   useRealtimeRefresh('requirements', loadData);
-
-  function startEdit(req: Requirement) {
-    setEditingId(req.id);
-    setEditForm({
-      name: req.name,
-      description: req.description ?? "",
-      is_required: req.is_required,
-      requires_upload: req.requires_upload,
-      is_attendance: req.is_attendance,
-      links: (req.links ?? []).map(l => ({ url: l.url, label: l.label ?? "" })),
-    });
-    setEditNameError(null);
-  }
-
-  function cancelEdit() {
-    setEditingId(null);
-    setEditForm(emptyForm);
-    setEditNameError(null);
-  }
-
-  async function handleSaveEdit(reqId: string) {
-    if (!editForm.name.trim()) {
-      setEditNameError("Requirement name is required");
-      return;
-    }
-    setEditNameError(null);
-    setIsSaving(true);
-    try {
-      const updated = await updateRequirement(reqId, {
-        name: editForm.name.trim(),
-        description: editForm.description.trim() || null,
-        is_required: editForm.is_required,
-        requires_upload: editForm.requires_upload,
-        is_attendance: editForm.is_attendance,
-      });
-      // Replace all links for this requirement
-      const validLinks = editForm.links.filter(l => l.url.trim());
-      await replaceRequirementLinks(reqId, validLinks.map((l, i) => ({ url: l.url.trim(), label: l.label.trim() || undefined, order: i })));
-      const updatedWithLinks = { ...updated, links: validLinks.map((l, i) => ({ id: '', requirement_id: reqId, url: l.url.trim(), label: l.label.trim() || null, order: i, created_at: '' })) };
-      setRequirements(prev => prev.map(r => r.id === reqId ? updatedWithLinks : r));
-      setEditingId(null);
-      showToast("success", "Requirement Updated", `"${updated.name}" has been updated.`);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Failed to update requirement";
-      showToast("error", "Error", msg);
-    } finally {
-      setIsSaving(false);
-    }
-  }
 
   async function handleDelete() {
     if (!deleteTarget) return;
@@ -224,19 +156,19 @@ export default function CspspDivisionRequirementsPage() {
     <div className="min-h-screen bg-surface-warm">
       {/* Header */}
       <header className="bg-white border-b border-border-warm">
-        <div className="px-6 py-5 flex items-center justify-between">
+        <div className="px-4 sm:px-6 py-4 sm:py-5 flex items-center justify-between">
           <div>
             <p className="text-sm text-warm-muted">{division?.name}</p>
             <h1 className="text-2xl font-display font-bold text-cjc-navy">Requirements</h1>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
             {requirements.some(r => !r.is_published) && (
               <button onClick={handleBulkPublish} disabled={isBulkPublishing}
                 className="flex items-center gap-2 px-4 py-2 border border-cjc-red text-cjc-red rounded-lg hover:bg-cjc-red-light-primary/5 transition-colors text-sm font-medium disabled:opacity-50">
                 {isBulkPublishing
                   ? <div className="w-4 h-4 border-2 border-cjc-red/30 border-t-cjc-red rounded-full animate-spin" />
                   : <Eye className="w-4 h-4" />}
-                Publish All
+                <span className="hidden sm:inline">Publish All</span>
               </button>
             )}
             <button
@@ -244,13 +176,13 @@ export default function CspspDivisionRequirementsPage() {
               className="flex items-center gap-2 px-4 py-2 bg-cjc-red text-white rounded-lg hover:bg-cjc-red-light transition-colors text-sm font-medium"
             >
               <Plus className="w-4 h-4" />
-              Add Requirement
+              <span className="hidden sm:inline">Add Requirement</span>
             </button>
           </div>
         </div>
       </header>
 
-      <div className="p-6 space-y-4">
+      <div className="p-4 sm:p-6 space-y-4">
         {/* Requirements Table */}
         <div className="card overflow-hidden">
           {requirements.length === 0 ? (
@@ -299,208 +231,94 @@ export default function CspspDivisionRequirementsPage() {
               <tbody className="divide-y divide-border-warm">
                 {requirements.map((req, index) => (
                   <tr key={req.id} className="hover:bg-gray-50/50 transition-colors">
-                    {editingId === req.id ? (
-                      <>
-                        <td className="px-4 py-3 text-warm-muted text-xs align-top pt-4">{index + 1}</td>
-                        <td className="px-4 py-3" colSpan={6}>
-                          <div className="space-y-2">
-                            <input
-                              type="text"
-                              value={editForm.name}
-                              onChange={e => setEditForm(prev => ({ ...prev, name: e.target.value }))}
-                              className="input-base text-sm h-9 w-full"
-                              autoFocus
-                            />
-                            {editNameError && (
-                              <p className="text-xs text-red-500">{editNameError}</p>
-                            )}
-                            <textarea
-                              value={editForm.description}
-                              onChange={e => setEditForm(prev => ({ ...prev, description: e.target.value }))}
-                              className="input-base text-sm resize-none w-full"
-                              rows={2}
-                              placeholder="Description (optional)"
-                            />
-                            <div className="flex gap-2">
-                              <label className="flex items-center gap-2 cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={editForm.is_required}
-                                  onChange={e => setEditForm(prev => ({ ...prev, is_required: e.target.checked }))}
-                                  className="w-4 h-4 rounded border-gray-300 text-cjc-red focus:ring-cjc-red"
-                                />
-                                <span className="text-xs text-cjc-navy">Required</span>
-                              </label>
-                              <label className={`flex items-center gap-2 cursor-pointer ml-4 ${editForm.is_attendance ? "opacity-40 cursor-not-allowed" : ""}`}>
-                                <input
-                                  type="checkbox"
-                                  checked={editForm.requires_upload}
-                                  disabled={editForm.is_attendance}
-                                  onChange={e => setEditForm(prev => ({ ...prev, requires_upload: e.target.checked }))}
-                                  className="w-4 h-4 rounded border-gray-300 text-cjc-red focus:ring-cjc-red"
-                                />
-                                <span className="text-xs text-cjc-navy">Requires upload</span>
-                              </label>
-                              <label className="flex items-center gap-2 cursor-pointer ml-4">
-                                <input
-                                  type="checkbox"
-                                  checked={editForm.is_attendance}
-                                  onChange={e => setEditForm(prev => ({
-                                    ...prev,
-                                    is_attendance: e.target.checked,
-                                    requires_upload: e.target.checked ? false : prev.requires_upload,
-                                  }))}
-                                  className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
-                                />
-                                <span className="text-xs text-cjc-navy flex items-center gap-1">
-                                  <ScanLine className="w-3 h-3 text-indigo-500" />
-                                  Scan only
-                                </span>
-                              </label>
-                            </div>
-                            <div className="space-y-2">
-                              <p className="text-xs font-medium text-cjc-navy">Links <span className="text-warm-muted font-normal">(optional)</span></p>
-                              {editForm.links.map((link, i) => (
-                                <div key={i} className="border border-gray-200 rounded-lg p-3 space-y-2 bg-gray-50">
-                                  <div className="flex items-center justify-between gap-2">
-                                    <input type="text" value={link.label}
-                                      onChange={e => setEditForm(prev => { const links = [...prev.links]; links[i] = { ...links[i], label: e.target.value }; return { ...prev, links }; })}
-                                      className="input-base text-sm flex-1 font-medium" placeholder="Link name (e.g. Open Evaluation Form)" />
-                                    <button type="button" onClick={() => setEditForm(prev => ({ ...prev, links: prev.links.filter((_, j) => j !== i) }))}
-                                      className="p-1.5 text-gray-400 hover:text-red-500 transition-colors flex-shrink-0">
-                                      <X className="w-3.5 h-3.5" />
-                                    </button>
-                                  </div>
-                                  <input type="url" value={link.url}
-                                    onChange={e => setEditForm(prev => { const links = [...prev.links]; links[i] = { ...links[i], url: e.target.value }; return { ...prev, links }; })}
-                                    className="input-base text-sm w-full text-gray-500" placeholder="https://example.com/form" />
-                                </div>
-                              ))}
-                              <button type="button"
-                                onClick={() => setEditForm(prev => ({ ...prev, links: [...prev.links, { url: "", label: "" }] }))}
-                                className="flex items-center gap-1.5 text-xs text-cjc-red hover:text-cjc-red-light font-medium transition-colors">
-                                <Plus className="w-3.5 h-3.5" />
-                                Add Link
-                              </button>
-                            </div>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3 align-top pt-4">
-                          <div className="flex items-center justify-end gap-2">
-                            <button
-                              onClick={() => handleSaveEdit(req.id)}
-                              disabled={isSaving}
-                              className="p-1.5 text-green-600 hover:bg-green-50 rounded-md transition-colors"
-                              title="Save"
-                            >
-                              {isSaving ? (
-                                <div className="w-4 h-4 border-2 border-green-600/30 border-t-green-600 rounded-full animate-spin" />
-                              ) : (
-                                <Check className="w-4 h-4" />
-                              )}
-                            </button>
-                            <button
-                              onClick={cancelEdit}
-                              className="p-1.5 text-gray-500 hover:bg-gray-100 rounded-md transition-colors"
-                              title="Cancel"
-                            >
-                              <X className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </td>
-                      </>
-                    ) : (
-                      <>
-                        <td className="px-4 py-4 text-warm-muted text-xs">{index + 1}</td>
-                        <td className="px-4 py-4">
-                          <p className="font-medium text-cjc-navy">{req.name}</p>
-                          {req.description && (
-                            <p className="text-xs text-warm-muted mt-0.5">{req.description}</p>
-                          )}
-                        </td>
-                        <td className="px-4 py-4">
-                          {req.is_required ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                              Required
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
-                              Optional
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-4">
-                          {req.requires_upload ? (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cjc-blue/10 text-cjc-navy">
-                              Required
-                            </span>
-                          ) : (
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
-                              None
-                            </span>
-                          )}
-                        </td>
-                        <td className="px-4 py-4">
-                          {(req.links ?? []).length > 0 ? (
-                            <div className="flex flex-col gap-1">
-                              {(req.links ?? []).map(link => (
-                                <a key={link.id || link.url} href={link.url} target="_blank" rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-cjc-blue/10 text-cjc-navy hover:bg-cjc-blue/15 transition-colors">
-                                  <ExternalLink className="w-3 h-3" />
-                                  {link.label || "Link"}
-                                </a>
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="text-xs text-gray-400">—</span>
-                          )}
-                        </td>
-                        <td className="px-4 py-4">
-                          <div className="flex items-center gap-2">
-                            {req.is_published ? (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                                <Eye className="w-3 h-3" />Live
-                              </span>
-                            ) : (
-                              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
-                                <EyeOff className="w-3 h-3" />Draft
-                              </span>
-                            )}
-                            <button
-                              onClick={() => handleTogglePublish(req)}
-                              disabled={togglingPublish.has(req.id)}
-                              title={req.is_published ? "Unpublish" : "Publish"}
-                              className={`p-1.5 rounded-md transition-colors ${req.is_published ? "text-gray-400 hover:text-orange-600 hover:bg-orange-50" : "text-gray-400 hover:text-green-600 hover:bg-green-50"}`}
-                            >
-                              {togglingPublish.has(req.id)
-                                ? <div className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />
-                                : req.is_published ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                            </button>
-                          </div>
-                        </td>
-                        <td className="px-4 py-4 text-warm-muted text-xs">
-                          {formatDate(req.created_at)}
-                        </td>
-                        <td className="px-4 py-4">
-                          <div className="flex items-center justify-end gap-1">
-                            <button
-                              onClick={() => startEdit(req)}
-                              className="p-2 hover:bg-surface-warm rounded-lg transition-colors"
-                              title="Edit"
-                            >
-                              <Pencil className="w-4 h-4 text-warm-muted" />
-                            </button>
-                            <button
-                              onClick={() => setDeleteTarget(req)}
-                              className="p-2 hover:bg-danger/10 rounded-lg transition-colors"
-                              title="Delete"
-                            >
-                              <Trash2 className="w-4 h-4 text-danger" />
-                            </button>
-                          </div>
-                        </td>
-                      </>
-                    )}
+                    <td className="px-4 py-4 text-warm-muted text-xs">{index + 1}</td>
+                    <td className="px-4 py-4">
+                      <p className="font-medium text-cjc-navy">{req.name}</p>
+                      {req.description && (
+                        <p className="text-xs text-warm-muted mt-0.5">{req.description}</p>
+                      )}
+                    </td>
+                    <td className="px-4 py-4">
+                      {req.is_required ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                          Required
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                          Optional
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-4">
+                      {req.requires_upload ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-cjc-blue/10 text-cjc-navy">
+                          Required
+                        </span>
+                      ) : (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                          None
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-4">
+                      {(req.links ?? []).length > 0 ? (
+                        <div className="flex flex-col gap-1">
+                          {(req.links ?? []).map(link => (
+                            <a key={link.id || link.url} href={link.url} target="_blank" rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-cjc-blue/10 text-cjc-navy hover:bg-cjc-blue/15 transition-colors">
+                              <ExternalLink className="w-3 h-3" />
+                              {link.label || "Link"}
+                            </a>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-xs text-gray-400">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="flex items-center gap-2">
+                        {req.is_published ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-700">
+                            <Eye className="w-3 h-3" />Live
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">
+                            <EyeOff className="w-3 h-3" />Draft
+                          </span>
+                        )}
+                        <button
+                          onClick={() => handleTogglePublish(req)}
+                          disabled={togglingPublish.has(req.id)}
+                          title={req.is_published ? "Unpublish" : "Publish"}
+                          className={`p-1.5 rounded-md transition-colors ${req.is_published ? "text-gray-400 hover:text-orange-600 hover:bg-orange-50" : "text-gray-400 hover:text-green-600 hover:bg-green-50"}`}
+                        >
+                          {togglingPublish.has(req.id)
+                            ? <div className="w-4 h-4 border-2 border-current/30 border-t-current rounded-full animate-spin" />
+                            : req.is_published ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </td>
+                    <td className="px-4 py-4 text-warm-muted text-xs">
+                      {formatDate(req.created_at)}
+                    </td>
+                    <td className="px-4 py-4">
+                      <div className="flex items-center justify-end gap-1">
+                        <button
+                          onClick={() => setEditingRequirement(req)}
+                          className="p-2 hover:bg-surface-warm rounded-lg transition-colors"
+                          title="Edit"
+                        >
+                          <Pencil className="w-4 h-4 text-warm-muted" />
+                        </button>
+                        <button
+                          onClick={() => setDeleteTarget(req)}
+                          className="p-2 hover:bg-danger/10 rounded-lg transition-colors"
+                          title="Delete"
+                        >
+                          <Trash2 className="w-4 h-4 text-danger" />
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -542,6 +360,23 @@ export default function CspspDivisionRequirementsPage() {
           sourceType="cspsp_division"
           sourceId={division.id}
           existingRequirements={requirements}
+        />
+      )}
+
+      {/* Edit Requirement Modal */}
+      {division && (
+        <RequirementFormModal
+          isOpen={!!editingRequirement}
+          onClose={() => setEditingRequirement(null)}
+          onSuccess={() => {
+            setEditingRequirement(null);
+            loadData();
+          }}
+          sourceType="cspsp_division"
+          sourceId={division.id}
+          existingRequirements={requirements}
+          mode="edit"
+          requirement={editingRequirement ?? undefined}
         />
       )}
     </div>

@@ -154,18 +154,18 @@ export default function AdminCspspDivisionsPage() {
             <table className="w-full">
               <thead className="bg-surface-warm border-b border-border-warm">
                 <tr>
-                  <th className="text-left py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy">Division</th>
-                  <th className="text-left py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy">Code</th>
-                  <th className="text-left py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy hidden md:table-cell">Department</th>
-                  <th className="text-left py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy hidden md:table-cell">Linked Account</th>
-                  <th className="text-left py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy hidden sm:table-cell">Status</th>
-                  <th className="text-right py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy">Actions</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy">Division</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy">Code</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy hidden md:table-cell">Department</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy hidden md:table-cell">Linked Account</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy hidden sm:table-cell">Status</th>
+                  <th className="text-right py-3 px-4 text-sm font-medium text-cjc-navy">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-warm">
                 {filteredDivisions.map((div) => (
                   <tr key={div.id} className="hover:bg-surface-warm transition-colors">
-                    <td className="py-3 px-2 sm:px-4">
+                    <td className="py-3 px-4">
                       <div className="flex items-center gap-3 min-w-0">
                         {div.logo_url ? (
                           <button className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer focus:outline-none" onClick={() => setPreviewUrl(div.logo_url!)}>
@@ -182,13 +182,13 @@ export default function AdminCspspDivisionsPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-2 sm:px-4">
+                    <td className="py-3 px-4">
                       <span className="text-xs px-2 py-1 rounded bg-cjc-navy text-white font-mono whitespace-nowrap">{div.code}</span>
                     </td>
-                    <td className="py-3 px-2 sm:px-4 hidden md:table-cell">
+                    <td className="py-3 px-4 hidden md:table-cell">
                       <span className="text-xs px-2 py-1 rounded bg-cjc-blue/10 text-cjc-blue font-mono">{div.department_code}</span>
                     </td>
-                    <td className="py-3 px-2 sm:px-4 hidden md:table-cell">
+                    <td className="py-3 px-4 hidden md:table-cell">
                       {div.head ? (
                         <div className="flex items-center gap-2">
                           <Avatar src={div.head.avatar_url || undefined} name={getHeadDisplayName(div) || ""} variant="primary" size="sm" />
@@ -205,14 +205,14 @@ export default function AdminCspspDivisionsPage() {
                         </div>
                       )}
                     </td>
-                    <td className="py-3 px-2 sm:px-4 hidden sm:table-cell">
+                    <td className="py-3 px-4 hidden sm:table-cell">
                       {div.status === "active" ? (
                         <span className="text-xs px-2.5 py-1 rounded-full bg-success/10 text-success font-medium">Active</span>
                       ) : (
                         <span className="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-500 font-medium">Inactive</span>
                       )}
                     </td>
-                    <td className="py-3 px-2 sm:px-4">
+                    <td className="py-3 px-4">
                       <div className="flex items-center justify-end gap-1">
                         <button onClick={() => handleEditDivision(div)} className="p-2 hover:bg-surface-warm rounded-lg transition-colors" title="Edit division">
                           <Edit2 className="w-4 h-4 text-warm-muted" />

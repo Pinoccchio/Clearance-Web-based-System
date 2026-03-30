@@ -290,7 +290,7 @@ export default function DepartmentDashboard() {
 
       <div className="p-6 space-y-6">
         {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
           <div className="card p-4 text-center">
             <Users className="w-8 h-8 text-cjc-blue mx-auto mb-2" />
             <p className="text-2xl font-bold text-cjc-navy">{stats.total}</p>
@@ -331,7 +331,7 @@ export default function DepartmentDashboard() {
           <CardHeader>
             <CardTitle>Student Clearance Overview</CardTitle>
           </CardHeader>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
             <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
               <CheckCircle2 className="w-5 h-5 text-green-600" />
               <div>

@@ -132,7 +132,7 @@ export function StudentClearanceProgressModal({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="max-w-2xl">
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
             <Loader2 className="w-8 h-8 animate-spin text-gray-400" />

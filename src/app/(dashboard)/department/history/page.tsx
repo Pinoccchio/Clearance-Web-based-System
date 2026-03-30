@@ -205,7 +205,7 @@ export default function DepartmentHistoryPage() {
       <div className="p-6 space-y-6">
         {/* Stats row */}
         {!isLoading && !error && (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
             <Card padding="sm">
               <p className="text-xs text-gray-500 mb-1">Total Reviewed</p>
               <p className="text-2xl font-bold text-cjc-navy">{items.length}</p>

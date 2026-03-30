@@ -173,18 +173,18 @@ export default function AdminCsgLgusPage() {
             <table className="w-full">
               <thead className="bg-surface-warm border-b border-border-warm">
                 <tr>
-                  <th className="text-left py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy">LGU</th>
-                  <th className="text-left py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy">Code</th>
-                  <th className="text-left py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy hidden md:table-cell">Department</th>
-                  <th className="text-left py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy hidden md:table-cell">Linked Account</th>
-                  <th className="text-left py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy hidden sm:table-cell">Status</th>
-                  <th className="text-right py-3 px-2 sm:px-4 text-sm font-medium text-cjc-navy">Actions</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy">LGU</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy">Code</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy hidden md:table-cell">Department</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy hidden md:table-cell">Linked Account</th>
+                  <th className="text-left py-3 px-4 text-sm font-medium text-cjc-navy hidden sm:table-cell">Status</th>
+                  <th className="text-right py-3 px-4 text-sm font-medium text-cjc-navy">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border-warm">
                 {filteredLgus.map((lgu) => (
                   <tr key={lgu.id} className="hover:bg-surface-warm transition-colors">
-                    <td className="py-3 px-2 sm:px-4">
+                    <td className="py-3 px-4">
                       <div className="flex items-center gap-3 min-w-0">
                         {lgu.logo_url ? (
                           <button className="w-10 h-10 rounded-lg overflow-hidden flex-shrink-0 cursor-pointer focus:outline-none" onClick={() => setPreviewUrl(lgu.logo_url!)}>
@@ -201,13 +201,13 @@ export default function AdminCsgLgusPage() {
                         </div>
                       </div>
                     </td>
-                    <td className="py-3 px-2 sm:px-4">
+                    <td className="py-3 px-4">
                       <span className="text-xs px-2 py-1 rounded bg-cjc-navy text-white font-mono whitespace-nowrap">{lgu.code}</span>
                     </td>
-                    <td className="py-3 px-2 sm:px-4 hidden md:table-cell">
+                    <td className="py-3 px-4 hidden md:table-cell">
                       <span className="text-xs px-2 py-1 rounded bg-cjc-blue/10 text-cjc-blue font-mono">{lgu.department_code}</span>
                     </td>
-                    <td className="py-3 px-2 sm:px-4 hidden md:table-cell">
+                    <td className="py-3 px-4 hidden md:table-cell">
                       {lgu.head ? (
                         <div className="flex items-center gap-2">
                           <Avatar src={lgu.head.avatar_url || undefined} name={getHeadDisplayName(lgu) || ""} variant="primary" size="sm" className={lgu.head.avatar_url ? "cursor-pointer" : ""} onClick={() => lgu.head?.avatar_url && setPreviewUrl(lgu.head.avatar_url)} />
@@ -224,14 +224,14 @@ export default function AdminCsgLgusPage() {
                         </div>
                       )}
                     </td>
-                    <td className="py-3 px-2 sm:px-4 hidden sm:table-cell">
+                    <td className="py-3 px-4 hidden sm:table-cell">
                       {lgu.status === "active" ? (
                         <span className="text-xs px-2.5 py-1 rounded-full bg-success/10 text-success font-medium">Active</span>
                       ) : (
                         <span className="text-xs px-2.5 py-1 rounded-full bg-gray-100 text-gray-500 font-medium">Inactive</span>
                       )}
                     </td>
-                    <td className="py-3 px-2 sm:px-4">
+                    <td className="py-3 px-4">
                       <div className="flex items-center justify-end gap-1">
                         <button onClick={() => handleEditLgu(lgu)} className="p-2 hover:bg-surface-warm rounded-lg transition-colors" title="Edit LGU">
                           <Edit2 className="w-4 h-4 text-warm-muted" />

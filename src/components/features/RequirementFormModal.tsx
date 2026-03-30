@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/Button";
 import { CheckSquare, Plus, X, ScanLine } from "lucide-react";
 import {
   createRequirement,
+  updateRequirement,
   replaceRequirementLinks,
   Requirement,
 } from "@/lib/supabase";
@@ -41,6 +42,8 @@ interface RequirementFormModalProps {
   sourceType: "department" | "office" | "club" | "csg_lgu" | "cspsp_division";
   sourceId: string;
   existingRequirements: Requirement[];
+  mode?: "add" | "edit";
+  requirement?: Requirement;
 }
 
 export function RequirementFormModal({
@@ -50,19 +53,32 @@ export function RequirementFormModal({
   sourceType,
   sourceId,
   existingRequirements,
+  mode = "add",
+  requirement,
 }: RequirementFormModalProps) {
   const { showToast } = useToast();
   const [formData, setFormData] = useState<RequirementFormData>(emptyForm);
   const [nameError, setNameError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Reset form when modal opens
+  // Reset or pre-fill form when modal opens
   useEffect(() => {
     if (isOpen) {
-      setFormData(emptyForm);
+      if (mode === "edit" && requirement) {
+        setFormData({
+          name: requirement.name,
+          description: requirement.description ?? "",
+          is_required: requirement.is_required,
+          requires_upload: requirement.requires_upload,
+          is_attendance: requirement.is_attendance,
+          links: (requirement.links ?? []).map(l => ({ url: l.url, label: l.label ?? "" })),
+        });
+      } else {
+        setFormData(emptyForm);
+      }
       setNameError(null);
     }
-  }, [isOpen]);
+  }, [isOpen, mode, requirement]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -76,40 +92,66 @@ export function RequirementFormModal({
     setIsLoading(true);
 
     try {
-      const nextOrder =
-        existingRequirements.length > 0
-          ? Math.max(...existingRequirements.map((r) => r.order ?? 0)) + 1
-          : 0;
-
-      const created = await createRequirement({
-        source_type: sourceType,
-        source_id: sourceId,
-        name: formData.name.trim(),
-        description: formData.description.trim() || undefined,
-        is_required: formData.is_required,
-        requires_upload: formData.requires_upload,
-        is_attendance: formData.is_attendance,
-        order: nextOrder,
-      });
-
-      // Save links to requirement_links table
       const validLinks = formData.links.filter((l) => l.url.trim());
-      if (validLinks.length > 0) {
+
+      if (mode === "edit" && requirement) {
+        const updated = await updateRequirement(requirement.id, {
+          name: formData.name.trim(),
+          description: formData.description.trim() || null,
+          is_required: formData.is_required,
+          requires_upload: formData.requires_upload,
+          is_attendance: formData.is_attendance,
+        });
+
         await replaceRequirementLinks(
-          created.id,
+          requirement.id,
           validLinks.map((l, i) => ({
             url: l.url.trim(),
             label: l.label.trim() || undefined,
             order: i,
           }))
         );
+
+        showToast(
+          "success",
+          "Requirement Updated",
+          `"${updated.name}" has been updated.`
+        );
+      } else {
+        const nextOrder =
+          existingRequirements.length > 0
+            ? Math.max(...existingRequirements.map((r) => r.order ?? 0)) + 1
+            : 0;
+
+        const created = await createRequirement({
+          source_type: sourceType,
+          source_id: sourceId,
+          name: formData.name.trim(),
+          description: formData.description.trim() || undefined,
+          is_required: formData.is_required,
+          requires_upload: formData.requires_upload,
+          is_attendance: formData.is_attendance,
+          order: nextOrder,
+        });
+
+        if (validLinks.length > 0) {
+          await replaceRequirementLinks(
+            created.id,
+            validLinks.map((l, i) => ({
+              url: l.url.trim(),
+              label: l.label.trim() || undefined,
+              order: i,
+            }))
+          );
+        }
+
+        showToast(
+          "success",
+          "Requirement Added",
+          `"${created.name}" has been added.`
+        );
       }
 
-      showToast(
-        "success",
-        "Requirement Added",
-        `"${created.name}" has been added.`
-      );
       onSuccess();
     } catch (err: unknown) {
       const msg =
@@ -148,7 +190,7 @@ export function RequirementFormModal({
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="max-w-2xl">
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {/* Header */}
         <div className="flex items-center gap-3 mb-6">
           <div className="w-10 h-10 rounded-full bg-cjc-red/10 flex items-center justify-center">
@@ -156,10 +198,10 @@ export function RequirementFormModal({
           </div>
           <div>
             <h2 className="text-lg font-semibold text-cjc-navy">
-              New Requirement
+              {mode === "edit" ? "Edit Requirement" : "New Requirement"}
             </h2>
             <p className="text-sm text-gray-500">
-              Add a new clearance requirement
+              {mode === "edit" ? "Update requirement details" : "Add a new clearance requirement"}
             </p>
           </div>
         </div>
@@ -346,7 +388,7 @@ export function RequirementFormModal({
               className="flex-1"
               isLoading={isLoading}
             >
-              Add Requirement
+              {mode === "edit" ? "Save Changes" : "Add Requirement"}
             </Button>
           </div>
         </form>

@@ -59,7 +59,7 @@ export function AnnouncementDetailModal({
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="max-w-2xl overflow-hidden" showCloseButton={false}>
       {/* Header */}
-      <div className="px-6 pt-6 pb-0 relative">
+      <div className="px-4 sm:px-6 pt-6 pb-0 relative">
         {/* Close button */}
         <button
           onClick={onClose}
@@ -88,7 +88,7 @@ export function AnnouncementDetailModal({
       </div>
 
       {/* Content Area */}
-      <div className="px-6 py-6">
+      <div className="px-4 sm:px-6 py-6">
         {/* Event Details */}
         {(announcement.event_date || announcement.event_location) && (
           <div className="flex flex-wrap gap-4 mb-5 text-sm">

@@ -234,12 +234,12 @@ export default function StudentHistoryPage() {
                     {items.map((item) => (
                       <div
                         key={item.id}
-                        className="flex items-center justify-between gap-4 px-5 py-3 hover:bg-gray-50"
+                        className="flex items-center justify-between gap-2 px-3 sm:px-5 py-3 hover:bg-gray-50"
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2 min-w-0">
                           <ItemStatusBadge status={item.status} />
-                          <div>
-                            <p className="text-sm font-medium text-cjc-navy">
+                          <div className="min-w-0">
+                            <p className="text-sm font-medium text-cjc-navy truncate">
                               {sourceNames[item.source_id] ?? item.source_id}
                             </p>
                             <p className="text-xs text-gray-400">

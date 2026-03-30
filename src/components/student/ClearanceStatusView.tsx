@@ -150,9 +150,9 @@ export default function ClearanceStatusView({
 
           return (
             <Card key={source.id} padding="md" className="space-y-2">
-              <div className="flex items-center justify-between gap-4 flex-wrap">
-                <div>
-                  <p className="font-semibold text-cjc-navy text-sm">
+              <div className="flex items-center justify-between gap-2 sm:gap-4 flex-wrap">
+                <div className="min-w-0">
+                  <p className="font-semibold text-cjc-navy text-sm truncate">
                     {source.code} — {source.name}
                   </p>
                   <p className="text-xs text-gray-400 mt-0.5">

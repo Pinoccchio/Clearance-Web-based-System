@@ -316,7 +316,7 @@ export default function ClubMembersPage() {
 
       <div className="p-6 space-y-6">
         {/* Stats Row */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
           <Card padding="sm" className="text-center">
             <p className="text-2xl font-bold text-cjc-navy">
               {isLoading ? "..." : totalCount}

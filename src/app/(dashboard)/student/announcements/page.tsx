@@ -19,6 +19,7 @@ import {
 import { AnnouncementWithRelations, getActiveAnnouncements } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth-context";
 import { AnnouncementDetailModal } from "@/components/features/AnnouncementDetailModal";
+import { Select } from "@/components/ui/Select";
 
 const priorityColors = {
   low: "bg-gray-100 text-gray-600",
@@ -189,7 +190,7 @@ export default function StudentAnnouncementsPage() {
         )}
 
         {/* Stats Row */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 sm:gap-4">
           <div className="card p-4 text-center">
             <p className="text-2xl font-bold text-cjc-navy">{stats.total}</p>
             <p className="text-sm text-warm-muted">Total</p>
@@ -269,17 +270,17 @@ export default function StudentAnnouncementsPage() {
               className="w-full h-10 pl-10 pr-3 border border-border-warm rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-cjc-blue/20 focus:border-cjc-blue"
             />
           </div>
-          <select
+          <Select
             value={priorityFilter}
             onChange={(e) => setPriorityFilter(e.target.value)}
-            className="h-10 px-3 border border-border-warm rounded-lg bg-white text-sm focus:outline-none focus:ring-2 focus:ring-cjc-blue/20 focus:border-cjc-blue"
-          >
-            <option value="all">All Priorities</option>
-            <option value="urgent">Urgent</option>
-            <option value="high">High</option>
-            <option value="normal">Normal</option>
-            <option value="low">Low</option>
-          </select>
+            options={[
+              { value: "all", label: "All Priorities" },
+              { value: "urgent", label: "Urgent" },
+              { value: "high", label: "High" },
+              { value: "normal", label: "Normal" },
+              { value: "low", label: "Low" },
+            ]}
+          />
           <button
             onClick={loadData}
             disabled={isLoading}
@@ -307,7 +308,7 @@ export default function StudentAnnouncementsPage() {
                 onClick={() => handleCardClick(a)}
                 className={`card p-4 cursor-pointer hover:shadow-md transition-shadow ${priorityCardBorder[a.priority]}`}
               >
-                <div className="flex items-start justify-between gap-4">
+                <div className="flex items-start justify-between gap-2 sm:gap-4">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${priorityColors[a.priority]}`}>
@@ -364,7 +365,7 @@ export default function StudentAnnouncementsPage() {
                       </div>
                     )}
                   </div>
-                  <div className="text-right text-xs text-warm-muted shrink-0">
+                  <div className="hidden sm:block text-right text-xs text-warm-muted shrink-0">
                     <p className="font-medium">{getPostedByName(a)}</p>
                     <p className="mt-0.5">{formatDateShort(a.created_at)}</p>
                     {a.expires_at && (

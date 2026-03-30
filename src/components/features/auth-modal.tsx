@@ -37,7 +37,7 @@ export function AuthModal({ isOpen, onClose, initialMode = "login" }: AuthModalP
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} className="max-w-md">
-      <div className="p-6">
+      <div className="p-4 sm:p-6">
         {/* Content - No tabs, just login or forgot password */}
         {mode === "login" ? (
           <LoginForm onClose={onClose} onForgotPassword={() => setMode("forgot-password")} />
