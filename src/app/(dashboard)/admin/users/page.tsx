@@ -212,7 +212,7 @@ export default function AdminUsersPage() {
         return "info";
       case "cspsg":
         return "pending";
-      case "cspsg_division":
+      case "csp_division":
         return "neutral";
       default:
         return "pending";
@@ -235,8 +235,8 @@ export default function AdminUsersPage() {
         return "LGU";
       case "cspsg":
         return "CSPSG";
-      case "cspsg_division":
-        return short ? "CSPSG Div" : "CSPSG Division";
+      case "csp_division":
+        return short ? "CSP Div" : "CSP Division";
       case "admin":
         return "Admin";
       default:
@@ -262,7 +262,7 @@ export default function AdminUsersPage() {
     { value: "csg", label: "CSG" },
     { value: "csg_department_lgu", label: "LGU" },
     { value: "cspsg", label: "CSPSG" },
-    { value: "cspsg_division", label: "CSPSG Division" },
+    { value: "csp_division", label: "CSP Division" },
     { value: "admin", label: "Admin" },
   ];
 
@@ -349,7 +349,7 @@ export default function AdminUsersPage() {
               {isLoading
                 ? "..."
                 : users.filter(
-                    (u) => u.role === "department" || u.role === "club" || u.role === "csg_department_lgu" || u.role === "cspsg_division"
+                    (u) => u.role === "department" || u.role === "club" || u.role === "csg_department_lgu" || u.role === "csp_division"
                   ).length}
             </p>
             <p className="text-sm text-gray-500">Dept/Clubs/Orgs</p>
@@ -544,7 +544,7 @@ export default function AdminUsersPage() {
                                 </span>
                               </div>
                             )
-                          ) : user.role === "cspsg_division" ? (
+                          ) : user.role === "csp_division" ? (
                             user.linkedCspsgDivision ? (
                               <div className="flex items-center gap-2">
                                 <UserCheck className="w-4 h-4 text-green-500" />

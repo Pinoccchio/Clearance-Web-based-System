@@ -8,7 +8,7 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "eyJhbGciOi
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Types
-export type UserRole = "student" | "office" | "department" | "club" | "csg_department_lgu" | "cspsg_division" | "csg" | "cspsg" | "admin";
+export type UserRole = "student" | "office" | "department" | "club" | "csg_department_lgu" | "csp_division" | "csg" | "cspsg" | "admin";
 
 export interface Profile {
   id: string;
@@ -905,7 +905,7 @@ export async function getUnlinkedCspsgDivisionUsers(): Promise<Profile[]> {
   let query = supabase
     .from("profiles")
     .select("*")
-    .eq("role", "cspsg_division")
+    .eq("role", "csp_division")
     .order("last_name", { ascending: true });
 
   if (linkedHeadIds.length > 0) {
@@ -921,7 +921,7 @@ export async function getCspsgDivisionRoleUsers(): Promise<Profile[]> {
   const { data, error } = await supabase
     .from("profiles")
     .select("*")
-    .eq("role", "cspsg_division")
+    .eq("role", "csp_division")
     .order("last_name", { ascending: true });
   if (error) throw error;
   return data || [];
@@ -2681,24 +2681,29 @@ export async function updateClearanceItem(
 
   if (error) throw error;
 
-  // Resolve reviewer role for history — fire-and-forget
-  supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', data.reviewed_by)
-    .single()
-    .then(({ data: profile }) => {
-      supabase.from('clearance_item_history').insert({
-        clearance_item_id: itemId,
-        from_status: currentStatus,
-        to_status: data.status,
-        actor_id: data.reviewed_by,
-        actor_role: profile?.role ?? null,
-        remarks: data.remarks ?? null,
-      }).then(({ error }) => {
-        if (error) console.error('Failed to log clearance history:', error);
-      });
+  // Log history entry — await to ensure it completes
+  try {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', data.reviewed_by)
+      .single();
+
+    const { error: historyError } = await supabase.from('clearance_item_history').insert({
+      clearance_item_id: itemId,
+      from_status: currentStatus,
+      to_status: data.status,
+      actor_id: data.reviewed_by,
+      actor_role: profile?.role ?? null,
+      remarks: data.remarks ?? null,
     });
+
+    if (historyError) {
+      console.error('Failed to log clearance history:', historyError);
+    }
+  } catch (historyErr) {
+    console.error('Error logging clearance history:', historyErr);
+  }
 
   return updated;
 }
@@ -2988,17 +2993,23 @@ export async function submitClearanceItem(
     .eq('id', itemId);
   if (error) throw error;
 
-  // Log history entry — fire-and-forget, don't block submit on history error
-  supabase.from('clearance_item_history').insert({
-    clearance_item_id: itemId,
-    from_status: currentStatus,
-    to_status: 'submitted',
-    actor_id: studentId,
-    actor_role: 'student',
-    remarks: null,
-  }).then(({ error }) => {
-    if (error) console.error('Failed to log clearance history:', error);
-  });
+  // Log history entry — await to ensure it completes
+  try {
+    const { error: historyError } = await supabase.from('clearance_item_history').insert({
+      clearance_item_id: itemId,
+      from_status: currentStatus,
+      to_status: 'submitted',
+      actor_id: studentId,
+      actor_role: 'student',
+      remarks: null,
+    });
+
+    if (historyError) {
+      console.error('Failed to log clearance history:', historyError);
+    }
+  } catch (historyErr) {
+    console.error('Error logging clearance history:', historyErr);
+  }
 }
 
 
@@ -3188,7 +3199,7 @@ export async function getClearanceItemsByCspsgDivision(
         student:profiles(*)
       )
     `)
-    .eq('source_type', 'cspsg_division')
+    .eq('source_type', 'csp_division')
     .eq('source_id', divisionId)
     .neq('status', 'pending')
     .order('created_at', { ascending: false });
@@ -3210,7 +3221,7 @@ export async function getProcessedClearanceItemsByCspsgDivision(
         student:profiles(*)
       )
     `)
-    .eq('source_type', 'cspsg_division')
+    .eq('source_type', 'csp_division')
     .eq('source_id', divisionId)
     .in('status', ['approved', 'rejected', 'on_hold'])
     .order('reviewed_at', { ascending: false });
@@ -3286,7 +3297,7 @@ export async function getAnnouncementsByCspsgDivision(
  * Used by admin list pages to show the source-specific clearance status for each student.
  */
 export async function getClearanceItemsBySourceAndRequests(
-  sourceType: 'department' | 'office' | 'club' | 'csg_department_lgu' | 'cspsg_division' | 'cspsg' | 'csg',
+  sourceType: 'department' | 'office' | 'club' | 'csg_department_lgu' | 'csp_division' | 'cspsg' | 'csg',
   sourceId: string,
   requestIds: string[]
 ): Promise<ClearanceItem[]> {
@@ -3317,7 +3328,7 @@ export interface StudentDocument {
   status: 'pending' | 'submitted' | 'verified' | 'rejected';
   submitted_at: string | null;
   remarks: string | null;
-  source_type: 'department' | 'office' | 'club' | 'csg_department_lgu' | 'cspsg_division' | 'cspsg' | 'csg';
+  source_type: 'department' | 'office' | 'club' | 'csg_department_lgu' | 'csp_division' | 'cspsg' | 'csg';
   source_id: string;
   academic_year: string;
   semester: string;
@@ -3359,7 +3370,7 @@ export async function getStudentDocuments(studentId: string): Promise<StudentDoc
       remarks: string | null;
       requirement: { name: string; requires_upload: boolean };
       clearance_item: {
-        source_type: 'department' | 'office' | 'club' | 'csg_department_lgu' | 'cspsg_division' | 'cspsg' | 'csg';
+        source_type: 'department' | 'office' | 'club' | 'csg_department_lgu' | 'csp_division' | 'cspsg' | 'csg';
         source_id: string;
         request: { academic_year: string; semester: string };
       };
@@ -3701,7 +3712,7 @@ export async function getAllEvents(): Promise<EventRecord[]> {
   const deptIds = [...new Set(events.filter(e => e.source_type === 'department').map(e => e.source_id))];
   const clubIds = [...new Set(events.filter(e => e.source_type === 'club').map(e => e.source_id))];
   const lguIds = [...new Set(events.filter(e => e.source_type === 'csg_department_lgu').map(e => e.source_id))];
-  const divisionIds = [...new Set(events.filter(e => e.source_type === 'cspsg_division').map(e => e.source_id))];
+  const divisionIds = [...new Set(events.filter(e => e.source_type === 'csp_division').map(e => e.source_id))];
 
   const nameMap: Record<string, string> = {};
 

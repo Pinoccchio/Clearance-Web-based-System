@@ -72,7 +72,7 @@ const adminNavSections: NavSection[] = [
     title: "CSP Student Gov",
     items: [
       { label: "CSPSG", href: "/admin/cspsg", icon: <GraduationCap className="w-5 h-5" /> },
-      { label: "CSPSG Divisions", href: "/admin/cspsg-divisions", icon: <GraduationCap className="w-5 h-5" /> },
+      { label: "CSP Divisions", href: "/admin/cspsg-divisions", icon: <GraduationCap className="w-5 h-5" /> },
     ],
   },
   {
@@ -88,7 +88,7 @@ const adminNavSections: NavSection[] = [
 
 // Dashboard-only navigation for other roles (placeholder)
 const getDashboardOnlyNav = (role: UserRole): NavSection[] => {
-  const rolePathMap: Record<string, string> = { csg_department_lgu: 'csg-department-lgu', cspsg_division: 'cspsg-division' };
+  const rolePathMap: Record<string, string> = { csg_department_lgu: 'csg-department-lgu', csp_division: 'cspsg-division' };
   const path = rolePathMap[role] ?? role;
   return [
     {
@@ -442,7 +442,7 @@ const studentNavSections: NavSection[] = [
     ],
   },
   {
-    title: "CSPSG Division",
+    title: "CSP Division",
     items: [
       { label: "Clearance Status", href: "/student/cspsg-division/clearance",   icon: <ClipboardList className="w-5 h-5" /> },
       { label: "Requirements",     href: "/student/cspsg-division/requirements", icon: <CheckSquare className="w-5 h-5" /> },
@@ -469,7 +469,7 @@ const roleLabels: Record<UserRole, string> = {
   department: "Department",
   club: "Club Officer",
   csg_department_lgu: "LGU Head",
-  cspsg_division: "CSPSG Division Head",
+  csp_division: "CSP Division Head",
   csg: "CSG Head",
   cspsg: "CSPSG Head",
   admin: "Administrator",
@@ -492,11 +492,11 @@ interface SidebarProps {
 export default function Sidebar({ role, userName, userEmail, userAvatar, isCollapsed, onToggleCollapse, onLogout, orgLogo, orgName, isCsp, onMobileClose }: SidebarProps) {
   const pathname = usePathname();
 
-  const roleToPath: Record<string, string> = { csg_department_lgu: 'csg-department-lgu', cspsg_division: 'cspsg-division' };
+  const roleToPath: Record<string, string> = { csg_department_lgu: 'csg-department-lgu', csp_division: 'cspsg-division' };
   const effectiveRole = roleToPath[role] ?? role;
 
   const getStudentNav = (): NavSection[] => {
-    const excludeTitles = isCsp ? ["CSG", "LGU"] : ["CSPSG", "CSPSG Division"];
+    const excludeTitles = isCsp ? ["CSG", "LGU"] : ["CSPSG", "CSP Division"];
     return studentNavSections.filter((section) => !excludeTitles.includes(section.title));
   };
 
@@ -507,7 +507,7 @@ export default function Sidebar({ role, userName, userEmail, userAvatar, isColla
     role === "club" ? clubNavSections :
     role === "csg_department_lgu" ? csgDepartmentLguNavSections :
     role === "csg" ? csgNavSections :
-    role === "cspsg_division" ? cspsgDivisionNavSections :
+    role === "csp_division" ? cspsgDivisionNavSections :
     role === "cspsg" ? cspsgNavSections :
     role === "student" ? getStudentNav() :
     getDashboardOnlyNav(role);
@@ -527,7 +527,7 @@ export default function Sidebar({ role, userName, userEmail, userAvatar, isColla
           <div className="w-10 h-10 rounded-xl overflow-hidden flex-shrink-0 bg-white/10 p-0.5">
             <Image
               src={
-                (role === "office" || role === "department" || role === "club" || role === "csg_department_lgu" || role === "cspsg_division" || role === "csg" || role === "cspsg")
+                (role === "office" || role === "department" || role === "club" || role === "csg_department_lgu" || role === "csp_division" || role === "csg" || role === "cspsg")
                   ? (orgLogo || "/images/logos/cjc-logo.jpeg")
                   : "/images/logos/cjc-logo.jpeg"
               }
@@ -541,7 +541,7 @@ export default function Sidebar({ role, userName, userEmail, userAvatar, isColla
             <div>
               <p className="text-white font-semibold">CJC Clearance</p>
               <p className="text-white/50 text-xs truncate max-w-[140px]">
-                {(role === "office" || role === "department" || role === "club" || role === "csg_department_lgu" || role === "cspsg_division" || role === "csg" || role === "cspsg") && orgName
+                {(role === "office" || role === "department" || role === "club" || role === "csg_department_lgu" || role === "csp_division" || role === "csg" || role === "cspsg") && orgName
                   ? orgName
                   : "Clearance System"}
               </p>

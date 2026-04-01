@@ -163,7 +163,7 @@ export default function CspsgDivisionAnnouncementsPage() {
 
   const roleLabel: Record<string, string> = {
     admin: "Admin", department: "Department", office: "Office",
-    club: "Club", student: "Student", cspsg_division: "CSPSG Division",
+    club: "Club", student: "Student", cspsg_division: "CSP Division",
   };
   const getPostedByName = (a: AnnouncementWithRelations) => {
     if (!a.posted_by) return "Unknown";
@@ -224,7 +224,7 @@ export default function CspsgDivisionAnnouncementsPage() {
       <header className="bg-white border-b border-border-warm">
         <div className="px-6 py-5">
           <p className="text-sm text-warm-muted">
-            {division ? division.name : "CSPSG Division"}
+            {division ? division.name : "CSP Division"}
           </p>
           <h1 className="text-2xl font-display font-bold text-cjc-navy">Announcements</h1>
         </div>

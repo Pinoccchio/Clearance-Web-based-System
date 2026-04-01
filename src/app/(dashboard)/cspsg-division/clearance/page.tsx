@@ -293,7 +293,7 @@ export default function CspsgDivisionClearancePage() {
       <header className="bg-white border-b border-border-warm">
         <div className="px-6 py-5">
           <p className="text-sm text-warm-muted">
-            {division?.name ?? "CSPSG Division"}
+            {division?.name ?? "CSP Division"}
           </p>
           <h1 className="text-2xl font-display font-bold text-cjc-navy">Clearance Queue</h1>
         </div>
@@ -696,6 +696,7 @@ export default function CspsgDivisionClearancePage() {
                     variant={actionType === "approved" ? "primary" : "secondary"}
                     size="sm"
                     onClick={() => setActionType("approved")}
+                    disabled={selectedItem.status === "approved"}
                   >
                     <CheckCircle className="w-4 h-4" />
                     Approve
@@ -704,6 +705,7 @@ export default function CspsgDivisionClearancePage() {
                     variant={actionType === "rejected" ? "danger" : "secondary"}
                     size="sm"
                     onClick={() => setActionType("rejected")}
+                    disabled={selectedItem.status === "rejected"}
                   >
                     <XCircle className="w-4 h-4" />
                     Reject
@@ -712,6 +714,7 @@ export default function CspsgDivisionClearancePage() {
                     variant="secondary"
                     size="sm"
                     onClick={() => setActionType("on_hold")}
+                    disabled={selectedItem.status === "on_hold"}
                     className={actionType === "on_hold" ? "border-amber-400 bg-amber-50 text-amber-700" : ""}
                   >
                     <PauseCircle className="w-4 h-4" />

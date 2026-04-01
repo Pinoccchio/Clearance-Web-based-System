@@ -66,7 +66,7 @@ export default function StudentDashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const isCsp = !!(profile?.cspsg_division || profile?.department === "CSP");
+  const isCsp = !!(profile?.csp_division || profile?.department === "CSP");
 
   const loadData = useCallback(async () => {
     if (!profile?.id) return;
@@ -88,7 +88,7 @@ export default function StudentDashboardPage() {
 
       if (isCsp) {
         const [div, cspsgResult] = await Promise.all([
-          profile.cspsg_division ? getCspsgDivisionWithHeadByCode(profile.cspsg_division) : Promise.resolve(null),
+          profile.csp_division ? getCspsgDivisionWithHeadByCode(profile.csp_division) : Promise.resolve(null),
           getActiveCspsg(),
         ]);
         if (div) cspsgDivisionsData = [div];
@@ -118,7 +118,7 @@ export default function StudentDashboardPage() {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [profile?.id, profile?.department, profile?.cspsg_division, isCsp]);
+  }, [profile?.id, profile?.department, profile?.csp_division, isCsp]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -188,7 +188,7 @@ export default function StudentDashboardPage() {
     sourceNameMap[`cspsg:${cspsgOrg.id}`] = cspsgOrg.name;
   }
   for (const d of cspsgDivisions) {
-    sourceNameMap[`cspsg_division:${d.id}`] = d.name;
+    sourceNameMap[`csp_division:${d.id}`] = d.name;
   }
 
   // Group items by source_type for display (current period only)
@@ -504,7 +504,7 @@ export default function StudentDashboardPage() {
                           <p className="text-xs text-gray-400">{div.code}</p>
                         </div>
                         <div className="flex items-center gap-3">
-                          {getStatusBadge(getItemsForSource("cspsg_division", div.id)?.status)}
+                          {getStatusBadge(getItemsForSource("csp_division", div.id)?.status)}
                           <Link href="/student/cspsg-division/submit">
                             <ArrowRight className="w-4 h-4 text-gray-400 hover:text-cjc-navy transition-colors" />
                           </Link>

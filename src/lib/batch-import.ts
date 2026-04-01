@@ -38,7 +38,7 @@ export interface ParsedData {
 
 const STUDENT_ID_REGEX = /^\d{4}-\d{4}-\d+$/;
 const EMAIL_DOMAIN = '@g.cjc.edu.ph';
-const VALID_YEAR_LEVELS = ['1', '2', '3', '4'];
+const VALID_YEAR_LEVELS = ['1', '2', '3', '4', '5'];
 
 // Column headers expected in the Excel file
 const EXPECTED_HEADERS = [
@@ -52,7 +52,7 @@ const EXPECTED_HEADERS = [
   'Course',
   'Year Level',
   'Enrolled Clubs',
-  'CSPSG Division',
+  'CSP Division',
 ];
 
 // ==========================================
@@ -128,7 +128,7 @@ export function validateRows(
     const course = (row['Course'] || '').trim().toUpperCase();
     const yearLevel = (row['Year Level'] || '').toString().trim();
     const enrolledClubs = (row['Enrolled Clubs'] || '').trim();
-    const cspsgDivisionCode = (row['CSPSG Division'] || '').trim().toUpperCase();
+    const cspsgDivisionCode = (row['CSP Division'] || '').trim().toUpperCase();
 
     // Skip completely empty rows
     if (!studentId && !firstName && !lastName && !email) {
@@ -200,7 +200,7 @@ export function validateRows(
     if (!yearLevel) {
       errors.push({ row: rowNum, field: 'Year Level', message: 'Year level is required' });
     } else if (!VALID_YEAR_LEVELS.includes(yearLevel)) {
-      errors.push({ row: rowNum, field: 'Year Level', message: 'Must be 1, 2, 3, or 4' });
+      errors.push({ row: rowNum, field: 'Year Level', message: 'Must be 1, 2, 3, 4, or 5' });
     }
 
     // Validate Enrolled Clubs (optional)
@@ -225,18 +225,18 @@ export function validateRows(
     const isCsp = department === 'CSP';
     if (isCsp) {
       if (!cspsgDivisionCode) {
-        errors.push({ row: rowNum, field: 'CSPSG Division', message: 'Required for CSP students — use code from CSPSG Divisions table' });
+        errors.push({ row: rowNum, field: 'CSP Division', message: 'Required for CSP students — use code from CSP Divisions table' });
       } else {
         const division = divisionCodeMap.get(cspsgDivisionCode);
         if (!division) {
-          errors.push({ row: rowNum, field: 'CSPSG Division', message: `Unknown CSPSG Division code: ${cspsgDivisionCode}` });
+          errors.push({ row: rowNum, field: 'CSP Division', message: `Unknown CSP Division code: ${cspsgDivisionCode}` });
         } else {
           cspsgDivisionId = division.id;
           cspsgDivisionCodeResolved = division.code;
         }
       }
     } else if (cspsgDivisionCode) {
-      errors.push({ row: rowNum, field: 'CSPSG Division', message: 'Only applicable for CSP students' });
+      errors.push({ row: rowNum, field: 'CSP Division', message: 'Only applicable for CSP students' });
     }
 
     // If no errors, add to valid rows
@@ -474,7 +474,7 @@ export function generateExcelTemplate(
   referenceData.push(['Course', 'Yes', 'Use code from Courses table']);
   referenceData.push(['Year Level', 'Yes', '1, 2, 3, or 4']);
   referenceData.push(['Enrolled Clubs', 'No', 'Comma-separated club codes (e.g., ACSS,CRCYC)']);
-  referenceData.push(['CSPSG Division', 'CSP only', 'Use code from CSPSG Divisions table (e.g., DATCH)']);
+  referenceData.push(['CSP Division', 'CSP only', 'Use code from CSP Divisions table (e.g., DATCH)']);
 
   const referenceSheet = XLSX.utils.aoa_to_sheet(referenceData);
 

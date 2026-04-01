@@ -24,7 +24,7 @@ interface CreateUserRequestBody {
   firstName: string;
   lastName: string;
   middleName?: string;
-  role: "student" | "office" | "department" | "club" | "csg_department_lgu" | "cspsg_division" | "csg" | "cspsg" | "admin";
+  role: "student" | "office" | "department" | "club" | "csg_department_lgu" | "csp_division" | "csg" | "cspsg" | "admin";
   department?: string;
   studentId?: string;
   course?: string;

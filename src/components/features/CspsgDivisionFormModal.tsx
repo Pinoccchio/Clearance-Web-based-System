@@ -181,7 +181,7 @@ export function CspsgDivisionFormModal({ isOpen, onClose, onSuccess, mode, divis
           </div>
           <div>
             <h2 className="text-lg font-semibold text-cjc-navy">{mode === "add" ? "Add New Division" : "Edit Division"}</h2>
-            <p className="text-sm text-gray-500">{mode === "add" ? "Create a new CSPSG Division" : "Update division information"}</p>
+            <p className="text-sm text-gray-500">{mode === "add" ? "Create a new CSP Division" : "Update division information"}</p>
           </div>
         </div>
 
@@ -192,7 +192,7 @@ export function CspsgDivisionFormModal({ isOpen, onClose, onSuccess, mode, divis
           <Select label="Department" name="department_code" value={formData.department_code} onChange={handleChange} options={[{ value: "", label: "Select Department" }, ...departments.map(d => ({ value: d.code, label: `${d.code} — ${d.name}` }))]} error={errors.department_code} required />
           <Input label="Description" name="description" value={formData.description} onChange={handleChange} placeholder="Brief description of the division" />
           <ImageUpload label="Division Logo (optional)" value={formData.logo_url || null} onChange={handleLogoChange} onUpload={handleLogoUpload} onDelete={handleLogoDelete} disabled={isLoading} />
-          <Select label="Linked Account (Head)" name="head_id" value={formData.head_id} onChange={handleChange} options={headOptions} disabled={loadingHeads} helperText={loadingHeads ? "Loading available accounts..." : "Select a user with 'CSPSG Division' role to manage this division"} />
+          <Select label="Linked Account (Head)" name="head_id" value={formData.head_id} onChange={handleChange} options={headOptions} disabled={loadingHeads} helperText={loadingHeads ? "Loading available accounts..." : "Select a user with 'CSP Division' role to manage this division"} />
           <Select label="Status" name="status" value={formData.status} onChange={handleChange} options={statusOptions} />
           <div className="flex gap-3 pt-4">
             <Button type="button" variant="secondary" className="flex-1" onClick={onClose} disabled={isLoading}>Cancel</Button>

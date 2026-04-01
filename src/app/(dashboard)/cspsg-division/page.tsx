@@ -122,7 +122,7 @@ export default function CspsgDivisionDashboard() {
 
       // Fetch division-specific clearance items for these requests
       const requestIds = currentRequests.map((r) => r.id);
-      const divItems = await getClearanceItemsBySourceAndRequests('cspsg_division', div.id, requestIds);
+      const divItems = await getClearanceItemsBySourceAndRequests('csp_division', div.id, requestIds);
 
       // Map items by request_id for quick lookup
       const itemByRequest = new Map<string, ClearanceItem>();
@@ -240,7 +240,7 @@ export default function CspsgDivisionDashboard() {
       <div className="min-h-screen bg-surface-warm">
         <header className="bg-white border-b border-border-warm">
           <div className="px-6 py-5">
-            <p className="text-sm text-warm-muted">{division?.name ?? "CSPSG Division"}</p>
+            <p className="text-sm text-warm-muted">{division?.name ?? "CSP Division"}</p>
             <h1 className="text-2xl font-display font-bold text-cjc-navy">
               Division Dashboard
             </h1>
@@ -266,7 +266,7 @@ export default function CspsgDivisionDashboard() {
       <header className="bg-white border-b border-border-warm">
         <div className="px-6 py-5 flex items-start justify-between">
           <div>
-            <p className="text-sm text-warm-muted">{division?.name ?? "CSPSG Division"}</p>
+            <p className="text-sm text-warm-muted">{division?.name ?? "CSP Division"}</p>
             <h1 className="text-2xl font-display font-bold text-cjc-navy">
               Division Dashboard
             </h1>
@@ -417,7 +417,7 @@ export default function CspsgDivisionDashboard() {
             {division?.code ?? "N/A"}
           </span>
           <span className="px-3 py-1 bg-white border border-gray-200 rounded-full">
-            {profile?.role === "cspsg_division" ? "Division Head" : "Staff"}
+            {profile?.role === "csp_division" ? "Division Head" : "Staff"}
           </span>
           <span className="px-3 py-1 bg-white border border-gray-200 rounded-full">
             {stats.total} Students

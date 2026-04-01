@@ -17,7 +17,7 @@ interface Source {
 }
 
 interface Props {
-  sourceType: "department" | "office" | "club" | "csg_department_lgu" | "cspsg_division" | "csg" | "cspsg";
+  sourceType: "department" | "office" | "club" | "csg_department_lgu" | "csp_division" | "csg" | "cspsg";
   sources: Source[];
   requirementCounts: Record<string, number>;
   clearanceRequest: ClearanceRequest | null;

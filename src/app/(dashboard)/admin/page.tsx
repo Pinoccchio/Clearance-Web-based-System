@@ -75,7 +75,7 @@ function getRoleBadge(role: string) {
       return <Badge variant="info" size="sm"><Shield className="w-3 h-3" /> LGU</Badge>;
     case "cspsg":
       return <Badge variant="pending" size="sm"><GraduationCap className="w-3 h-3" /> CSPSG</Badge>;
-    case "cspsg_division":
+    case "csp_division":
       return <Badge variant="neutral" size="sm"><GraduationCap className="w-3 h-3" /> CSPSG Div</Badge>;
     default:
       return <Badge variant="neutral" size="sm">{role}</Badge>;
@@ -150,7 +150,7 @@ export default function AdminDashboard() {
           case "csg_department_lgu":
             csgLguHeads++;
             break;
-          case "cspsg_division":
+          case "csp_division":
             cspsgDivisionHeads++;
             break;
           case "admin":

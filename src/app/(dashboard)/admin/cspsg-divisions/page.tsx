@@ -101,8 +101,8 @@ export default function AdminCspsgDivisionsPage() {
     <div className="min-h-screen bg-surface-warm">
       <header className="bg-white border-b border-border-warm">
         <div className="px-6 py-5">
-          <p className="text-sm text-warm-muted">Manage CSPSG Divisions</p>
-          <h1 className="text-2xl font-display font-bold text-cjc-navy">CSPSG Division Management</h1>
+          <p className="text-sm text-warm-muted">Manage CSP Divisions</p>
+          <h1 className="text-2xl font-display font-bold text-cjc-navy">CSP Division Management</h1>
         </div>
       </header>
 

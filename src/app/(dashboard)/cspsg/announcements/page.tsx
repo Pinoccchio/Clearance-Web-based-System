@@ -176,7 +176,7 @@ export default function CspsgAnnouncementsPage() {
     office: "Office",
     club: "Club",
     student: "Student",
-    cspsg_division: "CSPSG Division",
+    cspsg_division: "CSP Division",
     cspsg: "CSPSG",
     csg: "CSG",
     csg_department_lgu: "LGU",

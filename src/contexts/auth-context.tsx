@@ -32,7 +32,7 @@ async function fetchOrgForProfile(profile: Profile): Promise<{ logo: string | nu
   } else if (profile.role === "csg_department_lgu") {
     const org = await getCsgDepartmentLguByHeadId(profile.id);
     return { logo: org?.logo_url ?? null, name: org?.name ?? null, id: org?.id ?? null };
-  } else if (profile.role === "cspsg_division") {
+  } else if (profile.role === "csp_division") {
     const org = await getCspsgDivisionByHeadId(profile.id);
     return { logo: org?.logo_url ?? null, name: org?.name ?? null, id: org?.id ?? null };
   } else if (profile.role === "csg") {

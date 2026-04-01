@@ -237,7 +237,7 @@ export default function CspsgDivisionStudentsPage() {
 
       // 5. Fetch division-specific clearance items for these requests
       const requestIds = requests.map((r) => r.id);
-      const divItems = await getClearanceItemsBySourceAndRequests('cspsg_division', div.id, requestIds);
+      const divItems = await getClearanceItemsBySourceAndRequests('csp_division', div.id, requestIds);
 
       // Map items by request_id for quick lookup
       const itemByRequest = new Map<string, ClearanceItem>();
@@ -303,7 +303,7 @@ export default function CspsgDivisionStudentsPage() {
       <header className="bg-white border-b border-border-warm">
         <div className="px-6 py-5">
           <p className="text-sm text-warm-muted">
-            {division?.name ?? "CSPSG Division"}
+            {division?.name ?? "CSP Division"}
           </p>
           <h1 className="text-2xl font-display font-bold text-cjc-navy">Students</h1>
         </div>
@@ -407,7 +407,7 @@ export default function CspsgDivisionStudentsPage() {
                   { header: "Period", accessor: (s) => s.latestRequest ? `${s.latestRequest.academic_year} — ${s.latestRequest.semester}` : "—" },
                   { header: "Since", accessor: (s) => s.latestRequest ? formatDate(s.latestRequest.created_at) : "—" },
                 ],
-                `${division?.name ?? "cspsg_division"}_students_${periodLabel}`
+                `${division?.name ?? "csp_division"}_students_${periodLabel}`
               );
             }}
             disabled={isLoading || filtered.length === 0}

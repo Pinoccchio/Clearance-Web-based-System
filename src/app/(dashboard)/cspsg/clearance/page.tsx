@@ -763,6 +763,7 @@ export default function CspsgClearancePage() {
                   variant={actionType === "approved" ? "primary" : "secondary"}
                   size="sm"
                   onClick={() => setActionType("approved")}
+                  disabled={selectedItem.status === "approved"}
                 >
                   <CheckCircle className="w-4 h-4" />
                   Approve
@@ -771,6 +772,7 @@ export default function CspsgClearancePage() {
                   variant={actionType === "rejected" ? "danger" : "secondary"}
                   size="sm"
                   onClick={() => setActionType("rejected")}
+                  disabled={selectedItem.status === "rejected"}
                 >
                   <XCircle className="w-4 h-4" />
                   Reject
@@ -779,6 +781,7 @@ export default function CspsgClearancePage() {
                   variant="secondary"
                   size="sm"
                   onClick={() => setActionType("on_hold")}
+                  disabled={selectedItem.status === "on_hold"}
                   className={
                     actionType === "on_hold"
                       ? "border-amber-400 bg-amber-50 text-amber-700"

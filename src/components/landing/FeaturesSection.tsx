@@ -5,7 +5,7 @@ import { CheckCircle2, Users, FileCheck, ScanLine } from "lucide-react";
 
 interface ClearanceSource {
   name: string;
-  type: "department" | "office" | "club" | "csg" | "cspsg" | "csg_department_lgu" | "cspsg_division";
+  type: "department" | "office" | "club" | "csg" | "cspsg" | "csg_department_lgu" | "csp_division";
   logo_url: string | null;
 }
 

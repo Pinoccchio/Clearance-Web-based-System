@@ -196,7 +196,7 @@ export default function CspsgDivisionHistoryPage() {
       <header className="bg-white border-b border-border-warm">
         <div className="px-6 py-5">
           <p className="text-sm text-warm-muted">
-            {division?.name ?? "CSPSG Division"}
+            {division?.name ?? "CSP Division"}
           </p>
           <h1 className="text-2xl font-display font-bold text-cjc-navy">Clearance History</h1>
         </div>
@@ -267,7 +267,7 @@ export default function CspsgDivisionHistoryPage() {
                   { header: "Status", accessor: (i) => i.status },
                   { header: "Reviewed Date", accessor: (i) => i.reviewed_at ? formatDate(i.reviewed_at) : "—" },
                 ],
-                `${division?.name ?? "cspsg_division"}_clearance_history`
+                `${division?.name ?? "csp_division"}_clearance_history`
               );
             }}
             disabled={isLoading || filtered.length === 0}
@@ -437,7 +437,7 @@ export default function CspsgDivisionHistoryPage() {
               {selectedItem.reviewed_by && (
                 <div className="flex items-center justify-between">
                   <span className="text-xs text-gray-500">Reviewed by</span>
-                  <span className="text-xs text-gray-600">{division?.name ?? "CSPSG Division"}</span>
+                  <span className="text-xs text-gray-600">{division?.name ?? "CSP Division"}</span>
                 </div>
               )}
               {selectedItem.remarks && (
