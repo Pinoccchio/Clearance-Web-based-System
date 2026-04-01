@@ -83,7 +83,7 @@ function LoginForm({ onClose, onForgotPassword }: { onClose: () => void; onForgo
     console.log("[LoginForm] Login result:", result);
 
     if (result.success && result.role) {
-      const rolePathMap: Record<string, string> = { csg_department_lgu: 'csg-department-lgu', csp_division: 'cspsg-division' };
+      const rolePathMap: Record<string, string> = { csg_department_lgu: 'csg-department-lgu', cspsg_division: 'cspsg-division' };
       const path = rolePathMap[result.role] ?? result.role;
       console.log("[LoginForm] Login successful, redirecting to:", `/${path}`);
       onClose();

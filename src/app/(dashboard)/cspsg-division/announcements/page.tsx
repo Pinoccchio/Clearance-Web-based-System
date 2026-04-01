@@ -163,7 +163,7 @@ export default function CspsgDivisionAnnouncementsPage() {
 
   const roleLabel: Record<string, string> = {
     admin: "Admin", department: "Department", office: "Office",
-    club: "Club", student: "Student", csp_division: "CSP Division",
+    club: "Club", student: "Student", cspsg_division: "CSP Division",
   };
   const getPostedByName = (a: AnnouncementWithRelations) => {
     if (!a.posted_by) return "Unknown";

@@ -239,13 +239,13 @@ export async function DELETE(
       console.error("Error removing LGU head:", lguHeadError);
     }
 
-    // 12. Remove user from CSP Division head positions
+    // 12. Remove user from CSPSG Division head positions
     const { error: divisionHeadError } = await supabaseAdmin
-      .from("csp_divisions")
+      .from("cspsg_divisions")
       .update({ head_id: null })
       .eq("head_id", userId);
     if (divisionHeadError) {
-      console.error("Error removing CSP Division head:", divisionHeadError);
+      console.error("Error removing CSPSG Division head:", divisionHeadError);
     }
 
     // 13. Set updated_by to NULL in system_settings

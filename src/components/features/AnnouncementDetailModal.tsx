@@ -19,7 +19,7 @@ export function AnnouncementDetailModal({
 
   const roleLabel: Record<string, string> = {
     admin: "Admin", department: "Department", office: "Office",
-    club: "Club", student: "Student", csg_department_lgu: "LGU", csp_division: "CSP Division",
+    club: "Club", student: "Student", csg_department_lgu: "LGU", cspsg_division: "CSP Division",
   };
 
   const formatDate = (dateString: string) => {

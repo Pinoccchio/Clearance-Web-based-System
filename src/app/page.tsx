@@ -85,7 +85,7 @@ export default function LandingPage() {
           supabase.from("offices").select("name, logo_url").eq("status", "active").order("name"),
           supabase.from("clubs").select("name, logo_url").eq("status", "active").order("name"),
           supabase.from("csg_department_lgus").select("name, logo_url").eq("status", "active").order("name"),
-          supabase.from("csp_divisions").select("name, logo_url").eq("status", "active").order("name"),
+          supabase.from("cspsg_divisions").select("name, logo_url").eq("status", "active").order("name"),
           supabase.from("csg").select("name, logo_url").eq("status", "active").order("name"),
           supabase.from("cspsg").select("name, logo_url").eq("status", "active").order("name"),
         ]);

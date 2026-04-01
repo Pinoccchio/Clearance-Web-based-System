@@ -50,7 +50,7 @@ interface FormData {
   office_id: string;
   club_id: string;
   csg_department_lgu_id: string;
-  csp_division_id: string;
+  cspsg_division_id: string;
   csg_id: string;
   cspsg_id: string;
   event_date: string;
@@ -75,7 +75,7 @@ const initialFormData: FormData = {
   office_id: "",
   club_id: "",
   csg_department_lgu_id: "",
-  csp_division_id: "",
+  cspsg_division_id: "",
   csg_id: "",
   cspsg_id: "",
   event_date: "",
@@ -153,7 +153,7 @@ export function AnnouncementFormModal({
     if (ann.office_id) return "office";
     if (ann.club_id) return "club";
     if (ann.csg_department_lgu_id) return "csg_department_lgu";
-    if (ann.csp_division_id) return "csp_division";
+    if (ann.cspsg_division_id) return "csp_division";
     if (ann.csg_id) return "csg";
     if (ann.cspsg_id) return "cspsg";
     return "system";
@@ -172,7 +172,7 @@ export function AnnouncementFormModal({
         office_id: announcement.office_id || "",
         club_id: announcement.club_id || "",
         csg_department_lgu_id: announcement.csg_department_lgu_id || "",
-        csp_division_id: announcement.csp_division_id || "",
+        cspsg_division_id: announcement.cspsg_division_id || "",
         csg_id: announcement.csg_id || "",
         cspsg_id: announcement.cspsg_id || "",
         event_date: announcement.event_date
@@ -194,7 +194,7 @@ export function AnnouncementFormModal({
         ...(currentUser.role === "office" && departmentId ? { office_id: departmentId } : {}),
         ...(currentUser.role === "club" && departmentId ? { club_id: departmentId } : {}),
         ...(currentUser.role === "csg_department_lgu" && departmentId ? { csg_department_lgu_id: departmentId } : {}),
-        ...(currentUser.role === "csp_division" && departmentId ? { csp_division_id: departmentId } : {}),
+        ...(currentUser.role === "csp_division" && departmentId ? { cspsg_division_id: departmentId } : {}),
         ...(currentUser.role === "csg" && departmentId ? { csg_id: departmentId } : {}),
         ...(currentUser.role === "cspsg" && departmentId ? { cspsg_id: departmentId } : {}),
       });
@@ -226,7 +226,7 @@ export function AnnouncementFormModal({
       office_id: "",
       club_id: "",
       csg_department_lgu_id: "",
-      csp_division_id: "",
+      cspsg_division_id: "",
       csg_id: "",
       cspsg_id: "",
     }));
@@ -253,7 +253,7 @@ export function AnnouncementFormModal({
         newErrors.scope = "Please select a club";
       } else if (formData.scope === "csg_department_lgu" && !formData.csg_department_lgu_id) {
         newErrors.scope = "Please select a LGU";
-      } else if (formData.scope === "csp_division" && !formData.csp_division_id) {
+      } else if (formData.scope === "csp_division" && !formData.cspsg_division_id) {
         newErrors.scope = "Please select a CSPSG Division";
       } else if (formData.scope === "csg" && !formData.csg_id) {
         newErrors.scope = "Please select a CSG";
@@ -282,7 +282,7 @@ export function AnnouncementFormModal({
       let office_id: string | null = null;
       let club_id: string | null = null;
       let csg_department_lgu_id: string | null = null;
-      let csp_division_id: string | null = null;
+      let cspsg_division_id: string | null = null;
       let csg_id: string | null = null;
       let cspsg_id: string | null = null;
       let is_system_wide = false;
@@ -305,7 +305,7 @@ export function AnnouncementFormModal({
             csg_department_lgu_id = formData.csg_department_lgu_id;
             break;
           case "csp_division":
-            csp_division_id = formData.csp_division_id;
+            cspsg_division_id = formData.cspsg_division_id;
             break;
           case "csg":
             csg_id = formData.csg_id;
@@ -330,7 +330,7 @@ export function AnnouncementFormModal({
             csg_department_lgu_id = formData.csg_department_lgu_id || departmentId || null;
             break;
           case "csp_division":
-            csp_division_id = formData.csp_division_id || departmentId || null;
+            cspsg_division_id = formData.cspsg_division_id || departmentId || null;
             break;
           case "csg":
             csg_id = formData.csg_id || departmentId || null;
@@ -350,7 +350,7 @@ export function AnnouncementFormModal({
           office_id,
           club_id,
           csg_department_lgu_id,
-          csp_division_id,
+          cspsg_division_id,
           csg_id,
           cspsg_id,
           is_system_wide,
@@ -375,7 +375,7 @@ export function AnnouncementFormModal({
           office_id,
           club_id,
           csg_department_lgu_id,
-          csp_division_id,
+          cspsg_division_id,
           csg_id,
           cspsg_id,
           is_system_wide,
@@ -587,8 +587,8 @@ export function AnnouncementFormModal({
               {formData.scope === "csp_division" && (
                 <Select
                   label="Select CSPSG Division"
-                  name="csp_division_id"
-                  value={formData.csp_division_id}
+                  name="cspsg_division_id"
+                  value={formData.cspsg_division_id}
                   onChange={handleChange}
                   options={cspsgDivisionOptions}
                   error={errors.scope}

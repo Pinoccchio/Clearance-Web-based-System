@@ -98,7 +98,7 @@ export default function AdminUsersPage() {
           .from("csg_department_lgus")
           .select("*"),
         supabase
-          .from("csp_divisions")
+          .from("cspsg_divisions")
           .select("*"),
         supabase
           .from("csg")

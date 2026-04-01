@@ -154,12 +154,12 @@ export function UserFormModal({
         course: user.course || "",
         yearLevel: user.year_level || "",
         dateOfBirth: user.date_of_birth || "",
-        cspsgDivision: user.csp_division || "",
+        cspsgDivision: user.cspsg_division || "",
       });
       setSelectedClubs(user.enrolled_clubs ? user.enrolled_clubs.split(",") : []);
       // Set student type based on existing data
       if (user.role === "student") {
-        if (user.csp_division || user.department === "CSP") {
+        if (user.cspsg_division || user.department === "CSP") {
           setStudentType("csp");
         } else {
           setStudentType("regular");
@@ -328,7 +328,7 @@ export function UserFormModal({
           date_of_birth: formData.role === "student" && formData.dateOfBirth
             ? formData.dateOfBirth
             : null,
-          csp_division: formData.role === "student" && formData.cspsgDivision
+          cspsg_division: formData.role === "student" && formData.cspsgDivision
             ? formData.cspsgDivision
             : null,
         };

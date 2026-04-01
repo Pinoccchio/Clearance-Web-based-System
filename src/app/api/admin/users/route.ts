@@ -145,7 +145,7 @@ export async function POST(request: NextRequest) {
           year_level: body.yearLevel || null,
           enrolled_clubs: body.enrolledClubs || null,
           date_of_birth: body.dateOfBirth || null,
-          csp_division: body.cspsgDivision || null,
+          cspsg_division: body.cspsgDivision || null,
         },
       });
 
