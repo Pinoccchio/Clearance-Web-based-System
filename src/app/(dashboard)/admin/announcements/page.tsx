@@ -101,7 +101,7 @@ export default function AdminAnnouncementsPage() {
     if (announcement.office_id) return "office";
     if (announcement.club_id) return "club";
     if (announcement.csg_department_lgu_id) return "csg_department_lgu";
-    if (announcement.cspsg_division_id) return "csp_division";
+    if (announcement.csp_division_id) return "csp_division";
     if (announcement.csg_id) return "csg";
     if (announcement.cspsg_id) return "cspsg";
     return "system";
@@ -124,8 +124,8 @@ export default function AdminAnnouncementsPage() {
     if (announcement.csg_department_lgu) {
       return { label: announcement.csg_department_lgu.name, icon: Shield, color: "text-indigo-600 bg-indigo-100" };
     }
-    if (announcement.cspsg_division) {
-      return { label: announcement.cspsg_division.name, icon: Building2, color: "text-teal-600 bg-teal-100" };
+    if (announcement.csp_division) {
+      return { label: announcement.csp_division.name, icon: Building2, color: "text-teal-600 bg-teal-100" };
     }
     if (announcement.csg) {
       return { label: announcement.csg.name, icon: Shield, color: "text-indigo-600 bg-indigo-100" };
@@ -136,7 +136,7 @@ export default function AdminAnnouncementsPage() {
     if (announcement.csg_department_lgu_id) {
       return { label: "LGU", icon: Shield, color: "text-indigo-600 bg-indigo-100" };
     }
-    if (announcement.cspsg_division_id) {
+    if (announcement.csp_division_id) {
       return { label: "CSP Division", icon: Building2, color: "text-teal-600 bg-teal-100" };
     }
     if (announcement.csg_id) {

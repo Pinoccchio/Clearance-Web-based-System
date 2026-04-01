@@ -104,7 +104,7 @@ export function CspsgDivisionFormModal({ isOpen, onClose, onSuccess, mode, divis
 
   const handleLogoUpload = useCallback(async (file: File): Promise<string> => {
     const entityId = division?.id || `temp_${Date.now()}`;
-    return await uploadLogo(file, "cspsg_divisions", entityId);
+    return await uploadLogo(file, "csp_divisions", entityId);
   }, [division?.id]);
 
   const handleLogoDelete = useCallback(async (url: string): Promise<void> => { await deleteLogo(url); }, []);

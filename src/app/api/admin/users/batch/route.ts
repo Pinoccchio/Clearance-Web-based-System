@@ -172,7 +172,7 @@ export async function POST(request: NextRequest) {
               year_level: userData.yearLevel,
               enrolled_clubs: userData.enrolledClubs || null,
               date_of_birth: userData.dateOfBirth || null,
-              cspsg_division: userData.cspsgDivision || null,
+              csp_division: userData.cspsgDivision || null,
             },
           });
 

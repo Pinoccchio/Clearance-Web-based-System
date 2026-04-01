@@ -89,7 +89,7 @@ export function StudentClearanceProgressModal({
           getAllClubs(),
           student.department ? getDepartmentByCode(student.department) : Promise.resolve(null),
           student.department && !isCsp ? getCsgDepartmentLguByDepartmentCode(student.department) : Promise.resolve(null),
-          student.cspsg_division ? getCspsgDivisionByCode(student.cspsg_division) : Promise.resolve(null),
+          student.csp_division ? getCspsgDivisionByCode(student.csp_division) : Promise.resolve(null),
           !isCsp ? getActiveCsg() : Promise.resolve(null),
           isCsp ? getActiveCspsg() : Promise.resolve(null),
         ]);

@@ -24,7 +24,7 @@ export interface Profile {
   avatar_url?: string | null;
   enrolled_clubs?: string | null;
   date_of_birth?: string | null;
-  cspsg_division?: string | null;
+  csp_division?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -789,10 +789,10 @@ export interface UpdateCspsgDivisionData {
 
 export async function getAllCspsgDivisions(): Promise<CspsgDivisionWithHead[]> {
   const { data, error } = await supabase
-    .from("cspsg_divisions")
+    .from("csp_divisions")
     .select(`
       *,
-      head:profiles!cspsg_divisions_head_id_fkey(*)
+      head:profiles!csp_divisions_head_id_fkey(*)
     `)
     .order("name", { ascending: true });
   if (error) throw error;
@@ -801,10 +801,10 @@ export async function getAllCspsgDivisions(): Promise<CspsgDivisionWithHead[]> {
 
 export async function getCspsgDivisionById(id: string): Promise<CspsgDivisionWithHead | null> {
   const { data, error } = await supabase
-    .from("cspsg_divisions")
+    .from("csp_divisions")
     .select(`
       *,
-      head:profiles!cspsg_divisions_head_id_fkey(*)
+      head:profiles!csp_divisions_head_id_fkey(*)
     `)
     .eq("id", id)
     .single();
@@ -817,7 +817,7 @@ export async function getCspsgDivisionById(id: string): Promise<CspsgDivisionWit
 
 export async function getCspsgDivisionByHeadId(userId: string): Promise<CspsgDivision | null> {
   const { data, error } = await supabase
-    .from("cspsg_divisions")
+    .from("csp_divisions")
     .select("*")
     .eq("head_id", userId)
     .single();
@@ -827,7 +827,7 @@ export async function getCspsgDivisionByHeadId(userId: string): Promise<CspsgDiv
 
 export async function getCspsgDivisionByCode(code: string): Promise<CspsgDivision | null> {
   const { data, error } = await supabase
-    .from("cspsg_divisions")
+    .from("csp_divisions")
     .select("*")
     .ilike("code", code)
     .eq("status", "active")
@@ -838,10 +838,10 @@ export async function getCspsgDivisionByCode(code: string): Promise<CspsgDivisio
 
 export async function getCspsgDivisionWithHeadByCode(code: string): Promise<CspsgDivisionWithHead | null> {
   const { data, error } = await supabase
-    .from("cspsg_divisions")
+    .from("csp_divisions")
     .select(`
       *,
-      head:profiles!cspsg_divisions_head_id_fkey(*)
+      head:profiles!csp_divisions_head_id_fkey(*)
     `)
     .ilike("code", code)
     .eq("status", "active")
@@ -852,7 +852,7 @@ export async function getCspsgDivisionWithHeadByCode(code: string): Promise<Csps
 
 export async function createCspsgDivision(data: CreateCspsgDivisionData): Promise<CspsgDivision> {
   const { data: division, error } = await supabase
-    .from("cspsg_divisions")
+    .from("csp_divisions")
     .insert({
       name: data.name,
       code: data.code.toUpperCase(),
@@ -879,7 +879,7 @@ export async function updateCspsgDivision(id: string, data: UpdateCspsgDivisionD
   if (data.status !== undefined) updates.status = data.status;
 
   const { data: division, error } = await supabase
-    .from("cspsg_divisions")
+    .from("csp_divisions")
     .update(updates)
     .eq("id", id)
     .select()
@@ -889,13 +889,13 @@ export async function updateCspsgDivision(id: string, data: UpdateCspsgDivisionD
 }
 
 export async function deleteCspsgDivision(id: string): Promise<void> {
-  const { error } = await supabase.from("cspsg_divisions").delete().eq("id", id);
+  const { error } = await supabase.from("csp_divisions").delete().eq("id", id);
   if (error) throw error;
 }
 
 export async function getUnlinkedCspsgDivisionUsers(): Promise<Profile[]> {
   const { data: divisions, error: divError } = await supabase
-    .from("cspsg_divisions")
+    .from("csp_divisions")
     .select("head_id")
     .not("head_id", "is", null);
   if (divError) throw divError;
@@ -932,7 +932,7 @@ export async function getStudentsByDivision(divisionCode: string): Promise<Profi
     .from("profiles")
     .select("*")
     .eq("role", "student")
-    .eq("cspsg_division", divisionCode)
+    .eq("csp_division", divisionCode)
     .order("last_name", { ascending: true });
   if (error) throw error;
   return data || [];
@@ -1831,7 +1831,7 @@ export interface Announcement {
   office_id?: string | null;
   club_id?: string | null;
   csg_department_lgu_id?: string | null;
-  cspsg_division_id?: string | null;
+  csp_division_id?: string | null;
   csg_id?: string | null;
   cspsg_id?: string | null;
   is_system_wide: boolean;
@@ -1850,7 +1850,7 @@ export interface AnnouncementWithRelations extends Announcement {
   office?: Office | null;
   club?: Club | null;
   csg_department_lgu?: CsgDepartmentLgu | null;
-  cspsg_division?: CspsgDivision | null;
+  csp_division?: CspsgDivision | null;
   csg?: Csg | null;
   cspsg?: Cspsg | null;
 }
@@ -1863,7 +1863,7 @@ export interface CreateAnnouncementData {
   office_id?: string | null;
   club_id?: string | null;
   csg_department_lgu_id?: string | null;
-  cspsg_division_id?: string | null;
+  csp_division_id?: string | null;
   csg_id?: string | null;
   cspsg_id?: string | null;
   is_system_wide?: boolean;
@@ -1881,7 +1881,7 @@ export interface UpdateAnnouncementData {
   office_id?: string | null;
   club_id?: string | null;
   csg_department_lgu_id?: string | null;
-  cspsg_division_id?: string | null;
+  csp_division_id?: string | null;
   csg_id?: string | null;
   cspsg_id?: string | null;
   is_system_wide?: boolean;
@@ -1905,7 +1905,7 @@ export async function getAllAnnouncements(): Promise<AnnouncementWithRelations[]
       office:offices!announcements_office_id_fkey(*),
       club:clubs!announcements_club_id_fkey(*),
       csg_department_lgu:csg_department_lgus!announcements_csg_department_lgu_id_fkey(*),
-      cspsg_division:cspsg_divisions!announcements_cspsg_division_id_fkey(*),
+      csp_division:csp_divisions!announcements_csp_division_id_fkey(*),
       csg:csg!announcements_csg_id_fkey(*),
       cspsg:cspsg!announcements_cspsg_id_fkey(*)
     `)
@@ -1931,7 +1931,7 @@ export async function getActiveAnnouncements(): Promise<AnnouncementWithRelation
       office:offices!announcements_office_id_fkey(*),
       club:clubs!announcements_club_id_fkey(*),
       csg_department_lgu:csg_department_lgus!announcements_csg_department_lgu_id_fkey(*),
-      cspsg_division:cspsg_divisions!announcements_cspsg_division_id_fkey(*),
+      csp_division:csp_divisions!announcements_csp_division_id_fkey(*),
       csg:csg!announcements_csg_id_fkey(*),
       cspsg:cspsg!announcements_cspsg_id_fkey(*)
     `)
@@ -1990,7 +1990,7 @@ export async function createAnnouncement(
       office_id: data.office_id || null,
       club_id: data.club_id || null,
       csg_department_lgu_id: data.csg_department_lgu_id || null,
-      cspsg_division_id: data.cspsg_division_id || null,
+      csp_division_id: data.csp_division_id || null,
       csg_id: data.csg_id || null,
       cspsg_id: data.cspsg_id || null,
       is_system_wide: data.is_system_wide || false,
@@ -2027,7 +2027,7 @@ export async function updateAnnouncement(
   if (data.office_id !== undefined) updates.office_id = data.office_id;
   if (data.club_id !== undefined) updates.club_id = data.club_id;
   if (data.csg_department_lgu_id !== undefined) updates.csg_department_lgu_id = data.csg_department_lgu_id;
-  if (data.cspsg_division_id !== undefined) updates.cspsg_division_id = data.cspsg_division_id;
+  if (data.csp_division_id !== undefined) updates.csp_division_id = data.csp_division_id;
   if (data.csg_id !== undefined) updates.csg_id = data.csg_id;
   if (data.cspsg_id !== undefined) updates.cspsg_id = data.cspsg_id;
   if (data.is_system_wide !== undefined) updates.is_system_wide = data.is_system_wide;
@@ -3285,7 +3285,7 @@ export async function getAnnouncementsByCspsgDivision(
       *,
       posted_by:profiles!announcements_posted_by_id_fkey(*)
     `)
-    .eq('cspsg_division_id', divisionId)
+    .eq('csp_division_id', divisionId)
     .order('created_at', { ascending: false });
 
   if (error) throw error;
@@ -3733,7 +3733,7 @@ export async function getAllEvents(): Promise<EventRecord[]> {
     lgus?.forEach((l: { id: string; name: string }) => { nameMap[l.id] = l.name; });
   }
   if (divisionIds.length > 0) {
-    const { data: divs } = await supabase.from("cspsg_divisions").select("id, name").in("id", divisionIds);
+    const { data: divs } = await supabase.from("csp_divisions").select("id, name").in("id", divisionIds);
     divs?.forEach((d: { id: string; name: string }) => { nameMap[d.id] = d.name; });
   }
 

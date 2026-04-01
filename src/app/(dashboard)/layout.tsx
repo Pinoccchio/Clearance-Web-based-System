@@ -134,7 +134,7 @@ export default function DashboardLayout({
 
   const role = profile.role as UserRole;
   const userName = `${profile.first_name} ${profile.last_name}`;
-  const isCsp = !!(profile.cspsg_division || profile.department === "CSP");
+  const isCsp = !!(profile.csp_division || profile.department === "CSP");
   const bottomNavItems = getBottomNavItems(role);
 
   const handleLogout = async () => {

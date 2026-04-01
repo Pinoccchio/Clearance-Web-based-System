@@ -66,7 +66,7 @@ export default function CspsgDivisionProfilePage() {
     loadDivision();
   }, [loadDivision]);
 
-  useRealtimeRefresh('cspsg_divisions', loadDivision);
+  useRealtimeRefresh('csp_divisions', loadDivision);
   useRealtimeRefresh('profiles', loadDivision);
 
   // Sync personal form when profile changes
@@ -152,7 +152,7 @@ export default function CspsgDivisionProfilePage() {
     setIsUploadingLogo(true);
     try {
       if (division.logo_url) await deleteLogo(division.logo_url);
-      const url = await uploadLogo(file, "cspsg_divisions", division.id);
+      const url = await uploadLogo(file, "csp_divisions", division.id);
       const updated = await updateCspsgDivision(division.id, { logo_url: url });
       setDivision(updated);
       showToast("success", "Logo Updated", "Division logo has been changed.");
