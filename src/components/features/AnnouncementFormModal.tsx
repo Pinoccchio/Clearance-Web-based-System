@@ -45,7 +45,7 @@ interface FormData {
   title: string;
   content: string;
   priority: AnnouncementPriority;
-  scope: "system" | "department" | "office" | "club" | "csg_department_lgu" | "csp_division" | "csg" | "cspsg";
+  scope: "system" | "department" | "office" | "club" | "csg_department_lgu" | "cspsg_division" | "csg" | "cspsg";
   department_id: string;
   office_id: string;
   club_id: string;
@@ -153,7 +153,7 @@ export function AnnouncementFormModal({
     if (ann.office_id) return "office";
     if (ann.club_id) return "club";
     if (ann.csg_department_lgu_id) return "csg_department_lgu";
-    if (ann.cspsg_division_id) return "csp_division";
+    if (ann.cspsg_division_id) return "cspsg_division";
     if (ann.csg_id) return "csg";
     if (ann.cspsg_id) return "cspsg";
     return "system";
@@ -186,7 +186,7 @@ export function AnnouncementFormModal({
       });
     } else {
       // Reset form for new announcement
-      const defaultScope = isAdmin ? "system" : currentUser.role === "department" ? "department" : currentUser.role === "office" ? "office" : currentUser.role === "csg_department_lgu" ? "csg_department_lgu" : currentUser.role === "csp_division" ? "csp_division" : currentUser.role === "csg" ? "csg" : currentUser.role === "cspsg" ? "cspsg" : "club";
+      const defaultScope = isAdmin ? "system" : currentUser.role === "department" ? "department" : currentUser.role === "office" ? "office" : currentUser.role === "csg_department_lgu" ? "csg_department_lgu" : currentUser.role === "cspsg_division" ? "cspsg_division" : currentUser.role === "csg" ? "csg" : currentUser.role === "cspsg" ? "cspsg" : "club";
       setFormData({
         ...initialFormData,
         scope: defaultScope as FormData["scope"],
@@ -194,7 +194,7 @@ export function AnnouncementFormModal({
         ...(currentUser.role === "office" && departmentId ? { office_id: departmentId } : {}),
         ...(currentUser.role === "club" && departmentId ? { club_id: departmentId } : {}),
         ...(currentUser.role === "csg_department_lgu" && departmentId ? { csg_department_lgu_id: departmentId } : {}),
-        ...(currentUser.role === "csp_division" && departmentId ? { cspsg_division_id: departmentId } : {}),
+        ...(currentUser.role === "cspsg_division" && departmentId ? { cspsg_division_id: departmentId } : {}),
         ...(currentUser.role === "csg" && departmentId ? { csg_id: departmentId } : {}),
         ...(currentUser.role === "cspsg" && departmentId ? { cspsg_id: departmentId } : {}),
       });
@@ -253,7 +253,7 @@ export function AnnouncementFormModal({
         newErrors.scope = "Please select a club";
       } else if (formData.scope === "csg_department_lgu" && !formData.csg_department_lgu_id) {
         newErrors.scope = "Please select a LGU";
-      } else if (formData.scope === "csp_division" && !formData.cspsg_division_id) {
+      } else if (formData.scope === "cspsg_division" && !formData.cspsg_division_id) {
         newErrors.scope = "Please select a CSPSG Division";
       } else if (formData.scope === "csg" && !formData.csg_id) {
         newErrors.scope = "Please select a CSG";
@@ -304,7 +304,7 @@ export function AnnouncementFormModal({
           case "csg_department_lgu":
             csg_department_lgu_id = formData.csg_department_lgu_id;
             break;
-          case "csp_division":
+          case "cspsg_division":
             cspsg_division_id = formData.cspsg_division_id;
             break;
           case "csg":
@@ -329,7 +329,7 @@ export function AnnouncementFormModal({
           case "csg_department_lgu":
             csg_department_lgu_id = formData.csg_department_lgu_id || departmentId || null;
             break;
-          case "csp_division":
+          case "cspsg_division":
             cspsg_division_id = formData.cspsg_division_id || departmentId || null;
             break;
           case "csg":
@@ -413,7 +413,7 @@ export function AnnouncementFormModal({
     { value: "office", label: "Office" },
     { value: "club", label: "Club" },
     { value: "csg_department_lgu", label: "LGU" },
-    { value: "csp_division", label: "CSP Division" },
+    { value: "cspsg_division", label: "CSP Division" },
     { value: "csg", label: "CSG (School-wide)" },
     { value: "cspsg", label: "CSPSG (School-wide)" },
   ];
@@ -584,7 +584,7 @@ export function AnnouncementFormModal({
                 />
               )}
 
-              {formData.scope === "csp_division" && (
+              {formData.scope === "cspsg_division" && (
                 <Select
                   label="Select CSPSG Division"
                   name="cspsg_division_id"

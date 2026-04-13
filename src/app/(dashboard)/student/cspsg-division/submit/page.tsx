@@ -41,7 +41,7 @@ export default function CspsgDivisionSubmitPage() {
   const mutationsInFlightRef = useRef(0);
 
   const loadData = useCallback(async (cancelled: { value: boolean }, silent = false) => {
-    if (!profile?.csp_division) return;
+    if (!profile?.cspsg_division) return;
 
     loadGenRef.current += 1;
     const gen = loadGenRef.current;
@@ -49,7 +49,7 @@ export default function CspsgDivisionSubmitPage() {
     try {
       const [sys, d, requests] = await Promise.all([
         getSystemSettings(),
-        getCspsgDivisionByCode(profile.csp_division),
+        getCspsgDivisionByCode(profile.cspsg_division),
         getStudentClearanceRequests(profile.id),
       ]);
 
@@ -67,12 +67,12 @@ export default function CspsgDivisionSubmitPage() {
       setActiveRequest(active);
 
       if (d) {
-        const reqs = await getPublishedRequirementsBySource("csp_division", d.id);
+        const reqs = await getPublishedRequirementsBySource("cspsg_division", d.id);
         if (cancelled.value || gen !== loadGenRef.current) return;
         setRequirements(reqs);
 
         if (active) {
-          const item = await getClearanceItemForRequest(active.id, "csp_division", d.id);
+          const item = await getClearanceItemForRequest(active.id, "cspsg_division", d.id);
           if (cancelled.value || gen !== loadGenRef.current) return;
           setClearanceItem(item);
 
@@ -89,11 +89,11 @@ export default function CspsgDivisionSubmitPage() {
     } finally {
       if (!cancelled.value && gen === loadGenRef.current) setIsLoading(false);
     }
-  }, [profile?.id, profile?.csp_division]);
+  }, [profile?.id, profile?.cspsg_division]);
 
   useEffect(() => {
     if (authLoading) return;
-    if (!profile?.csp_division) { setIsLoading(false); return; }
+    if (!profile?.cspsg_division) { setIsLoading(false); return; }
 
     const cancelled = { value: false };
     loadData(cancelled);
@@ -161,7 +161,7 @@ export default function CspsgDivisionSubmitPage() {
     );
   }
 
-  if (!profile.csp_division) {
+  if (!profile.cspsg_division) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header title="Submit — CSPSG Division" subtitle="Submit your CSPSG Division clearance" />
@@ -187,7 +187,7 @@ export default function CspsgDivisionSubmitPage() {
       />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <SubmitView
-          sourceType="csp_division"
+          sourceType="cspsg_division"
           sources={sources}
           studentId={profile.id}
           systemSettings={systemSettings}

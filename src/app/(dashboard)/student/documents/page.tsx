@@ -238,7 +238,7 @@ export default function StudentDocumentsPage() {
                       </p>
                       <p className="text-xs text-gray-500 mt-0.5">
                         {sourceNames[doc.source_id] ?? doc.source_id} ·{" "}
-                        <span>{doc.source_type === "csg_department_lgu" ? "LGU" : doc.source_type === "csp_division" ? "CSP Division" : doc.source_type.charAt(0).toUpperCase() + doc.source_type.slice(1)}</span>
+                        <span>{doc.source_type === "csg_department_lgu" ? "LGU" : doc.source_type === "cspsg_division" ? "CSP Division" : doc.source_type.charAt(0).toUpperCase() + doc.source_type.slice(1)}</span>
                       </p>
                     </div>
                     {statusBadge(doc.status)}

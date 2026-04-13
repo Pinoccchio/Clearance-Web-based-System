@@ -24,7 +24,7 @@ interface CreateUserRequestBody {
   firstName: string;
   lastName: string;
   middleName?: string;
-  role: "student" | "office" | "department" | "club" | "csg_department_lgu" | "csp_division" | "csg" | "cspsg" | "admin";
+  role: "student" | "office" | "department" | "club" | "csg_department_lgu" | "cspsg_division" | "csg" | "cspsg" | "admin";
   department?: string;
   studentId?: string;
   course?: string;
@@ -155,6 +155,40 @@ export async function POST(request: NextRequest) {
         { error: createError.message || "Failed to create user" },
         { status: 400 }
       );
+    }
+
+    // Upsert the full profile with all optional fields.
+    // The handle_new_user trigger creates a minimal profile row on auth.users insert.
+    // This upsert ensures every field submitted in the form is persisted correctly,
+    // acting as both a data-completeness guarantee and a trigger-failure safety net.
+    if (newUser?.user) {
+      const { error: profileUpsertError } = await supabaseAdmin
+        .from("profiles")
+        .upsert(
+          {
+            id: newUser.user.id,
+            email: body.email,
+            first_name: body.firstName,
+            last_name: body.lastName,
+            middle_name: body.middleName || null,
+            role: body.role,
+            department: body.department || null,
+            student_id: body.studentId || null,
+            course: body.course || null,
+            year_level: body.yearLevel || null,
+            enrolled_clubs: body.enrolledClubs || null,
+            date_of_birth: body.dateOfBirth || null,
+            cspsg_division: body.cspsgDivision || null,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "id" }
+        );
+
+      if (profileUpsertError) {
+        // Profile upsert failed — log but do not fail the whole request.
+        // The auth user was created; the admin can edit the profile separately.
+        console.error("Warning: profile upsert failed after user creation:", profileUpsertError);
+      }
     }
 
     return NextResponse.json({

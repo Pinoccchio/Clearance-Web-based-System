@@ -53,7 +53,7 @@ export default function CspsgDivisionRequirementsPage() {
         return;
       }
       setDivision(div);
-      const data = await getRequirementsBySource("csp_division", div.id);
+      const data = await getRequirementsBySource("cspsg_division", div.id);
       setRequirements(data);
     } catch {
       setError("Failed to load requirements.");
@@ -368,7 +368,7 @@ export default function CspsgDivisionRequirementsPage() {
             setIsAddModalOpen(false);
             loadData();
           }}
-          sourceType="csp_division"
+          sourceType="cspsg_division"
           sourceId={division.id}
           existingRequirements={requirements}
         />
@@ -383,7 +383,7 @@ export default function CspsgDivisionRequirementsPage() {
             setEditingRequirement(null);
             loadData();
           }}
-          sourceType="csp_division"
+          sourceType="cspsg_division"
           sourceId={division.id}
           existingRequirements={requirements}
           mode="edit"

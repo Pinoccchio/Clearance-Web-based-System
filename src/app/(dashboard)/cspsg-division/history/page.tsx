@@ -267,7 +267,7 @@ export default function CspsgDivisionHistoryPage() {
                   { header: "Status", accessor: (i) => i.status },
                   { header: "Reviewed Date", accessor: (i) => i.reviewed_at ? formatDate(i.reviewed_at) : "—" },
                 ],
-                `${division?.name ?? "csp_division"}_clearance_history`
+                `${division?.name ?? "cspsg_division"}_clearance_history`
               );
             }}
             disabled={isLoading || filtered.length === 0}

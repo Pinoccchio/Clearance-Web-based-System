@@ -24,13 +24,13 @@ export default function CspsgDivisionRequirementsPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const loadData = useCallback(async () => {
-    if (!profile?.csp_division) return;
+    if (!profile?.cspsg_division) return;
     try {
-      const d = await getCspsgDivisionByCode(profile.csp_division);
+      const d = await getCspsgDivisionByCode(profile.cspsg_division);
       setDivision(d);
 
       if (d) {
-        const reqs = await getPublishedRequirementsBySource("csp_division", d.id);
+        const reqs = await getPublishedRequirementsBySource("cspsg_division", d.id);
         setRequirements(reqs);
       }
     } catch {
@@ -38,11 +38,11 @@ export default function CspsgDivisionRequirementsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [profile?.id, profile?.csp_division, showToast]);
+  }, [profile?.id, profile?.cspsg_division, showToast]);
 
   useEffect(() => {
     if (authLoading) return;
-    if (!profile?.csp_division) { setIsLoading(false); return; }
+    if (!profile?.cspsg_division) { setIsLoading(false); return; }
     loadData();
   }, [authLoading, loadData]);
 
@@ -73,7 +73,7 @@ export default function CspsgDivisionRequirementsPage() {
     );
   }
 
-  if (!profile.csp_division) {
+  if (!profile.cspsg_division) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header title="CSPSG Division Requirements" subtitle="Requirements for your CSPSG Division" />

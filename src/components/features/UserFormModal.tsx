@@ -84,7 +84,7 @@ const roleOptions = [
   { value: "csg", label: "CSG" },
   { value: "csg_department_lgu", label: "LGU" },
   { value: "cspsg", label: "CSPSG" },
-  { value: "csp_division", label: "CSP Division" },
+  { value: "cspsg_division", label: "CSP Division" },
   { value: "admin", label: "Admin" },
 ];
 

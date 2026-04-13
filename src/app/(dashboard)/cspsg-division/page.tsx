@@ -122,7 +122,7 @@ export default function CspsgDivisionDashboard() {
 
       // Fetch division-specific clearance items for these requests
       const requestIds = currentRequests.map((r) => r.id);
-      const divItems = await getClearanceItemsBySourceAndRequests('csp_division', div.id, requestIds);
+      const divItems = await getClearanceItemsBySourceAndRequests('cspsg_division', div.id, requestIds);
 
       // Map items by request_id for quick lookup
       const itemByRequest = new Map<string, ClearanceItem>();
@@ -417,7 +417,7 @@ export default function CspsgDivisionDashboard() {
             {division?.code ?? "N/A"}
           </span>
           <span className="px-3 py-1 bg-white border border-gray-200 rounded-full">
-            {profile?.role === "csp_division" ? "Division Head" : "Staff"}
+            {profile?.role === "cspsg_division" ? "Division Head" : "Staff"}
           </span>
           <span className="px-3 py-1 bg-white border border-gray-200 rounded-full">
             {stats.total} Students

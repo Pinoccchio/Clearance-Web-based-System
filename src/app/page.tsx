@@ -25,7 +25,7 @@ const CampusMapSection = dynamic(
 
 interface ClearanceSource {
   name: string;
-  type: "department" | "office" | "club" | "csg" | "cspsg" | "csg_department_lgu" | "csp_division";
+  type: "department" | "office" | "club" | "csg" | "cspsg" | "csg_department_lgu" | "cspsg_division";
   logo_url: string | null;
 }
 
@@ -55,7 +55,7 @@ export default function LandingPage() {
   // Auto-redirect authenticated users to their dashboard
   useEffect(() => {
     if (!isLoading && isAuthenticated && profile) {
-      const rolePathMap: Record<string, string> = { csg_department_lgu: 'csg-department-lgu', csp_division: 'cspsg-division' };
+      const rolePathMap: Record<string, string> = { csg_department_lgu: 'csg-department-lgu', cspsg_division: 'cspsg-division' };
       router.push(`/${rolePathMap[profile.role] ?? profile.role}`);
     }
   }, [isLoading, isAuthenticated, profile, router]);
@@ -101,7 +101,7 @@ export default function LandingPage() {
           ...(offices.data || []).map((o) => ({ name: o.name, type: "office" as const, logo_url: o.logo_url })),
           ...(clubs.data || []).map((c) => ({ name: c.name, type: "club" as const, logo_url: c.logo_url })),
           ...(lgus.data || []).map((l) => ({ name: l.name, type: "csg_department_lgu" as const, logo_url: l.logo_url })),
-          ...(cspsgDivisions.data || []).map((d) => ({ name: d.name, type: "csp_division" as const, logo_url: d.logo_url })),
+          ...(cspsgDivisions.data || []).map((d) => ({ name: d.name, type: "cspsg_division" as const, logo_url: d.logo_url })),
           ...(csgRows.data || []).map((c) => ({ name: c.name, type: "csg" as const, logo_url: c.logo_url })),
           ...(cspsgRows.data || []).map((c) => ({ name: c.name, type: "cspsg" as const, logo_url: c.logo_url })),
         ];

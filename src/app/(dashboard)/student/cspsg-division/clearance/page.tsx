@@ -33,10 +33,10 @@ export default function CspsgDivisionClearancePage() {
   const [isLoading, setIsLoading] = useState(true);
 
   const loadData = useCallback(async () => {
-    if (!profile?.csp_division) return;
+    if (!profile?.cspsg_division) return;
     try {
       const [d, requests, sys] = await Promise.all([
-        getCspsgDivisionByCode(profile.csp_division),
+        getCspsgDivisionByCode(profile.cspsg_division),
         getStudentClearanceRequests(profile.id),
         getSystemSettings(),
       ]);
@@ -54,8 +54,8 @@ export default function CspsgDivisionClearancePage() {
 
       if (d) {
         const [divReqs, item] = await Promise.all([
-          getRequirementsBySource("csp_division", d.id),
-          active ? getClearanceItemForRequest(active.id, "csp_division", d.id) : Promise.resolve(null),
+          getRequirementsBySource("cspsg_division", d.id),
+          active ? getClearanceItemForRequest(active.id, "cspsg_division", d.id) : Promise.resolve(null),
         ]);
         setRequirementCount(divReqs.length);
         setClearanceItem(item);
@@ -65,11 +65,11 @@ export default function CspsgDivisionClearancePage() {
     } finally {
       setIsLoading(false);
     }
-  }, [profile?.id, profile?.csp_division, showToast]);
+  }, [profile?.id, profile?.cspsg_division, showToast]);
 
   useEffect(() => {
     if (authLoading) return;
-    if (!profile?.csp_division) { setIsLoading(false); return; }
+    if (!profile?.cspsg_division) { setIsLoading(false); return; }
     loadData();
   }, [authLoading, loadData]);
 
@@ -100,7 +100,7 @@ export default function CspsgDivisionClearancePage() {
     );
   }
 
-  if (!profile.csp_division) {
+  if (!profile.cspsg_division) {
     return (
       <div className="min-h-screen bg-gray-50">
         <Header title="CSPSG Division Clearance" subtitle="Your CSPSG Division clearance status" />
@@ -126,7 +126,7 @@ export default function CspsgDivisionClearancePage() {
       />
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <ClearanceStatusView
-          sourceType="csp_division"
+          sourceType="cspsg_division"
           sources={sources}
           requirementCounts={requirementCounts}
           clearanceRequest={activeRequest}

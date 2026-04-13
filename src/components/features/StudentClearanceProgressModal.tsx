@@ -305,7 +305,7 @@ export function StudentClearanceProgressModal({
                     <p className="font-medium text-cjc-navy text-sm">{studentCspsgDiv.name}</p>
                     <p className="text-xs text-gray-400">{studentCspsgDiv.code}</p>
                   </div>
-                  {getStatusBadge(getItemForSource("csp_division", studentCspsgDiv.id)?.status)}
+                  {getStatusBadge(getItemForSource("cspsg_division", studentCspsgDiv.id)?.status)}
                 </div>
               </div>
             )}

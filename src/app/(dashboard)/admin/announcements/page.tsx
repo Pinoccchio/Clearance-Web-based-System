@@ -30,7 +30,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useToast } from "@/components/ui/Toast";
 import { Avatar } from "@/components/ui/Avatar";
 
-type FilterType = "all" | "system" | "department" | "office" | "club" | "csg_department_lgu" | "csp_division" | "csg" | "cspsg";
+type FilterType = "all" | "system" | "department" | "office" | "club" | "csg_department_lgu" | "cspsg_division" | "csg" | "cspsg";
 
 const priorityColors = {
   low: "bg-gray-100 text-gray-600",
@@ -101,7 +101,7 @@ export default function AdminAnnouncementsPage() {
     if (announcement.office_id) return "office";
     if (announcement.club_id) return "club";
     if (announcement.csg_department_lgu_id) return "csg_department_lgu";
-    if (announcement.cspsg_division_id) return "csp_division";
+    if (announcement.cspsg_division_id) return "cspsg_division";
     if (announcement.csg_id) return "csg";
     if (announcement.cspsg_id) return "cspsg";
     return "system";
@@ -245,7 +245,7 @@ export default function AdminAnnouncementsPage() {
     { value: "office", label: "Office" },
     { value: "club", label: "Club" },
     { value: "csg_department_lgu", label: "LGU" },
-    { value: "csp_division", label: "CSPSG Div" },
+    { value: "cspsg_division", label: "CSPSG Div" },
     { value: "csg", label: "CSG" },
     { value: "cspsg", label: "CSPSG" },
   ];

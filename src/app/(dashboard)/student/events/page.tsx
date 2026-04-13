@@ -183,7 +183,7 @@ export default function StudentEventsPage() {
                   ? GraduationCap
                   : group.sourceType === "csg_department_lgu"
                   ? Shield
-                  : group.sourceType === "csp_division"
+                  : group.sourceType === "cspsg_division"
                   ? GraduationCap
                   : Users;
               const fallbackBg =
@@ -193,7 +193,7 @@ export default function StudentEventsPage() {
                   ? "bg-amber-100 text-amber-600"
                   : group.sourceType === "csg_department_lgu"
                   ? "bg-purple-100 text-purple-600"
-                  : group.sourceType === "csp_division"
+                  : group.sourceType === "cspsg_division"
                   ? "bg-teal-100 text-teal-600"
                   : "bg-green-100 text-green-600";
 
