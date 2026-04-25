@@ -279,6 +279,52 @@ export async function deleteUser(userId: string): Promise<void> {
   }
 }
 
+export interface ResetStudentClearanceResult {
+  success: boolean;
+  student: {
+    id: string;
+    name: string;
+  };
+  counts: {
+    clearanceRequests: number;
+    clearanceItems: number;
+    requirementSubmissions: number;
+    submissionFiles: number;
+  };
+}
+
+/**
+ * Reset one student's clearance workflow data while keeping the account.
+ * Calls the server-side admin route which uses the service role key.
+ */
+export async function resetStudentClearance(
+  userId: string
+): Promise<ResetStudentClearanceResult> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (!session) {
+    throw new Error("Not authenticated");
+  }
+
+  const response = await fetch(`/api/admin/students/${userId}/reset-clearance`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${session.access_token}`,
+      "Content-Type": "application/json",
+    },
+  });
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(data.error || "Failed to reset student clearance");
+  }
+
+  return data as ResetStudentClearanceResult;
+}
+
 /**
  * Create user data for admin-created users
  */

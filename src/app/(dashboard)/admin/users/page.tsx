@@ -22,6 +22,7 @@ import {
   Plus,
   Edit2,
   Trash2,
+  RotateCcw,
   UserCheck,
   UserX,
   Loader2,
@@ -32,6 +33,7 @@ import {
   supabase,
   Profile,
   deleteUser,
+  resetStudentClearance,
   Department,
   Office,
   Club,
@@ -46,6 +48,7 @@ import { useToast } from "@/components/ui/Toast";
 
 interface UserWithStatus extends Profile {
   status: "active" | "inactive";
+  hasClearanceData?: boolean;
   linkedDepartment?: Department | null;
   linkedOffice?: Office | null;
   linkedClub?: Club | null;
@@ -70,6 +73,7 @@ export default function AdminUsersPage() {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isResetDialogOpen, setIsResetDialogOpen] = useState(false);
   const [isBatchImportModalOpen, setIsBatchImportModalOpen] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -80,7 +84,7 @@ export default function AdminUsersPage() {
       setError(null);
 
       // Fetch users, departments, offices, and clubs in parallel
-      const [usersResponse, departmentsResponse, officesResponse, clubsResponse, csgDepartmentLgusResponse, cspsgDivisionsResponse, csgResponse, cspsgResponse] = await Promise.all([
+      const [usersResponse, departmentsResponse, officesResponse, clubsResponse, csgDepartmentLgusResponse, cspsgDivisionsResponse, csgResponse, cspsgResponse, clearanceRequestsResponse] = await Promise.all([
         supabase
           .from("profiles")
           .select("*")
@@ -106,6 +110,9 @@ export default function AdminUsersPage() {
         supabase
           .from("cspsg")
           .select("*"),
+        supabase
+          .from("clearance_requests")
+          .select("student_id"),
       ]);
 
       if (usersResponse.error) {
@@ -170,10 +177,15 @@ export default function AdminUsersPage() {
         }
       });
 
+      const studentsWithClearanceData = new Set(
+        (clearanceRequestsResponse.data || []).map((request) => request.student_id)
+      );
+
       // Add status field and linked department/office/club
       const usersWithStatus = (usersResponse.data || []).map((user) => ({
         ...user,
         status: "active" as const,
+        hasClearanceData: studentsWithClearanceData.has(user.id),
         linkedDepartment: headToDepartmentMap.get(user.id) || null,
         linkedOffice: headToOfficeMap.get(user.id) || null,
         linkedClub: adviserToClubMap.get(user.id) || null,
@@ -281,6 +293,11 @@ export default function AdminUsersPage() {
     setIsDeleteDialogOpen(true);
   };
 
+  const handleResetClick = (user: UserWithStatus) => {
+    setSelectedUser(user);
+    setIsResetDialogOpen(true);
+  };
+
   const handleDeleteConfirm = async () => {
     if (!selectedUser) return;
 
@@ -301,6 +318,30 @@ export default function AdminUsersPage() {
     }
   };
 
+  const handleResetConfirm = async () => {
+    if (!selectedUser) return;
+
+    setActionLoading(true);
+    try {
+      const userName = `${selectedUser.first_name} ${selectedUser.last_name}`;
+      const result = await resetStudentClearance(selectedUser.id);
+      await fetchUsers();
+      setIsResetDialogOpen(false);
+      setSelectedUser(null);
+      showToast(
+        "success",
+        "Clearance Reset",
+        `${userName} was reset. Removed ${result.counts.clearanceRequests} requests, ${result.counts.clearanceItems} items, ${result.counts.requirementSubmissions} submissions, and ${result.counts.submissionFiles} files.`
+      );
+    } catch (err) {
+      console.error("Error resetting student clearance:", err);
+      const errorMessage = err instanceof Error ? err.message : "Failed to reset student clearance. Please try again.";
+      showToast("error", "Reset Failed", errorMessage);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleModalSuccess = () => {
     fetchUsers();
   };
@@ -309,6 +350,7 @@ export default function AdminUsersPage() {
     setIsAddModalOpen(false);
     setIsEditModalOpen(false);
     setIsDeleteDialogOpen(false);
+    setIsResetDialogOpen(false);
     setSelectedUser(null);
   };
 
@@ -631,6 +673,15 @@ export default function AdminUsersPage() {
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-1">
+                            {user.role === "student" && user.hasClearanceData && (
+                              <button
+                                onClick={() => handleResetClick(user)}
+                                className="p-2 hover:bg-amber-50 rounded-lg transition-colors"
+                                title="Reset clearance data"
+                              >
+                                <RotateCcw className="w-4 h-4 text-amber-600" />
+                              </button>
+                            )}
                             <button
                               onClick={() => handleEdit(user)}
                               className="p-2 hover:bg-surface-warm rounded-lg transition-colors"
@@ -731,6 +782,21 @@ export default function AdminUsersPage() {
         confirmText="Delete"
         cancelText="Cancel"
         variant="danger"
+        isLoading={actionLoading}
+      />
+
+      <ConfirmDialog
+        isOpen={isResetDialogOpen}
+        onClose={() => {
+          setIsResetDialogOpen(false);
+          setSelectedUser(null);
+        }}
+        onConfirm={handleResetConfirm}
+        title="Reset Student Clearance"
+        message={`Reset clearance workflow data for ${selectedUser?.first_name} ${selectedUser?.last_name}? This keeps the account but removes requests, items, submissions, attendance records, history, and uploaded submission files.`}
+        confirmText="Reset Clearance"
+        cancelText="Cancel"
+        variant="warning"
         isLoading={actionLoading}
       />
 
