@@ -350,8 +350,8 @@ export default function ClubClearancePage() {
 
       <div className="p-6 space-y-6">
         {/* Toolbar */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
+        <div className="flex flex-wrap items-start gap-4">
+          <div className="min-w-[280px] flex-[2_1_320px]">
             <Input
               placeholder="Search by member name or ID..."
               value={search}
@@ -359,7 +359,7 @@ export default function ClubClearancePage() {
               leftIcon={<Search className="w-4 h-4" />}
             />
           </div>
-          <div className="w-full sm:w-64">
+          <div className="min-w-[220px] flex-1 sm:flex-none sm:w-64">
             <Select
               options={[
                 ...distinctPeriods.map((p) => {
@@ -377,7 +377,7 @@ export default function ClubClearancePage() {
               onChange={(e) => setPeriodFilter(e.target.value)}
             />
           </div>
-          <div className="w-full sm:w-48">
+          <div className="min-w-[160px] flex-1 sm:flex-none sm:w-48">
             <Select
               options={[
                 { value: "all", label: "All Years" },
@@ -390,7 +390,7 @@ export default function ClubClearancePage() {
               onChange={(e) => setYearLevelFilter(e.target.value)}
             />
           </div>
-          <div className="w-full sm:w-40">
+          <div className="min-w-[160px] flex-1 sm:flex-none sm:w-40">
             <Select
               options={[
                 { value: "all", label: "All Types" },
@@ -401,14 +401,14 @@ export default function ClubClearancePage() {
               onChange={(e) => setStudentTypeFilter(e.target.value)}
             />
           </div>
-          <div className="w-48">
+          <div className="min-w-[160px] flex-1 sm:flex-none sm:w-48">
             <Select
               options={STATUS_OPTIONS}
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             />
           </div>
-          <div className="w-full sm:w-48">
+          <div className="min-w-[180px] flex-1 sm:flex-none sm:w-48">
             <Select
               options={[
                 { value: "latest", label: "Latest First" },
@@ -422,7 +422,7 @@ export default function ClubClearancePage() {
               onChange={(e) => setSortBy(e.target.value)}
             />
           </div>
-          <Button variant="secondary" onClick={loadData} disabled={isLoading}>
+          <Button className="w-full sm:w-auto sm:self-start" variant="secondary" onClick={loadData} disabled={isLoading}>
             <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
           </Button>

@@ -226,8 +226,8 @@ export default function CspsgDivisionHistoryPage() {
         )}
 
         {/* Toolbar */}
-        <div className="flex flex-col sm:flex-row gap-4">
-          <div className="flex-1">
+        <div className="flex flex-wrap items-start gap-4">
+          <div className="min-w-[280px] flex-[2_1_320px]">
             <Input
               placeholder="Search by student name or ID..."
               value={search}
@@ -235,25 +235,26 @@ export default function CspsgDivisionHistoryPage() {
               leftIcon={<Search className="w-4 h-4" />}
             />
           </div>
-          <div className="w-44">
+          <div className="min-w-[160px] flex-1 sm:flex-none sm:w-44">
             <Select
               options={STATUS_OPTIONS}
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
             />
           </div>
-          <div className="w-44">
+          <div className="min-w-[160px] flex-1 sm:flex-none sm:w-44">
             <Select
               options={TYPE_OPTIONS}
               value={typeFilter}
               onChange={(e) => setTypeFilter(e.target.value)}
             />
           </div>
-          <Button variant="secondary" onClick={loadData} disabled={isLoading}>
+          <Button className="w-full sm:w-auto sm:self-start" variant="secondary" onClick={loadData} disabled={isLoading}>
             <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
           <Button
+            className="w-full sm:w-auto sm:self-start"
             variant="secondary"
             onClick={() => {
               exportToExcel(
