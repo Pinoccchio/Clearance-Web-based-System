@@ -1938,6 +1938,24 @@ export interface UpdateAnnouncementData {
   is_active?: boolean;
 }
 
+function normalizeAnnouncementRow<T extends Record<string, unknown>>(row: T): T {
+  if ("csp_division_id" in row && !("cspsg_division_id" in row)) {
+    return {
+      ...row,
+      cspsg_division_id: row.csp_division_id ?? null,
+    } as T;
+  }
+
+  if ("csp_division_id" in row) {
+    return {
+      ...row,
+      cspsg_division_id: row.cspsg_division_id ?? row.csp_division_id ?? null,
+    } as T;
+  }
+
+  return row;
+}
+
 /**
  * Get all announcements with relations (for admin view)
  */
@@ -1946,6 +1964,7 @@ export async function getAllAnnouncements(): Promise<AnnouncementWithRelations[]
     .from("announcements")
     .select(`
       *,
+      cspsg_division_id:csp_division_id,
       posted_by:profiles!announcements_posted_by_id_fkey(*),
       department:departments!announcements_department_id_fkey(*),
       office:offices!announcements_office_id_fkey(*),
@@ -1961,7 +1980,7 @@ export async function getAllAnnouncements(): Promise<AnnouncementWithRelations[]
     throw error;
   }
 
-  return data || [];
+  return (data || []).map((row) => normalizeAnnouncementRow(row));
 }
 
 /**
@@ -1972,6 +1991,7 @@ export async function getActiveAnnouncements(): Promise<AnnouncementWithRelation
     .from("announcements")
     .select(`
       *,
+      cspsg_division_id:csp_division_id,
       posted_by:profiles!announcements_posted_by_id_fkey(*),
       department:departments!announcements_department_id_fkey(*),
       office:offices!announcements_office_id_fkey(*),
@@ -1989,7 +2009,7 @@ export async function getActiveAnnouncements(): Promise<AnnouncementWithRelation
     throw error;
   }
 
-  return data || [];
+  return (data || []).map((row) => normalizeAnnouncementRow(row));
 }
 
 /**
@@ -2002,6 +2022,7 @@ export async function getAnnouncementById(
     .from("announcements")
     .select(`
       *,
+      cspsg_division_id:csp_division_id,
       posted_by:profiles!announcements_posted_by_id_fkey(*),
       department:departments!announcements_department_id_fkey(*),
       office:offices!announcements_office_id_fkey(*),
@@ -2017,7 +2038,7 @@ export async function getAnnouncementById(
     throw error;
   }
 
-  return data;
+  return normalizeAnnouncementRow(data);
 }
 
 /**
@@ -2036,7 +2057,7 @@ export async function createAnnouncement(
       office_id: data.office_id || null,
       club_id: data.club_id || null,
       csg_department_lgu_id: data.csg_department_lgu_id || null,
-      cspsg_division_id: data.cspsg_division_id || null,
+      csp_division_id: data.cspsg_division_id || null,
       csg_id: data.csg_id || null,
       cspsg_id: data.cspsg_id || null,
       is_system_wide: data.is_system_wide || false,
@@ -2046,14 +2067,17 @@ export async function createAnnouncement(
       expires_at: data.expires_at || null,
       is_active: data.is_active !== undefined ? data.is_active : true,
     })
-    .select()
+    .select(`
+      *,
+      cspsg_division_id:csp_division_id
+    `)
     .single();
 
   if (error) {
     throw error;
   }
 
-  return announcement;
+  return normalizeAnnouncementRow(announcement);
 }
 
 /**
@@ -2073,7 +2097,7 @@ export async function updateAnnouncement(
   if (data.office_id !== undefined) updates.office_id = data.office_id;
   if (data.club_id !== undefined) updates.club_id = data.club_id;
   if (data.csg_department_lgu_id !== undefined) updates.csg_department_lgu_id = data.csg_department_lgu_id;
-  if (data.cspsg_division_id !== undefined) updates.cspsg_division_id = data.cspsg_division_id;
+  if (data.cspsg_division_id !== undefined) updates.csp_division_id = data.cspsg_division_id;
   if (data.csg_id !== undefined) updates.csg_id = data.csg_id;
   if (data.cspsg_id !== undefined) updates.cspsg_id = data.cspsg_id;
   if (data.is_system_wide !== undefined) updates.is_system_wide = data.is_system_wide;
@@ -2087,14 +2111,17 @@ export async function updateAnnouncement(
     .from("announcements")
     .update(updates)
     .eq("id", id)
-    .select()
+    .select(`
+      *,
+      cspsg_division_id:csp_division_id
+    `)
     .single();
 
   if (error) {
     throw error;
   }
 
-  return announcement;
+  return normalizeAnnouncementRow(announcement);
 }
 
 /**
