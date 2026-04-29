@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import {
   parseExcelFile,
+  validateHeaders,
   validateRows,
   downloadExcelTemplate,
   StudentRow,
@@ -45,7 +46,7 @@ type Step = "upload" | "preview" | "importing" | "results";
 interface ImportResult {
   email: string;
   studentId: string;
-  success: boolean;
+  status: "created" | "updated" | "failed";
   error?: string;
 }
 
@@ -61,8 +62,11 @@ export function BatchImportModal({
   const [step, setStep] = useState<Step>("upload");
   const [file, setFile] = useState<File | null>(null);
   const [validRows, setValidRows] = useState<StudentRow[]>([]);
+  const [headerErrors, setHeaderErrors] = useState<ValidationError[]>([]);
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [importResults, setImportResults] = useState<ImportResult[]>([]);
+  const [totalRows, setTotalRows] = useState(0);
+  const [invalidRowCount, setInvalidRowCount] = useState(0);
   const [importProgress, setImportProgress] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -119,8 +123,11 @@ export function BatchImportModal({
     setStep("upload");
     setFile(null);
     setValidRows([]);
+    setHeaderErrors([]);
     setValidationErrors([]);
     setImportResults([]);
+    setTotalRows(0);
+    setInvalidRowCount(0);
     setImportProgress(0);
     setIsLoading(false);
     onClose();
@@ -147,12 +154,16 @@ export function BatchImportModal({
     try {
       // Read and parse file
       const buffer = await selectedFile.arrayBuffer();
-      const { data } = parseExcelFile(buffer);
+      const { headers, data } = parseExcelFile(buffer);
+      const workbookHeaderErrors = validateHeaders(headers);
+      setHeaderErrors(workbookHeaderErrors);
 
       // Validate rows
       const result = validateRows(data, departments, courses, clubs, cspsgDivisions);
       setValidRows(result.rows);
       setValidationErrors(result.errors);
+      setTotalRows(result.totalRows);
+      setInvalidRowCount(result.invalidRowCount);
 
       // Move to preview step
       setStep("preview");
@@ -205,7 +216,7 @@ export function BatchImportModal({
       setStep("results");
 
       // Notify success
-      const successCount = data.summary.successful;
+      const successCount = data.summary.created + data.summary.updated;
       const failedCount = data.summary.failed;
       if (failedCount === 0) {
         showToast("success", "Import Complete", `Successfully imported ${successCount} users`);
@@ -296,7 +307,7 @@ export function BatchImportModal({
           <li>Students will be created <strong>without passwords</strong></li>
           <li>Students must use &quot;Forgot Password&quot; on the login page to set their password</li>
           <li>Maximum 100 students per import</li>
-          <li>Duplicate emails or student IDs will be skipped</li>
+          <li>Existing students matched by email or student ID will be updated</li>
         </ul>
       </div>
     </div>
@@ -308,7 +319,7 @@ export function BatchImportModal({
       {/* Summary */}
       <div className="grid grid-cols-3 gap-4">
         <div className="p-4 bg-gray-50 rounded-lg text-center">
-          <p className="text-2xl font-bold text-cjc-navy">{validRows.length + validationErrors.length}</p>
+          <p className="text-2xl font-bold text-cjc-navy">{totalRows}</p>
           <p className="text-sm text-gray-500">Total Rows</p>
         </div>
         <div className="p-4 bg-green-50 rounded-lg text-center">
@@ -316,10 +327,39 @@ export function BatchImportModal({
           <p className="text-sm text-gray-500">Valid</p>
         </div>
         <div className="p-4 bg-red-50 rounded-lg text-center">
-          <p className="text-2xl font-bold text-red-600">{validationErrors.length}</p>
-          <p className="text-sm text-gray-500">Errors</p>
+          <p className="text-2xl font-bold text-red-600">{invalidRowCount}</p>
+          <p className="text-sm text-gray-500">Invalid Rows</p>
         </div>
       </div>
+
+      {headerErrors.length > 0 && (
+        <div className="border border-red-200 rounded-lg overflow-hidden">
+          <div className="bg-red-50 px-4 py-2 border-b border-red-200">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="w-4 h-4 text-red-600" />
+              <span className="font-medium text-red-900">Workbook Header Errors</span>
+            </div>
+          </div>
+          <div className="max-h-40 overflow-y-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-gray-50 sticky top-0">
+                <tr>
+                  <th className="px-4 py-2 text-left font-medium text-gray-600">Field</th>
+                  <th className="px-4 py-2 text-left font-medium text-gray-600">Error</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {headerErrors.map((error, i) => (
+                  <tr key={i}>
+                    <td className="px-4 py-2 text-gray-600">{error.field}</td>
+                    <td className="px-4 py-2 text-red-600">{error.message}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
 
       {/* Validation Errors */}
       {validationErrors.length > 0 && (
@@ -420,7 +460,10 @@ export function BatchImportModal({
           setStep("upload");
           setFile(null);
           setValidRows([]);
+          setHeaderErrors([]);
           setValidationErrors([]);
+          setTotalRows(0);
+          setInvalidRowCount(0);
         }}>
           <ArrowLeft className="w-4 h-4" />
           Back
@@ -428,7 +471,7 @@ export function BatchImportModal({
         <Button
           variant="primary"
           onClick={handleImport}
-          disabled={validRows.length === 0}
+          disabled={validRows.length === 0 || headerErrors.length > 0}
         >
           Import {validRows.length} Students
           <ArrowRight className="w-4 h-4" />
@@ -468,9 +511,11 @@ export function BatchImportModal({
 
   // Results step
   const renderResultsStep = () => {
-    const successCount = importResults.filter(r => r.success).length;
-    const failedCount = importResults.filter(r => !r.success).length;
-    const failedResults = importResults.filter(r => !r.success);
+    const createdCount = importResults.filter(r => r.status === "created").length;
+    const updatedCount = importResults.filter(r => r.status === "updated").length;
+    const failedCount = importResults.filter(r => r.status === "failed").length;
+    const successCount = createdCount + updatedCount;
+    const failedResults = importResults.filter(r => r.status === "failed");
 
     return (
       <div className="space-y-6">
@@ -489,27 +534,42 @@ export function BatchImportModal({
             {failedCount === 0 ? "Import Complete!" : "Import Complete with Issues"}
           </h3>
           <p className="text-gray-500 mt-1">
-            {successCount} student{successCount !== 1 ? "s" : ""} imported successfully
+            {successCount} student{successCount !== 1 ? "s" : ""} saved successfully
             {failedCount > 0 && `, ${failedCount} failed`}
           </p>
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-3 gap-4">
+          <div className="p-4 bg-cjc-blue/5 border border-cjc-blue/20 rounded-lg text-center">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <CheckCircle2 className="w-5 h-5 text-cjc-blue" />
+              <span className="text-2xl font-bold text-cjc-blue">{createdCount}</span>
+            </div>
+            <p className="text-sm text-cjc-navy">Created</p>
+          </div>
+          <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg text-center">
+            <div className="flex items-center justify-center gap-2 mb-1">
+              <CheckCircle2 className="w-5 h-5 text-amber-600" />
+              <span className="text-2xl font-bold text-amber-600">{updatedCount}</span>
+            </div>
+            <p className="text-sm text-amber-700">Updated</p>
+          </div>
           <div className="p-4 bg-green-50 border border-green-200 rounded-lg text-center">
             <div className="flex items-center justify-center gap-2 mb-1">
               <CheckCircle2 className="w-5 h-5 text-green-600" />
               <span className="text-2xl font-bold text-green-600">{successCount}</span>
             </div>
-            <p className="text-sm text-green-700">Successful</p>
+            <p className="text-sm text-green-700">Total Saved</p>
           </div>
-          <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-center">
-            <div className="flex items-center justify-center gap-2 mb-1">
-              <XCircle className="w-5 h-5 text-red-600" />
-              <span className="text-2xl font-bold text-red-600">{failedCount}</span>
-            </div>
-            <p className="text-sm text-red-700">Failed</p>
+        </div>
+
+        <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-center">
+          <div className="flex items-center justify-center gap-2 mb-1">
+            <XCircle className="w-5 h-5 text-red-600" />
+            <span className="text-2xl font-bold text-red-600">{failedCount}</span>
           </div>
+          <p className="text-sm text-red-700">Failed</p>
         </div>
 
         {/* Failed Details */}

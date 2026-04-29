@@ -30,6 +30,8 @@ export interface ValidationError {
 export interface ParsedData {
   rows: StudentRow[];
   errors: ValidationError[];
+  totalRows: number;
+  invalidRowCount: number;
 }
 
 // ==========================================
@@ -41,7 +43,7 @@ const EMAIL_DOMAIN = '@g.cjc.edu.ph';
 const VALID_YEAR_LEVELS = ['1', '2', '3', '4'];
 
 // Column headers expected in the Excel file
-const EXPECTED_HEADERS = [
+export const EXPECTED_HEADERS = [
   'Student ID',
   'First Name',
   'Middle Name',
@@ -89,6 +91,48 @@ export function parseExcelFile(file: ArrayBuffer): { headers: string[]; data: Re
   return { headers, data: jsonData };
 }
 
+export function validateHeaders(headers: string[]): ValidationError[] {
+  const errors: ValidationError[] = [];
+  const normalizedHeaders = headers.map((header) => header.trim());
+  const headerCounts = new Map<string, number>();
+
+  for (const header of normalizedHeaders) {
+    headerCounts.set(header, (headerCounts.get(header) ?? 0) + 1);
+  }
+
+  for (const expected of EXPECTED_HEADERS) {
+    if (!normalizedHeaders.includes(expected)) {
+      errors.push({
+        row: 1,
+        field: expected,
+        message: `Missing required column: ${expected}`,
+      });
+    }
+  }
+
+  for (const [header, count] of headerCounts.entries()) {
+    if (!header) {
+      continue;
+    }
+
+    if (!EXPECTED_HEADERS.includes(header)) {
+      errors.push({
+        row: 1,
+        field: header,
+        message: "Unexpected column in workbook",
+      });
+    } else if (count > 1) {
+      errors.push({
+        row: 1,
+        field: header,
+        message: "Duplicate column header",
+      });
+    }
+  }
+
+  return errors;
+}
+
 /**
  * Validate parsed rows against business rules
  */
@@ -102,10 +146,13 @@ export function validateRows(
   const result: ParsedData = {
     rows: [],
     errors: [],
+    totalRows: 0,
+    invalidRowCount: 0,
   };
 
   const seenStudentIds = new Set<string>();
   const seenEmails = new Set<string>();
+  const invalidRows = new Set<number>();
 
   // Create lookup maps
   const deptCodeMap = new Map(validDepartments.map(d => [d.code.toUpperCase(), d]));
@@ -134,6 +181,8 @@ export function validateRows(
     if (!studentId && !firstName && !lastName && !email) {
       return;
     }
+
+    result.totalRows += 1;
 
     // Validate Student ID
     if (!studentId) {
@@ -171,7 +220,7 @@ export function validateRows(
     if (dateOfBirth) {
       const parsed = parseDate(dateOfBirth);
       if (!parsed) {
-        errors.push({ row: rowNum, field: 'Date of Birth', message: 'Invalid date format (expected YYYY-MM-DD)' });
+        errors.push({ row: rowNum, field: 'Date of Birth', message: 'Invalid date format (use YYYY-MM-DD or DD/MM/YYYY)' });
       }
     }
 
@@ -220,7 +269,7 @@ export function validateRows(
     }
 
     // Validate CSPSG Division (required only if department = CSP)
-    let cspsgDivisionId: string | undefined;
+    let cspsgDivisionValue: string | undefined;
     let cspsgDivisionCodeResolved: string | undefined;
     const isCsp = department === 'CSP';
     if (isCsp) {
@@ -231,7 +280,7 @@ export function validateRows(
         if (!division) {
           errors.push({ row: rowNum, field: 'CSP Division', message: `Unknown CSP Division code: ${cspsgDivisionCode}` });
         } else {
-          cspsgDivisionId = division.id;
+          cspsgDivisionValue = division.code;
           cspsgDivisionCodeResolved = division.code;
         }
       }
@@ -253,14 +302,16 @@ export function validateRows(
         yearLevel,
         enrolledClubs: validClubIds.length > 0 ? validClubIds.join(',') : undefined,
         enrolledClubCodes: validClubCodes.length > 0 ? validClubCodes.join(', ') : undefined,
-        cspsgDivision: cspsgDivisionId,
+        cspsgDivision: cspsgDivisionValue,
         cspsgDivisionCode: cspsgDivisionCodeResolved,
       });
     } else {
+      invalidRows.add(rowNum);
       result.errors.push(...errors);
     }
   });
 
+  result.invalidRowCount = invalidRows.size;
   return result;
 }
 
@@ -373,7 +424,7 @@ export function generateExcelTemplate(
   const studentsData = [
     // Headers
     EXPECTED_HEADERS,
-    // Sample rows - using DD/MM/YYYY format for dates
+  // Sample rows - using DD/MM/YYYY format for dates
     // Last column = CSPSG Division (only for CSP students)
     ['2021-0001-5', 'Juan', 'Santos', 'Dela Cruz', 'juan.delacruz@g.cjc.edu.ph', '15/01/2003', 'CCIS', 'BSCS', '3', '', ''],
     ['2021-0002-3', 'Maria', 'Clara', 'Santos', 'maria.santos@g.cjc.edu.ph', '20/05/2003', 'CABE', 'BSA', '2', '', ''],
@@ -469,7 +520,7 @@ export function generateExcelTemplate(
   referenceData.push(['Middle Name', 'No', 'Text (leave blank if none)']);
   referenceData.push(['Last Name', 'Yes', 'Text']);
   referenceData.push(['Email', 'Yes', 'Must end with @g.cjc.edu.ph']);
-  referenceData.push(['Date of Birth', 'No', 'DD/MM/YYYY format (e.g., 15/01/2003)']);
+    referenceData.push(['Date of Birth', 'No', 'YYYY-MM-DD or DD/MM/YYYY (e.g., 2003-01-15 or 15/01/2003)']);
   referenceData.push(['Department', 'Yes', 'Use code from Departments table']);
   referenceData.push(['Course', 'Yes', 'Use code from Courses table']);
   referenceData.push(['Year Level', 'Yes', '1, 2, 3, or 4']);

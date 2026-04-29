@@ -1,22 +1,9 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-
-// Create admin client with service role key for privileged operations
-function createAdminClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error("Missing Supabase environment variables");
-  }
-
-  return createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
-}
+import {
+  createAdminClient,
+  upsertProfileRecord,
+  type AdminUserRole,
+} from "@/lib/server/admin-users";
 
 interface BatchUserData {
   studentId: string;
@@ -32,19 +19,43 @@ interface BatchUserData {
   cspsgDivision?: string;
 }
 
+type BatchStatus = "created" | "updated" | "failed";
+
 interface BatchResult {
   email: string;
   studentId: string;
-  success: boolean;
+  status: BatchStatus;
   error?: string;
+}
+
+interface ExistingProfileMatch {
+  id: string;
+  email: string;
+  student_id: string | null;
+  role: AdminUserRole;
+}
+
+function normalizeStudent(row: BatchUserData): BatchUserData {
+  return {
+    ...row,
+    email: row.email.trim().toLowerCase(),
+    studentId: row.studentId.trim(),
+    firstName: row.firstName.trim(),
+    middleName: row.middleName?.trim(),
+    lastName: row.lastName.trim(),
+    department: row.department.trim().toUpperCase(),
+    course: row.course.trim().toUpperCase(),
+    yearLevel: row.yearLevel.trim(),
+    enrolledClubs: row.enrolledClubs?.trim(),
+    dateOfBirth: row.dateOfBirth?.trim(),
+    cspsgDivision: row.cspsgDivision?.trim().toUpperCase(),
+  };
 }
 
 export async function POST(request: NextRequest) {
   try {
-    // Create admin client with service role key
     const supabaseAdmin = createAdminClient();
 
-    // Verify the requester is an admin by checking their session
     const authHeader = request.headers.get("authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return NextResponse.json(
@@ -54,8 +65,6 @@ export async function POST(request: NextRequest) {
     }
 
     const token = authHeader.substring(7);
-
-    // Verify the token and get the user
     const {
       data: { user: requestingUser },
       error: authError,
@@ -68,7 +77,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if the requesting user is an admin
     const { data: requestingProfile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .select("role")
@@ -89,9 +97,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Parse the request body
     const body: { users: BatchUserData[] } = await request.json();
-
     if (!body.users || !Array.isArray(body.users) || body.users.length === 0) {
       return NextResponse.json(
         { error: "Invalid request: users array is required" },
@@ -99,7 +105,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Limit batch size to prevent timeouts
     if (body.users.length > 100) {
       return NextResponse.json(
         { error: "Batch size too large: maximum 100 users per request" },
@@ -107,67 +112,149 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check for existing emails in the database
-    const emails = body.users.map(u => u.email.toLowerCase());
-    const { data: existingUsers } = await supabaseAdmin
-      .from("profiles")
-      .select("email")
-      .in("email", emails);
+    const users = body.users.map(normalizeStudent);
+    const emails = [...new Set(users.map((user) => user.email))];
+    const studentIds = [...new Set(users.map((user) => user.studentId))];
 
-    const existingEmails = new Set((existingUsers || []).map(u => u.email.toLowerCase()));
+    const [emailMatchesResponse, studentMatchesResponse] = await Promise.all([
+      supabaseAdmin
+        .from("profiles")
+        .select("id, email, student_id, role")
+        .in("email", emails),
+      supabaseAdmin
+        .from("profiles")
+        .select("id, email, student_id, role")
+        .in("student_id", studentIds),
+    ]);
 
-    // Check for existing student IDs
-    const studentIds = body.users.map(u => u.studentId);
-    const { data: existingStudents } = await supabaseAdmin
-      .from("profiles")
-      .select("student_id")
-      .in("student_id", studentIds);
+    if (emailMatchesResponse.error) {
+      throw emailMatchesResponse.error;
+    }
 
-    const existingStudentIds = new Set((existingStudents || []).map(u => u.student_id));
+    if (studentMatchesResponse.error) {
+      throw studentMatchesResponse.error;
+    }
 
-    // Process each user
+    const existingByEmail = new Map<string, ExistingProfileMatch>();
+    for (const profile of (emailMatchesResponse.data ?? []) as ExistingProfileMatch[]) {
+      existingByEmail.set(profile.email.toLowerCase(), profile);
+    }
+
+    const existingByStudentId = new Map<string, ExistingProfileMatch>();
+    for (const profile of (studentMatchesResponse.data ?? []) as ExistingProfileMatch[]) {
+      if (profile.student_id) {
+        existingByStudentId.set(profile.student_id, profile);
+      }
+    }
+
     const results: BatchResult[] = [];
 
-    for (const userData of body.users) {
-      const email = userData.email.toLowerCase();
-      const studentId = userData.studentId;
+    for (const userData of users) {
+      const emailMatch = existingByEmail.get(userData.email);
+      const studentMatch = existingByStudentId.get(userData.studentId);
 
-      // Check if email already exists
-      if (existingEmails.has(email)) {
+      if (emailMatch && studentMatch && emailMatch.id !== studentMatch.id) {
         results.push({
-          email,
-          studentId,
-          success: false,
-          error: "Email already exists",
+          email: userData.email,
+          studentId: userData.studentId,
+          status: "failed",
+          error: "Email and Student ID belong to different existing users",
         });
         continue;
       }
 
-      // Check if student ID already exists
-      if (existingStudentIds.has(studentId)) {
+      const existingProfile = emailMatch ?? studentMatch ?? null;
+
+      if (existingProfile && existingProfile.role !== "student") {
         results.push({
-          email,
-          studentId,
-          success: false,
-          error: "Student ID already exists",
+          email: userData.email,
+          studentId: userData.studentId,
+          status: "failed",
+          error: `Matched existing ${existingProfile.role} account; expected student`,
         });
         continue;
       }
 
       try {
-        // Create user WITHOUT password using admin API
-        // User will use "Forgot Password" to set their initial password
+        if (existingProfile) {
+          const { error: authUpdateError } = await supabaseAdmin.auth.admin.updateUserById(
+            existingProfile.id,
+            {
+              email: userData.email,
+              email_confirm: true,
+              user_metadata: {
+                first_name: userData.firstName,
+                last_name: userData.lastName,
+                middle_name: userData.middleName || null,
+                role: "student",
+                department: userData.department,
+                student_id: userData.studentId,
+                course: userData.course,
+                year_level: userData.yearLevel,
+                enrolled_clubs: userData.enrolledClubs || null,
+                date_of_birth: userData.dateOfBirth || null,
+                cspsg_division: userData.cspsgDivision || null,
+              },
+            }
+          );
+
+          if (authUpdateError) {
+            throw authUpdateError;
+          }
+
+          await upsertProfileRecord(supabaseAdmin, {
+            id: existingProfile.id,
+            email: userData.email,
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            middleName: userData.middleName,
+            role: "student",
+            department: userData.department,
+            studentId: userData.studentId,
+            course: userData.course,
+            yearLevel: userData.yearLevel,
+            enrolledClubs: userData.enrolledClubs,
+            dateOfBirth: userData.dateOfBirth,
+            cspsgDivision: userData.cspsgDivision,
+          });
+
+          results.push({
+            email: userData.email,
+            studentId: userData.studentId,
+            status: "updated",
+          });
+          if (existingProfile.email.toLowerCase() !== userData.email) {
+            existingByEmail.delete(existingProfile.email.toLowerCase());
+          }
+          if (existingProfile.student_id && existingProfile.student_id !== userData.studentId) {
+            existingByStudentId.delete(existingProfile.student_id);
+          }
+          existingByEmail.set(userData.email, {
+            id: existingProfile.id,
+            email: userData.email,
+            student_id: userData.studentId,
+            role: "student",
+          });
+          existingByStudentId.set(userData.studentId, {
+            id: existingProfile.id,
+            email: userData.email,
+            student_id: userData.studentId,
+            role: "student",
+          });
+          continue;
+        }
+
         const { data: newUser, error: createError } =
           await supabaseAdmin.auth.admin.createUser({
-            email: email,
-            email_confirm: true, // Auto-confirm email so they can use forgot password
+            email: userData.email,
+            email_confirm: true,
             user_metadata: {
               first_name: userData.firstName,
               last_name: userData.lastName,
               middle_name: userData.middleName || null,
               role: "student",
               department: userData.department,
-              student_id: studentId,
+              student_id: userData.studentId,
               course: userData.course,
               year_level: userData.yearLevel,
               enrolled_clubs: userData.enrolledClubs || null,
@@ -176,44 +263,67 @@ export async function POST(request: NextRequest) {
             },
           });
 
-        if (createError) {
+        if (createError || !newUser?.user) {
           results.push({
-            email,
-            studentId,
-            success: false,
-            error: createError.message,
+            email: userData.email,
+            studentId: userData.studentId,
+            status: "failed",
+            error: createError?.message || "Failed to create auth user",
           });
           continue;
         }
 
-        // Add email to existing set to prevent duplicates within the batch
-        existingEmails.add(email);
-        existingStudentIds.add(studentId);
+        await upsertProfileRecord(supabaseAdmin, {
+          id: newUser.user.id,
+          email: userData.email,
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          middleName: userData.middleName,
+          role: "student",
+          department: userData.department,
+          studentId: userData.studentId,
+          course: userData.course,
+          yearLevel: userData.yearLevel,
+          enrolledClubs: userData.enrolledClubs,
+          dateOfBirth: userData.dateOfBirth,
+          cspsgDivision: userData.cspsgDivision,
+        });
+
+        const profileRecord = {
+          id: newUser.user.id,
+          email: userData.email,
+          student_id: userData.studentId,
+          role: "student" as const,
+        };
+        existingByEmail.set(userData.email, profileRecord);
+        existingByStudentId.set(userData.studentId, profileRecord);
 
         results.push({
-          email,
-          studentId,
-          success: true,
+          email: userData.email,
+          studentId: userData.studentId,
+          status: "created",
         });
       } catch (err) {
         results.push({
-          email,
-          studentId,
-          success: false,
+          email: userData.email,
+          studentId: userData.studentId,
+          status: "failed",
           error: err instanceof Error ? err.message : "Unknown error",
         });
       }
     }
 
-    const successCount = results.filter(r => r.success).length;
-    const failureCount = results.filter(r => !r.success).length;
+    const created = results.filter((result) => result.status === "created").length;
+    const updated = results.filter((result) => result.status === "updated").length;
+    const failed = results.filter((result) => result.status === "failed").length;
 
     return NextResponse.json({
-      success: true,
+      success: failed === 0,
       summary: {
         total: results.length,
-        successful: successCount,
-        failed: failureCount,
+        created,
+        updated,
+        failed,
       },
       results,
     });

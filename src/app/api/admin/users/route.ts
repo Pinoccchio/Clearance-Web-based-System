@@ -1,22 +1,5 @@
-import { createClient } from "@supabase/supabase-js";
 import { NextRequest, NextResponse } from "next/server";
-
-// Create admin client with service role key for privileged operations
-function createAdminClient() {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !serviceRoleKey) {
-    throw new Error("Missing Supabase environment variables");
-  }
-
-  return createClient(supabaseUrl, serviceRoleKey, {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  });
-}
+import { createAdminClient, upsertProfileRecord } from "@/lib/server/admin-users";
 
 interface CreateUserRequestBody {
   email: string;
@@ -36,10 +19,8 @@ interface CreateUserRequestBody {
 
 export async function POST(request: NextRequest) {
   try {
-    // Create admin client with service role key
     const supabaseAdmin = createAdminClient();
 
-    // Verify the requester is an admin by checking their session
     const authHeader = request.headers.get("authorization");
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return NextResponse.json(
@@ -49,8 +30,6 @@ export async function POST(request: NextRequest) {
     }
 
     const token = authHeader.substring(7);
-
-    // Verify the token and get the user
     const {
       data: { user: requestingUser },
       error: authError,
@@ -63,7 +42,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if the requesting user is an admin
     const { data: requestingProfile, error: profileError } = await supabaseAdmin
       .from("profiles")
       .select("role")
@@ -87,10 +65,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Parse the request body
     const body: CreateUserRequestBody = await request.json();
 
-    // Validate required fields
     if (!body.email || !body.password || !body.firstName || !body.lastName || !body.role) {
       return NextResponse.json(
         { error: "Missing required fields: email, password, firstName, lastName, role" },
@@ -98,7 +74,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Department heads can only create students in their own department
     if (isDepartmentHead) {
       if (body.role !== "student") {
         return NextResponse.json(
@@ -106,34 +81,35 @@ export async function POST(request: NextRequest) {
           { status: 403 }
         );
       }
-      // Verify the department code matches their linked department
+
       const { data: deptData } = await supabaseAdmin
         .from("departments")
         .select("code")
         .eq("head_id", requestingUser.id)
         .single();
+
       if (!deptData) {
         return NextResponse.json(
           { error: "Forbidden: No department linked to your account" },
           { status: 403 }
         );
       }
+
       if (body.department && body.department.toUpperCase() !== deptData.code.toUpperCase()) {
         return NextResponse.json(
           { error: `Forbidden: You can only add students to the ${deptData.code} department` },
           { status: 403 }
         );
       }
-      // Force department to their own
+
       body.department = deptData.code;
     }
 
-    // Create the user using admin API (does NOT create a session for the new user)
     const { data: newUser, error: createError } =
       await supabaseAdmin.auth.admin.createUser({
         email: body.email,
         password: body.password,
-        email_confirm: true, // Auto-confirm email so user can log in immediately
+        email_confirm: true,
         user_metadata: {
           first_name: body.firstName,
           last_name: body.lastName,
@@ -157,36 +133,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Upsert the full profile with all optional fields.
-    // The handle_new_user trigger creates a minimal profile row on auth.users insert.
-    // This upsert ensures every field submitted in the form is persisted correctly,
-    // acting as both a data-completeness guarantee and a trigger-failure safety net.
     if (newUser?.user) {
-      const { error: profileUpsertError } = await supabaseAdmin
-        .from("profiles")
-        .upsert(
-          {
-            id: newUser.user.id,
-            email: body.email,
-            first_name: body.firstName,
-            last_name: body.lastName,
-            middle_name: body.middleName || null,
-            role: body.role,
-            department: body.department || null,
-            student_id: body.studentId || null,
-            course: body.course || null,
-            year_level: body.yearLevel || null,
-            enrolled_clubs: body.enrolledClubs || null,
-            date_of_birth: body.dateOfBirth || null,
-            cspsg_division: body.cspsgDivision || null,
-            updated_at: new Date().toISOString(),
-          },
-          { onConflict: "id" }
-        );
-
-      if (profileUpsertError) {
-        // Profile upsert failed — log but do not fail the whole request.
-        // The auth user was created; the admin can edit the profile separately.
+      try {
+        await upsertProfileRecord(supabaseAdmin, {
+          id: newUser.user.id,
+          email: body.email,
+          firstName: body.firstName,
+          lastName: body.lastName,
+          middleName: body.middleName,
+          role: body.role,
+          department: body.department,
+          studentId: body.studentId,
+          course: body.course,
+          yearLevel: body.yearLevel,
+          enrolledClubs: body.enrolledClubs,
+          dateOfBirth: body.dateOfBirth,
+          cspsgDivision: body.cspsgDivision,
+        });
+      } catch (profileUpsertError) {
         console.error("Warning: profile upsert failed after user creation:", profileUpsertError);
       }
     }
