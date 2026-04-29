@@ -1,0 +1,28 @@
+flowchart LR
+    Student[Student]
+    Staff[Office / Department / Club / CSG / CSPSG Head]
+    Scanner[Attendance Scanner User]
+    Admin[Administrator]
+
+    System((Clearance Monitoring System))
+
+    Student -->|View requirements| System
+    Student -->|Upload files| System
+    Student -->|Confirm non-file requirements| System
+    Student -->|Submit for review| System
+    Student -->|Track status/history| System
+    Student -->|View announcements and events| System
+
+    Staff -->|Manage requirements| System
+    Staff -->|Review submissions| System
+    Staff -->|Approve / Reject / On Hold| System
+    Staff -->|Manage announcements| System
+    Staff -->|Manage events| System
+
+    Scanner -->|Scan QR or Student ID| System
+    Scanner -->|Record time in / time out| System
+
+    Admin -->|Manage users| System
+    Admin -->|Manage organizations| System
+    Admin -->|Manage system settings| System
+    Admin -->|View reports and activity| System

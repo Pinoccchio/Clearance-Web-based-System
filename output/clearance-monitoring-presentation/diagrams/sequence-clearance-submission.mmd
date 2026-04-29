@@ -1,0 +1,29 @@
+sequenceDiagram
+    actor Student
+    participant Web as Web App
+    participant API as Supabase RPC / API
+    participant DB as PostgreSQL
+
+    Student->>Web: Open clearance source page
+    Web->>API: Load requirements + submissions + item status
+    API->>DB: Query relevant records
+    DB-->>API: Return current data
+    API-->>Web: Render requirements
+
+    Student->>Web: Upload file / confirm requirement
+    Web->>API: Sync requirement submissions
+    API->>DB: Validate ownership and save state
+    DB-->>API: Saved rows
+    API-->>Web: Updated status
+
+    Student->>Web: Submit for review
+    Web->>API: submit_clearance_item_if_complete()
+    API->>DB: Check all applicable required requirements
+    alt Complete
+        DB-->>API: Validation passed
+        API->>DB: Update item to submitted + write history
+        API-->>Web: Submission successful
+    else Incomplete
+        DB-->>API: Validation failed
+        API-->>Web: Return blocking error
+    end

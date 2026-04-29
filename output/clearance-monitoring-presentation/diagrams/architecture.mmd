@@ -1,0 +1,13 @@
+flowchart TD
+    A[Student / Staff / Admin Users] --> B[Next.js Web App]
+    A --> C[Flutter Attendance App]
+
+    B --> D[Supabase Backend]
+    C --> D
+
+    D --> E[Supabase Auth]
+    D --> F[PostgreSQL Database]
+    D --> G[Supabase Storage]
+    D --> H[Realtime Engine]
+
+    F --> I[Business Rules<br/>RPCs, Triggers, RLS]

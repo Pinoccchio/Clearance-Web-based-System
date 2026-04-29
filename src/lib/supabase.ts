@@ -3494,7 +3494,7 @@ export async function getAnnouncementsByCspsgDivision(
       *,
       posted_by:profiles!announcements_posted_by_id_fkey(*)
     `)
-    .eq('cspsg_division_id', divisionId)
+    .eq('csp_division_id', divisionId)
     .order('created_at', { ascending: false });
 
   if (error) throw error;

@@ -1,0 +1,24 @@
+sequenceDiagram
+    actor Staff
+    actor Student
+    participant App as Flutter Attendance App
+    participant API as Supabase Backend
+    participant DB as PostgreSQL
+
+    Staff->>App: Open event attendance screen
+    Student->>App: Present QR / Student ID
+    App->>API: Record attendance event
+    API->>DB: Insert or update attendance_records
+    DB-->>API: Attendance saved
+
+    alt Event linked to requirement
+        API->>DB: Create or update requirement_submissions
+        DB-->>API: Requirement fulfilled
+    end
+
+    API-->>App: Return attendance success
+    App-->>Staff: Show recorded status
+
+    Note over API,DB: If event rules or requirement applicability change later
+    API->>DB: Revalidate affected clearance items
+    DB-->>API: Reset invalid submitted items to on_hold

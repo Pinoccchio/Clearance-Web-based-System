@@ -27,6 +27,10 @@ import {
   getAllDepartments,
   getAllOffices,
   getAllClubs,
+  getAllCsgDepartmentLgus,
+  getAllCspsgDivisions,
+  getAllCsg,
+  getAllCspsg,
 } from "@/lib/supabase";
 import ClearanceItemHistoryTimeline from "@/components/shared/ClearanceItemHistoryTimeline";
 
@@ -123,11 +127,15 @@ export default function StudentHistoryPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const [items, depts, offices, clubs] = await Promise.all([
+      const [items, depts, offices, clubs, csgDepartmentLgus, cspsgDivisions, csgs, cspsgs] = await Promise.all([
         getClearanceItemsForStudent(profile.id),
         getAllDepartments(),
         getAllOffices(),
         getAllClubs(),
+        getAllCsgDepartmentLgus(),
+        getAllCspsgDivisions(),
+        getAllCsg(),
+        getAllCspsg(),
       ]);
 
       // Build id → "CODE — Name" lookup
@@ -135,6 +143,10 @@ export default function StudentHistoryPage() {
       for (const d of depts) names[d.id] = `${d.code} — ${d.name}`;
       for (const o of offices) names[o.id] = `${o.code} — ${o.name}`;
       for (const c of clubs) names[c.id] = `${c.code} — ${c.name}`;
+      for (const l of csgDepartmentLgus) names[l.id] = `${l.code} — ${l.name}`;
+      for (const d of cspsgDivisions) names[d.id] = `${d.code} — ${d.name}`;
+      for (const c of csgs) names[c.id] = `${c.code} — ${c.name}`;
+      for (const c of cspsgs) names[c.id] = `${c.code} — ${c.name}`;
       setSourceNames(names);
 
       const grouped = groupByRequest(items as ItemWithRequest[]);

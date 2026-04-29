@@ -27,6 +27,8 @@ import {
   getAllClubs,
   getAllCsgDepartmentLgus,
   getAllCspsgDivisions,
+  getAllCsg,
+  getAllCspsg,
   StudentDocument,
 } from "@/lib/supabase";
 
@@ -100,13 +102,15 @@ export default function StudentDocumentsPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const [documents, depts, offices, clubs, csgDepartmentLgus, cspsgDivisions] = await Promise.all([
+      const [documents, depts, offices, clubs, csgDepartmentLgus, cspsgDivisions, csgs, cspsgs] = await Promise.all([
         getStudentDocuments(profile.id),
         getAllDepartments(),
         getAllOffices(),
         getAllClubs(),
         getAllCsgDepartmentLgus(),
         getAllCspsgDivisions(),
+        getAllCsg(),
+        getAllCspsg(),
       ]);
 
       const names: Record<string, string> = {};
@@ -115,6 +119,8 @@ export default function StudentDocumentsPage() {
       for (const c of clubs) names[c.id] = `${c.code} — ${c.name}`;
       for (const l of csgDepartmentLgus) names[l.id] = `${l.code} — ${l.name}`;
       for (const d of cspsgDivisions) names[d.id] = `${d.code} — ${d.name}`;
+      for (const c of csgs) names[c.id] = `${c.code} — ${c.name}`;
+      for (const c of cspsgs) names[c.id] = `${c.code} — ${c.name}`;
       setSourceNames(names);
       setDocs(documents);
     } catch (err) {

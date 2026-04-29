@@ -27,6 +27,8 @@ import {
   getAllClubs,
   getAllCsgDepartmentLgus,
   getAllCspsgDivisions,
+  getAllCsg,
+  getAllCspsg,
   StudentAttendanceWithEvent,
 } from "@/lib/supabase";
 
@@ -49,13 +51,15 @@ export default function StudentEventsPage() {
     setIsLoading(true);
     setError(null);
     try {
-      const [attendance, depts, offices, clubs, csgDepartmentLgus, cspsgDivisions] = await Promise.all([
+      const [attendance, depts, offices, clubs, csgDepartmentLgus, cspsgDivisions, csgs, cspsgs] = await Promise.all([
         getStudentAttendanceWithEvents(profile.id),
         getAllDepartments(),
         getAllOffices(),
         getAllClubs(),
         getAllCsgDepartmentLgus(),
         getAllCspsgDivisions(),
+        getAllCsg(),
+        getAllCspsg(),
       ]);
 
       const names: Record<string, { name: string; code: string; logo_url: string | null }> = {};
@@ -64,6 +68,8 @@ export default function StudentEventsPage() {
       for (const c of clubs) names[c.id] = { name: c.name, code: c.code, logo_url: c.logo_url ?? null };
       for (const l of csgDepartmentLgus) names[l.id] = { name: l.name, code: l.code, logo_url: l.logo_url ?? null };
       for (const d of cspsgDivisions) names[d.id] = { name: d.name, code: d.code, logo_url: d.logo_url ?? null };
+      for (const c of csgs) names[c.id] = { name: c.name, code: c.code, logo_url: c.logo_url ?? null };
+      for (const c of cspsgs) names[c.id] = { name: c.name, code: c.code, logo_url: c.logo_url ?? null };
       setSourceNames(names);
       setRecords(attendance);
     } catch (err) {
