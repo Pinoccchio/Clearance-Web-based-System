@@ -16,7 +16,7 @@ import {
   getClubById,
   getStudentClearanceRequests,
   getOrCreateClearanceItem,
-  getRequirementsBySource,
+  getPublishedRequirementsBySource,
   getSystemSettings,
 } from "@/lib/supabase";
 
@@ -76,7 +76,7 @@ export default function StudentClubsClearancePage() {
 
       await Promise.all(
         validClubs.map(async (club) => {
-          const reqs = await getRequirementsBySource("club", club.id, profile.year_level);
+          const reqs = await getPublishedRequirementsBySource("club", club.id, profile.year_level);
 
           counts[club.id] = reqs.length;
 

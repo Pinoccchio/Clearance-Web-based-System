@@ -18,7 +18,7 @@ import {
   getClubById,
   getStudentClearanceRequests,
   getOrCreateClearanceItem,
-  getPublishedRequirementsBySource,
+  getPublishedRequirementsByMultipleSources,
   getSubmissionsByItems,
   getSystemSettings,
 } from "@/lib/supabase";
@@ -85,14 +85,19 @@ export default function StudentClubsSubmitPage() {
       setActiveRequest(active);
 
       // Fetch requirements and clearance items for each club
+      const reqMap = await getPublishedRequirementsByMultipleSources(
+        validClubs.map((club) => ({ source_type: "club", source_id: club.id })),
+        profile.year_level
+      );
+
+      if (cancelled.value || gen !== loadGenRef.current) return;
+
       const reqsBySource: Record<string, Requirement[]> = {};
       const items: ClearanceItem[] = [];
 
       await Promise.all(
         validClubs.map(async (club) => {
-          const reqs = await getPublishedRequirementsBySource("club", club.id, profile.year_level);
-          if (cancelled.value || gen !== loadGenRef.current) return;
-          reqsBySource[club.id] = reqs;
+          reqsBySource[club.id] = reqMap[`club:${club.id}`] ?? [];
 
           if (active) {
             // Use getOrCreateClearanceItem to ensure clubs have clearance items
@@ -172,7 +177,6 @@ export default function StudentClubsSubmitPage() {
   }, [loadData]);
 
   useRealtimeRefresh("clearance_items", refreshData);
-  useRealtimeRefresh("requirement_submissions", debouncedRefresh, undefined, 400);
 
   function handleRequestCreated(req: ClearanceRequest) {
     setActiveRequest(req);

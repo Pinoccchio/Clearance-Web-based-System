@@ -16,7 +16,7 @@ import {
   getActiveCsg,
   getStudentClearanceRequests,
   getClearanceItemForRequest,
-  getRequirementsBySource,
+  getPublishedRequirementsBySource,
   getSystemSettings,
 } from "@/lib/supabase";
 
@@ -53,7 +53,7 @@ export default function CsgClearancePage() {
 
       if (d) {
         const [csgReqs, item] = await Promise.all([
-          getRequirementsBySource("csg", d.id, profile.year_level),
+          getPublishedRequirementsBySource("csg", d.id, profile.year_level),
 
           active ? getClearanceItemForRequest(active.id, "csg", d.id) : Promise.resolve(null),
         ]);

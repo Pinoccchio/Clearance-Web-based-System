@@ -44,7 +44,7 @@ import {
   getCsgByHeadId,
   updateClearanceItem,
   getSubmissionsByItem,
-  getRequirementsBySource,
+  getPublishedRequirementsBySource,
   getSystemSettings,
   getDistinctPeriods,
   supabase,
@@ -221,7 +221,7 @@ export default function CsgClearancePage() {
     setIsLoadingSubmissions(true);
     Promise.all([
       getSubmissionsByItem(selectedItem.id),
-      getRequirementsBySource(
+      getPublishedRequirementsBySource(
         selectedItem.source_type, 
         selectedItem.source_id,
         selectedItem.request?.student?.year_level

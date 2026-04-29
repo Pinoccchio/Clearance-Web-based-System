@@ -17,7 +17,7 @@ import {
   getCsgDepartmentLguByDepartmentCode,
   getStudentClearanceRequests,
   getClearanceItemForRequest,
-  getRequirementsBySource,
+  getPublishedRequirementsBySource,
   getSystemSettings,
 } from "@/lib/supabase";
 
@@ -54,7 +54,7 @@ export default function CsgDepartmentLguClearancePage() {
 
       if (d) {
         const [lguReqs, item] = await Promise.all([
-          getRequirementsBySource("csg_department_lgu", d.id, profile.year_level),
+          getPublishedRequirementsBySource("csg_department_lgu", d.id, profile.year_level),
 
           active ? getClearanceItemForRequest(active.id, "csg_department_lgu", d.id) : Promise.resolve(null),
         ]);

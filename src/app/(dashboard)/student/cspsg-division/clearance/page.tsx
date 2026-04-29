@@ -17,7 +17,7 @@ import {
   getCspsgDivisionByCode,
   getStudentClearanceRequests,
   getClearanceItemForRequest,
-  getRequirementsBySource,
+  getPublishedRequirementsBySource,
   getSystemSettings,
 } from "@/lib/supabase";
 
@@ -54,7 +54,7 @@ export default function CspsgDivisionClearancePage() {
 
       if (d) {
         const [divReqs, item] = await Promise.all([
-          getRequirementsBySource("cspsg_division", d.id, profile.year_level),
+          getPublishedRequirementsBySource("cspsg_division", d.id, profile.year_level),
 
           active ? getClearanceItemForRequest(active.id, "cspsg_division", d.id) : Promise.resolve(null),
         ]);

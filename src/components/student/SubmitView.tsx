@@ -17,6 +17,7 @@ import {
   removeFileFromSubmission,
   submitClearanceItem,
   acknowledgeRequirement,
+  syncRequirementSubmissionsBatch,
 } from "@/lib/supabase";
 import { uploadSubmissionFile, validateSubmissionFile, deleteSubmissionFile } from "@/lib/storage";
 import {
@@ -113,8 +114,12 @@ export default function SubmitView({
   const [submittingSource, setSubmittingSource] = useState<string | null>(null);
   const [submittedSources, setSubmittedSources] = useState<Set<string>>(new Set());
   const [savingReqIds, setSavingReqIds] = useState<Set<string>>(new Set());
+  const [saveErrors, setSaveErrors] = useState<Record<string, string>>({});
   const queueRef = useRef<Array<{ reqId: string; clearanceItemId: string; acknowledged: boolean }>>([]);
   const processingRef = useRef(false);
+  const checkboxDraftsRef = useRef<Record<string, Record<string, boolean>>>({});
+  const flushTimersRef = useRef<Record<string, ReturnType<typeof setTimeout> | null>>({});
+  const flushInFlightRef = useRef<Record<string, boolean>>({});
   const [pendingSubmit, setPendingSubmit] = useState<{ sourceId: string; item: ClearanceItem } | null>(null);
   const [pendingDelete, setPendingDelete] = useState<{ reqId: string; clearanceItemId: string; fileUrl: string } | null>(null);
   const [historyItem, setHistoryItem] = useState<{ item: ClearanceItem; sourceName: string } | null>(null);
@@ -270,10 +275,14 @@ export default function SubmitView({
     const acknowledged = !currentlyChecked;
 
     // If this req is already queued/saving, ignore (no double-toggle)
-    if (queueRef.current.some((q) => q.reqId === reqId)) return;
 
     // Optimistic UI update — instant green check / uncheck
     setSavingReqIds((prev) => new Set(prev).add(reqId));
+    setSaveErrors((prev) => {
+      const next = { ...prev };
+      delete next[reqId];
+      return next;
+    });
     setLocalSubOverrides((prev) => ({
       ...prev,
       [reqId]: acknowledged
@@ -293,8 +302,11 @@ export default function SubmitView({
     }));
 
     // Enqueue and kick off processing
-    queueRef.current.push({ reqId, clearanceItemId, acknowledged });
-    processQueue();
+    checkboxDraftsRef.current[clearanceItemId] = {
+      ...(checkboxDraftsRef.current[clearanceItemId] ?? {}),
+      [reqId]: acknowledged,
+    };
+    scheduleCheckboxFlush(clearanceItemId);
   }
 
   async function processQueue() {
@@ -347,6 +359,100 @@ export default function SubmitView({
     }
 
     processingRef.current = false;
+  }
+
+  function scheduleCheckboxFlush(clearanceItemId: string) {
+    const existingTimer = flushTimersRef.current[clearanceItemId];
+    if (existingTimer) clearTimeout(existingTimer);
+
+    flushTimersRef.current[clearanceItemId] = setTimeout(() => {
+      void flushCheckboxDrafts(clearanceItemId);
+    }, 300);
+  }
+
+  async function flushCheckboxDrafts(clearanceItemId: string) {
+    if (flushInFlightRef.current[clearanceItemId]) return;
+    flushInFlightRef.current[clearanceItemId] = true;
+
+    try {
+      while (Object.keys(checkboxDraftsRef.current[clearanceItemId] ?? {}).length > 0) {
+        const draftMap = checkboxDraftsRef.current[clearanceItemId] ?? {};
+        const updates = Object.entries(draftMap).map(([requirement_id, acknowledged]) => ({
+          requirement_id,
+          acknowledged,
+        }));
+        checkboxDraftsRef.current[clearanceItemId] = {};
+
+        if (updates.length === 0) continue;
+        if (mutationsInFlightRef) mutationsInFlightRef.current += 1;
+
+        try {
+          const savedRows = await syncRequirementSubmissionsBatch(clearanceItemId, studentId, updates);
+          const savedByRequirement = new Map(savedRows.map((row) => [row.requirement_id, row]));
+
+          setLocalSubOverrides((prev) => {
+            const next = { ...prev };
+            for (const update of updates) {
+              const row = savedByRequirement.get(update.requirement_id);
+              if (row && (row.status === 'submitted' || row.status === 'verified')) {
+                next[update.requirement_id] = {
+                  ...row,
+                  requirement: { id: update.requirement_id } as SubmissionWithRequirement["requirement"],
+                };
+              } else {
+                next[update.requirement_id] = null;
+              }
+            }
+            return next;
+          });
+
+          setSaveErrors((prev) => {
+            const next = { ...prev };
+            for (const update of updates) {
+              delete next[update.requirement_id];
+            }
+            return next;
+          });
+        } catch (err) {
+          const message = err instanceof Error ? err.message : "Could not save your response.";
+
+          setLocalSubOverrides((prev) => {
+            const next = { ...prev };
+            for (const update of updates) {
+              delete next[update.requirement_id];
+            }
+            return next;
+          });
+
+          setSaveErrors((prev) => {
+            const next = { ...prev };
+            for (const update of updates) {
+              next[update.requirement_id] = message;
+            }
+            return next;
+          });
+
+          showToast(
+            "error",
+            "Failed to save",
+            updates.length === 1 ? message : `${updates.length} changes could not be saved.`
+          );
+        } finally {
+          if (mutationsInFlightRef) mutationsInFlightRef.current = Math.max(0, mutationsInFlightRef.current - 1);
+          setSavingReqIds((prev) => {
+            const next = new Set(prev);
+            for (const update of updates) {
+              next.delete(update.requirement_id);
+            }
+            return next;
+          });
+        }
+
+        onUploadComplete?.();
+      }
+    } finally {
+      flushInFlightRef.current[clearanceItemId] = false;
+    }
   }
 
   async function handleSubmitForReview(sourceId: string, item: ClearanceItem) {
@@ -491,6 +597,27 @@ export default function SubmitView({
       </div>
     )}
     <div className="space-y-4">
+      {(savingReqIds.size > 0 || Object.keys(saveErrors).length > 0) && (
+        <div className={`flex items-start gap-3 px-4 py-3 rounded-lg border ${
+          Object.keys(saveErrors).length > 0
+            ? "bg-red-50 border-red-200"
+            : "bg-amber-50 border-amber-200"
+        }`}>
+          {Object.keys(saveErrors).length > 0 ? (
+            <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+          ) : (
+            <Loader2 className="w-4 h-4 text-amber-500 animate-spin flex-shrink-0 mt-0.5" />
+          )}
+          <p className={`text-sm ${
+            Object.keys(saveErrors).length > 0 ? "text-red-700" : "text-amber-700"
+          }`}>
+            {Object.keys(saveErrors).length > 0
+              ? `${Object.keys(saveErrors).length} requirement${Object.keys(saveErrors).length !== 1 ? "s" : ""} failed to save. Retry by clicking the affected row again.`
+              : `Saving ${savingReqIds.size} change${savingReqIds.size !== 1 ? "s" : ""}...`}
+          </p>
+        </div>
+      )}
+
       {/* Info banner */}
       <div className="flex items-start gap-3 px-4 py-3 bg-cjc-blue/5 border border-cjc-blue/20 rounded-lg">
         <Info className="w-4 h-4 text-cjc-blue flex-shrink-0 mt-0.5" />
@@ -592,6 +719,10 @@ export default function SubmitView({
 
               const isRejected = item?.status === 'rejected';
               const isOnHold = item?.status === 'on_hold';
+              const hasSavingReqs = reqs.some((r) => savingReqIds.has(r.id));
+              const hasErroredReqs = reqs.some((r) => !!saveErrors[r.id]);
+              const hasBusyUploads = reqs.some((r) => uploadingReqs.has(r.id));
+              const isMutating = hasSavingReqs || hasErroredReqs || hasBusyUploads;
 
               const isAlreadySubmitted = isLocked || isRejected || isOnHold;
 
@@ -812,49 +943,67 @@ export default function SubmitView({
                               ) : (() => {
                                 const isChecked = existingSub?.status === 'submitted' || existingSub?.status === 'verified';
                                 const isThisSaving = savingReqIds.has(req.id);
-                                const checkboxLocked = isLocked;
+                                const saveError = saveErrors[req.id];
+                                const checkboxLocked = isLocked || isThisSaving;
                                 return (
-                                  <button
-                                    type="button"
-                                    disabled={checkboxLocked}
-                                    onClick={() => item && handleCheckboxToggle(req.id, item.id, !!isChecked)}
-                                    className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border-2 text-left transition-all group ${
-                                      checkboxLocked
-                                        ? isChecked
-                                          ? "border-green-200 bg-green-50 cursor-default"
-                                          : "border-gray-200 bg-gray-50 cursor-default opacity-60"
-                                        : isChecked
-                                          ? "border-green-300 bg-green-50 hover:border-red-300 hover:bg-red-50 cursor-pointer"
-                                          : "border-dashed border-gray-300 bg-gray-50 hover:border-cjc-gold/60 hover:bg-cjc-gold/5"
-                                    }`}
-                                  >
-                                    {isThisSaving ? (
-                                      <Loader2 className="w-4 h-4 text-gray-400 animate-spin flex-shrink-0" />
-                                    ) : (
-                                      <div className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 border-2 transition-colors ${
-                                        isChecked
-                                          ? checkboxLocked
-                                            ? "bg-green-500 border-green-500"
-                                            : "bg-green-500 border-green-500 group-hover:bg-red-400 group-hover:border-red-400"
-                                          : "border-gray-400 bg-white"
+                                  <div className="space-y-1.5">
+                                    <button
+                                      type="button"
+                                      disabled={checkboxLocked}
+                                      onClick={() => item && handleCheckboxToggle(req.id, item.id, !!isChecked)}
+                                      className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg border-2 text-left transition-all group ${
+                                        saveError
+                                          ? "border-red-300 bg-red-50 hover:border-red-400"
+                                          : checkboxLocked
+                                            ? isChecked
+                                              ? "border-green-200 bg-green-50 cursor-default"
+                                              : "border-gray-200 bg-gray-50 cursor-default opacity-60"
+                                            : isChecked
+                                              ? "border-green-300 bg-green-50 hover:border-red-300 hover:bg-red-50 cursor-pointer"
+                                              : "border-dashed border-gray-300 bg-gray-50 hover:border-cjc-gold/60 hover:bg-cjc-gold/5"
+                                      }`}
+                                    >
+                                      {isThisSaving ? (
+                                        <Loader2 className="w-4 h-4 text-amber-500 animate-spin flex-shrink-0" />
+                                      ) : saveError ? (
+                                        <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+                                      ) : (
+                                        <div className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 border-2 transition-colors ${
+                                          isChecked
+                                            ? checkboxLocked
+                                              ? "bg-green-500 border-green-500"
+                                              : "bg-green-500 border-green-500 group-hover:bg-red-400 group-hover:border-red-400"
+                                            : "border-gray-400 bg-white"
+                                        }`}>
+                                          {isChecked && <CheckCircle className="w-3 h-3 text-white" />}
+                                        </div>
+                                      )}
+                                      <span className={`text-xs font-medium transition-colors ${
+                                        saveError
+                                          ? "text-red-700"
+                                          : isThisSaving
+                                            ? "text-amber-700"
+                                            : isChecked
+                                              ? checkboxLocked
+                                                ? "text-green-700"
+                                                : "text-green-700 group-hover:text-red-600"
+                                              : "text-gray-500"
                                       }`}>
-                                        {isChecked && <CheckCircle className="w-3 h-3 text-white" />}
-                                      </div>
+                                        {saveError
+                                          ? "Failed to save. Click to retry."
+                                          : isThisSaving
+                                            ? "Saving..."
+                                            : isChecked
+                                              ? checkboxLocked
+                                                ? "Confirmed"
+                                                : <><span className="group-hover:hidden">Confirmed</span><span className="hidden group-hover:inline">Click to undo</span></>
+                                              : "Click to confirm compliance"}
+                                      </span>
+                                    </button>
+                                    {saveError && (
+                                      <p className="text-[11px] text-red-600">{saveError}</p>
                                     )}
-                                    <span className={`text-xs font-medium transition-colors ${
-                                      isChecked
-                                        ? checkboxLocked
-                                          ? "text-green-700"
-                                          : "text-green-700 group-hover:text-red-600"
-                                        : "text-gray-500"
-                                    }`}>
-                                      {isChecked
-                                        ? checkboxLocked
-                                          ? "Confirmed"
-                                          : <><span className="group-hover:hidden">Confirmed</span><span className="hidden group-hover:inline">Click to undo</span></>
-                                        : "Click to confirm compliance"}
-                                    </span>
-                                  </button>
+                                  </div>
                                 );
                               })()}
                             </div>
@@ -891,7 +1040,7 @@ export default function SubmitView({
                           <Button
                             variant="primary"
                             size="sm"
-                            disabled={!isReady || submittingSource === source.id}
+                            disabled={!isReady || submittingSource === source.id || isMutating}
                             isLoading={submittingSource === source.id}
                             onClick={() => setPendingSubmit({ sourceId: source.id, item })}
                           >
@@ -924,7 +1073,7 @@ export default function SubmitView({
                           <Button
                             variant="primary"
                             size="sm"
-                            disabled={!isReady || submittingSource === source.id}
+                            disabled={!isReady || submittingSource === source.id || isMutating}
                             isLoading={submittingSource === source.id}
                             onClick={() => setPendingSubmit({ sourceId: source.id, item })}
                           >
@@ -953,7 +1102,7 @@ export default function SubmitView({
                         <Button
                           variant="primary"
                           size="sm"
-                          disabled={!isReady || submittingSource === source.id}
+                            disabled={!isReady || submittingSource === source.id || isMutating}
                           isLoading={submittingSource === source.id}
                           onClick={() => setPendingSubmit({ sourceId: source.id, item })}
                         >

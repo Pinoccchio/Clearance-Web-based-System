@@ -130,7 +130,6 @@ export default function CsgSubmitPage() {
   }, [loadData]);
 
   useRealtimeRefresh('clearance_items', refreshData);
-  useRealtimeRefresh('requirement_submissions', debouncedRefresh, undefined, 400);
 
   function handleRequestCreated(req: ClearanceRequest) {
     setActiveRequest(req);

@@ -44,7 +44,7 @@ import {
   getCspsgByHeadId,
   updateClearanceItem,
   getSubmissionsByItem,
-  getRequirementsBySource,
+  getPublishedRequirementsBySource,
   getSystemSettings,
   getDistinctPeriods,
 } from "@/lib/supabase";
@@ -223,7 +223,7 @@ export default function CspsgClearancePage() {
     setIsLoadingSubmissions(true);
     Promise.all([
       getSubmissionsByItem(selectedItem.id),
-      getRequirementsBySource(
+      getPublishedRequirementsBySource(
         selectedItem.source_type, 
         selectedItem.source_id,
         selectedItem.request?.student?.year_level

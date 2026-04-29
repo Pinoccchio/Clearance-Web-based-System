@@ -17,8 +17,8 @@ import {
   SubmissionWithRequirement,
   getAllOffices,
   getStudentClearanceRequests,
-  getClearanceItemForRequest,
-  getPublishedRequirementsBySource,
+  getClearanceItemsForRequestSources,
+  getPublishedRequirementsByMultipleSources,
   getSubmissionsByItems,
   getSystemSettings,
 } from "@/lib/supabase";
@@ -66,24 +66,25 @@ export default function StudentOfficesSubmitPage() {
       ) ?? null;
       setActiveRequest(active);
 
-      const reqsBySource: Record<string, Requirement[]> = {};
-      const items: ClearanceItem[] = [];
-
-      await Promise.all(
-        allOffices.map(async (office) => {
-          const reqs = await getPublishedRequirementsBySource("office", office.id, profile.year_level);
-          if (cancelled.value || gen !== loadGenRef.current) return;
-          reqsBySource[office.id] = reqs;
-
-          if (active) {
-            const item = await getClearanceItemForRequest(active.id, "office", office.id);
-            if (cancelled.value || gen !== loadGenRef.current) return;
-            if (item) {
-              items.push(item);
-            }
-          }
-        })
+      const reqMap = await getPublishedRequirementsByMultipleSources(
+        allOffices.map((office) => ({ source_type: "office", source_id: office.id })),
+        profile.year_level
       );
+
+      if (cancelled.value || gen !== loadGenRef.current) return;
+
+      const reqsBySource: Record<string, Requirement[]> = {};
+      for (const office of allOffices) {
+        reqsBySource[office.id] = reqMap[`office:${office.id}`] ?? [];
+      }
+
+      const items = active
+        ? await getClearanceItemsForRequestSources(
+            active.id,
+            "office",
+            allOffices.map((office) => office.id)
+          )
+        : [];
 
       if (cancelled.value || gen !== loadGenRef.current) return;
 
@@ -143,7 +144,6 @@ export default function StudentOfficesSubmitPage() {
 
   useRealtimeRefresh('clearance_items', refreshData);
   useRealtimeRefresh('requirements', refreshData, undefined, 300);
-  useRealtimeRefresh('requirement_submissions', debouncedRefresh, undefined, 400);
 
   useEffect(() => {
     const handleVisibilityOrFocus = () => {

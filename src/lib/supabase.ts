@@ -2845,6 +2845,23 @@ export async function getSubmissionsByItems(
   return result;
 }
 
+export async function syncRequirementSubmissionsBatch(
+  clearanceItemId: string,
+  studentId: string,
+  updates: Array<{ requirement_id: string; acknowledged: boolean }>
+): Promise<RequirementSubmission[]> {
+  if (updates.length === 0) return [];
+
+  const { data, error } = await supabase.rpc('sync_requirement_submissions_batch', {
+    p_clearance_item_id: clearanceItemId,
+    p_student_id: studentId,
+    p_updates: updates,
+  });
+
+  if (error) throw error;
+  return (data as RequirementSubmission[]) || [];
+}
+
 /** Fetch all processed (approved/rejected/on_hold) clearance items for a department */
 export async function getProcessedClearanceItemsByDepartment(
   deptId: string
@@ -2922,6 +2939,24 @@ export async function getClearanceItemForRequest(
 
   if (error) throw error;
   return data;
+}
+
+export async function getClearanceItemsForRequestSources(
+  requestId: string,
+  sourceType: string,
+  sourceIds: string[]
+): Promise<ClearanceItem[]> {
+  if (sourceIds.length === 0) return [];
+
+  const { data, error } = await supabase
+    .from('clearance_items')
+    .select('*')
+    .eq('request_id', requestId)
+    .eq('source_type', sourceType)
+    .in('source_id', sourceIds);
+
+  if (error) throw error;
+  return data || [];
 }
 
 /** Get or create a clearance_item for a given request + source.
