@@ -54,8 +54,10 @@ export default function OfficesClearancePage() {
 
       // Batch fetch requirement counts
       const reqMap = await getRequirementsByMultipleSources(
-        allOffices.map((o) => ({ source_type: "office", source_id: o.id }))
+        allOffices.map((o) => ({ source_type: "office", source_id: o.id })),
+        profile.year_level
       );
+
       const counts: Record<string, number> = {};
       for (const office of allOffices) {
         counts[office.id] = (reqMap[`office:${office.id}`] ?? []).length;

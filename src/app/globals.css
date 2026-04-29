@@ -572,10 +572,6 @@ body {
   50% { box-shadow: 0 0 0 8px rgba(169, 30, 44, 0); }
 }
 
-@keyframes skeletonShimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
 
 @keyframes toastSlideIn {
   from { opacity: 0; transform: translateY(8px); }
@@ -1132,28 +1128,6 @@ body {
   opacity: 0.02;
 }
 
-/* Skeleton loading */
-.skeleton-gold {
-  background: linear-gradient(
-    90deg,
-    rgba(232, 228, 222, 0.8) 0%,
-    rgba(212, 164, 24, 0.2) 50%,
-    rgba(232, 228, 222, 0.8) 100%
-  );
-  background-size: 200% 100%;
-  animation: skeletonShimmer 1.5s ease-in-out infinite;
-  border-radius: var(--radius-sm);
-}
-
-.dark .skeleton-gold {
-  background: linear-gradient(
-    90deg,
-    rgba(30, 58, 90, 0.8) 0%,
-    rgba(212, 164, 24, 0.15) 50%,
-    rgba(30, 58, 90, 0.8) 100%
-  );
-  background-size: 200% 100%;
-}
 
 /* ============================================
    FOOTER

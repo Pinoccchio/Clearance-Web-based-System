@@ -18,12 +18,12 @@ import {
   getAllOffices,
   getStudentClearanceRequests,
   getClearanceItemForRequest,
-  getPublishedRequirementsByMultipleSources,
+  getPublishedRequirementsBySource,
   getSubmissionsByItems,
   getSystemSettings,
 } from "@/lib/supabase";
 
-export default function OfficesSubmitPage() {
+export default function StudentOfficesSubmitPage() {
   const { profile, isLoading: authLoading } = useAuth();
   const { showToast } = useToast();
 
@@ -41,7 +41,7 @@ export default function OfficesSubmitPage() {
   const mutationsInFlightRef = useRef(0);
 
   const loadData = useCallback(async (cancelled: { value: boolean }, silent = false) => {
-    if (!profile) return;
+    if (!profile?.id) return;
 
     loadGenRef.current += 1;
     const gen = loadGenRef.current;
@@ -66,38 +66,44 @@ export default function OfficesSubmitPage() {
       ) ?? null;
       setActiveRequest(active);
 
-      // Batch fetch requirements
-      const reqMap = await getPublishedRequirementsByMultipleSources(
-        allOffices.map((o) => ({ source_type: "office", source_id: o.id }))
+      const reqsBySource: Record<string, Requirement[]> = {};
+      const items: ClearanceItem[] = [];
+
+      await Promise.all(
+        allOffices.map(async (office) => {
+          const reqs = await getPublishedRequirementsBySource("office", office.id, profile.year_level);
+          if (cancelled.value || gen !== loadGenRef.current) return;
+          reqsBySource[office.id] = reqs;
+
+          if (active) {
+            const item = await getClearanceItemForRequest(active.id, "office", office.id);
+            if (cancelled.value || gen !== loadGenRef.current) return;
+            if (item) {
+              items.push(item);
+            }
+          }
+        })
       );
-      const byId: Record<string, Requirement[]> = {};
-      for (const [k, v] of Object.entries(reqMap)) {
-        byId[k.split(":")[1]] = v;
-      }
 
       if (cancelled.value || gen !== loadGenRef.current) return;
-      setRequirementsBySource(byId);
 
-      if (active) {
-        const items = await Promise.all(
-          allOffices.map((o) => getClearanceItemForRequest(active.id, "office", o.id))
-        );
-        const validItems = items.filter((i): i is ClearanceItem => i !== null);
-        if (cancelled.value || gen !== loadGenRef.current) return;
-        setClearanceItems(validItems);
+      const subsByItem = active && items.length > 0
+        ? await getSubmissionsByItems(items.map((i) => i.id))
+        : {};
 
-        // Fetch submissions for all items in a single bulk query
-        const subsByItem = await getSubmissionsByItems(validItems.map((i) => i.id));
-        if (!cancelled.value && gen === loadGenRef.current) {
-          setSubmissionsByItem(subsByItem);
-        }
+      if (!cancelled.value && gen === loadGenRef.current) {
+        setRequirementsBySource(reqsBySource);
+        setClearanceItems(items);
+        setSubmissionsByItem(subsByItem);
       }
-    } catch (err) {
-      if (!cancelled.value && gen === loadGenRef.current && !silent) showToast("error", "Load failed", "Failed to load submission data.");
+    } catch {
+      if (!cancelled.value && gen === loadGenRef.current && !silent) {
+        showToast("error", "Load failed", "Failed to load submission data.");
+      }
     } finally {
       if (!cancelled.value && gen === loadGenRef.current) setIsLoading(false);
     }
-  }, [profile?.id]);
+  }, [profile?.id, profile?.year_level, showToast]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -136,7 +142,23 @@ export default function OfficesSubmitPage() {
   }, [loadData]);
 
   useRealtimeRefresh('clearance_items', refreshData);
+  useRealtimeRefresh('requirements', refreshData, undefined, 300);
   useRealtimeRefresh('requirement_submissions', debouncedRefresh, undefined, 400);
+
+  useEffect(() => {
+    const handleVisibilityOrFocus = () => {
+      if (document.visibilityState === "visible") {
+        refreshData();
+      }
+    };
+
+    window.addEventListener("focus", handleVisibilityOrFocus);
+    document.addEventListener("visibilitychange", handleVisibilityOrFocus);
+    return () => {
+      window.removeEventListener("focus", handleVisibilityOrFocus);
+      document.removeEventListener("visibilitychange", handleVisibilityOrFocus);
+    };
+  }, [refreshData]);
 
   function handleRequestCreated(req: ClearanceRequest) {
     setActiveRequest(req);
@@ -147,7 +169,7 @@ export default function OfficesSubmitPage() {
   if (authLoading || isLoading) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header title="Submit — Offices" subtitle="Submit your office clearances" />
+        <Header title="Submit — Offices" subtitle="Submit your office clearance" />
         <div className="flex items-center justify-center p-16">
           <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
         </div>
@@ -158,7 +180,7 @@ export default function OfficesSubmitPage() {
   if (!profile) {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header title="Submit — Offices" subtitle="Submit your office clearances" />
+        <Header title="Submit — Offices" subtitle="Submit your office clearance" />
         <div className="flex items-center justify-center p-12">
           <Card padding="lg" className="text-center max-w-sm w-full">
             <AlertCircle className="w-10 h-10 text-red-400 mx-auto mb-3" />
@@ -173,7 +195,7 @@ export default function OfficesSubmitPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header title="Submit — Offices" subtitle="Submit your office clearances" />
+      <Header title="Submit — Offices" subtitle="Submit your office clearance" />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <SubmitView
           sourceType="office"

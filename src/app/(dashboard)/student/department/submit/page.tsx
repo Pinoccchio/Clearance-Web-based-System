@@ -27,7 +27,7 @@ export default function DepartmentSubmitPage() {
   const { profile, isLoading: authLoading } = useAuth();
   const { showToast } = useToast();
 
-  const [dept, setDept] = useState<Department | null>(null);
+  const [department, setDepartment] = useState<Department | null>(null);
   const [systemSettings, setSystemSettings] = useState<SystemSettings | null>(null);
   const [activeRequest, setActiveRequest] = useState<ClearanceRequest | null>(null);
   const [clearanceItem, setClearanceItem] = useState<ClearanceItem | null>(null);
@@ -56,7 +56,7 @@ export default function DepartmentSubmitPage() {
       if (cancelled.value || gen !== loadGenRef.current) return;
 
       setSystemSettings(sys);
-      setDept(d);
+      setDepartment(d);
 
       const active = requests.find(
         (r) =>
@@ -67,7 +67,7 @@ export default function DepartmentSubmitPage() {
       setActiveRequest(active);
 
       if (d) {
-        const reqs = await getPublishedRequirementsBySource("department", d.id);
+        const reqs = await getPublishedRequirementsBySource("department", d.id, profile.year_level);
         if (cancelled.value || gen !== loadGenRef.current) return;
         setRequirements(reqs);
 
@@ -84,12 +84,14 @@ export default function DepartmentSubmitPage() {
           }
         }
       }
-    } catch (err) {
-      if (!cancelled.value && gen === loadGenRef.current && !silent) showToast("error", "Load failed", "Failed to load submission data.");
+    } catch {
+      if (!cancelled.value && gen === loadGenRef.current && !silent) {
+        showToast("error", "Load failed", "Failed to load submission data.");
+      }
     } finally {
       if (!cancelled.value && gen === loadGenRef.current) setIsLoading(false);
     }
-  }, [profile?.id, profile?.department]);
+  }, [profile?.id, profile?.department, profile?.year_level, showToast]);
 
   useEffect(() => {
     if (authLoading) return;
@@ -98,7 +100,7 @@ export default function DepartmentSubmitPage() {
     const cancelled = { value: false };
     loadData(cancelled);
     return () => { cancelled.value = true; };
-  }, [authLoading, loadData]);
+  }, [authLoading, loadData, profile?.department]);
 
   const refreshData = useCallback(() => {
     const cancelled = { value: false };
@@ -132,7 +134,6 @@ export default function DepartmentSubmitPage() {
 
   function handleRequestCreated(req: ClearanceRequest) {
     setActiveRequest(req);
-    // Re-fetch items and submissions
     const cancelled = { value: false };
     loadData(cancelled);
   }
@@ -176,15 +177,15 @@ export default function DepartmentSubmitPage() {
     );
   }
 
-  const sources = dept ? [{ id: dept.id, name: dept.name, code: dept.code }] : [];
-  const requirementsBySource = dept ? { [dept.id]: requirements } : {};
+  const sources = department ? [{ id: department.id, name: department.name, code: department.code }] : [];
+  const requirementsBySource = department ? { [department.id]: requirements } : {};
   const clearanceItems = clearanceItem ? [clearanceItem] : [];
 
   return (
     <div className="min-h-screen bg-gray-50">
       <Header
         title="Submit — Department"
-        subtitle={dept ? `${dept.name} (${dept.code})` : "Submit your department clearance"}
+        subtitle={department ? `${department.name} (${department.code})` : "Submit your department clearance"}
       />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <SubmitView

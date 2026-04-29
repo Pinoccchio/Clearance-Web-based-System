@@ -30,7 +30,7 @@ export default function CspsgRequirementsPage() {
       setCspsg(org);
 
       if (org) {
-        const reqs = await getPublishedRequirementsBySource("cspsg", org.id);
+        const reqs = await getPublishedRequirementsBySource("cspsg", org.id, profile.year_level);
         setRequirements(reqs);
       }
     } catch {

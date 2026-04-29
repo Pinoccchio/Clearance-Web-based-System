@@ -30,7 +30,7 @@ export default function CsgDepartmentLguRequirementsPage() {
       setLgu(d);
 
       if (d) {
-        const reqs = await getPublishedRequirementsBySource("csg_department_lgu", d.id);
+        const reqs = await getPublishedRequirementsBySource("csg_department_lgu", d.id, profile.year_level);
         setRequirements(reqs);
       }
     } catch {

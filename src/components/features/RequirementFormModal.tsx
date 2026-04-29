@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Modal } from "@/components/ui/modal";
 import { Button } from "@/components/ui/Button";
-import { CheckSquare, Plus, X, ScanLine } from "lucide-react";
+import { CheckSquare, Plus, X, ScanLine, Users } from "lucide-react";
 import {
   createRequirement,
   updateRequirement,
@@ -23,8 +23,16 @@ interface RequirementFormData {
   is_required: boolean;
   requires_upload: boolean;
   is_attendance: boolean;
+  applicable_year_levels: string[];
   links: LinkEntry[];
 }
+
+const YEAR_LEVEL_OPTIONS = [
+  { value: "1", label: "1st Year" },
+  { value: "2", label: "2nd Year" },
+  { value: "3", label: "3rd Year" },
+  { value: "4", label: "4th Year" },
+];
 
 const emptyForm: RequirementFormData = {
   name: "",
@@ -32,6 +40,7 @@ const emptyForm: RequirementFormData = {
   is_required: true,
   requires_upload: false,
   is_attendance: false,
+  applicable_year_levels: [],
   links: [],
 };
 
@@ -71,6 +80,7 @@ export function RequirementFormModal({
           is_required: requirement.is_required,
           requires_upload: requirement.requires_upload,
           is_attendance: requirement.is_attendance,
+          applicable_year_levels: requirement.applicable_year_levels ?? [],
           links: (requirement.links ?? []).map(l => ({ url: l.url, label: l.label ?? "" })),
         });
       } else {
@@ -79,6 +89,18 @@ export function RequirementFormModal({
       setNameError(null);
     }
   }, [isOpen, mode, requirement]);
+
+  function toggleYearLevel(value: string) {
+    setFormData((prev) => {
+      const current = prev.applicable_year_levels;
+      return {
+        ...prev,
+        applicable_year_levels: current.includes(value)
+          ? current.filter((v) => v !== value)
+          : [...current, value],
+      };
+    });
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -101,6 +123,7 @@ export function RequirementFormModal({
           is_required: formData.is_required,
           requires_upload: formData.requires_upload,
           is_attendance: formData.is_attendance,
+          applicable_year_levels: formData.applicable_year_levels,
         });
 
         await replaceRequirementLinks(
@@ -131,6 +154,7 @@ export function RequirementFormModal({
           is_required: formData.is_required,
           requires_upload: formData.requires_upload,
           is_attendance: formData.is_attendance,
+          applicable_year_levels: formData.applicable_year_levels,
           order: nextOrder,
         });
 
@@ -243,6 +267,44 @@ export function RequirementFormModal({
               rows={2}
               placeholder="Additional notes shown to students/members"
             />
+          </div>
+
+          {/* ── Year Level Targeting ─────────────────────────────── */}
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Users className="w-4 h-4 text-cjc-navy" />
+              <label className="block text-sm font-medium text-cjc-navy">
+                Applies to Year Levels{" "}
+                <span className="text-warm-muted font-normal">(optional)</span>
+              </label>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {YEAR_LEVEL_OPTIONS.map((opt) => {
+                const selected = formData.applicable_year_levels.includes(opt.value);
+                return (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => toggleYearLevel(opt.value)}
+                    className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${
+                      selected
+                        ? "bg-cjc-red text-white border-cjc-red shadow-sm"
+                        : "bg-white text-cjc-navy border-gray-300 hover:border-cjc-red hover:text-cjc-red"
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                );
+              })}
+            </div>
+            <p className="mt-1.5 text-xs text-warm-muted">
+              {formData.applicable_year_levels.length === 0
+                ? "⬆ No selection = applies to all year levels."
+                : `Applies only to: ${formData.applicable_year_levels
+                    .sort()
+                    .map((v) => YEAR_LEVEL_OPTIONS.find((o) => o.value === v)?.label)
+                    .join(", ")}`}
+            </p>
           </div>
 
           {/* Checkboxes */}

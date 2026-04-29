@@ -54,7 +54,8 @@ export default function CspsgClearancePage() {
 
       if (org) {
         const [reqs, item] = await Promise.all([
-          getRequirementsBySource("cspsg", org.id),
+          getRequirementsBySource("cspsg", org.id, profile.year_level),
+
           active ? getClearanceItemForRequest(active.id, "cspsg", org.id) : Promise.resolve(null),
         ]);
         setRequirementCount(reqs.length);

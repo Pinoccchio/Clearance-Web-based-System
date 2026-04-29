@@ -209,8 +209,13 @@ export default function CsgDepartmentLguClearancePage() {
     setIsLoadingSubmissions(true);
     Promise.all([
       getSubmissionsByItem(selectedItem.id),
-      getRequirementsBySource(selectedItem.source_type, selectedItem.source_id),
+      getRequirementsBySource(
+        selectedItem.source_type, 
+        selectedItem.source_id,
+        selectedItem.request?.student?.year_level
+      ),
     ])
+
       .then(([subs, reqs]) => {
         setSubmissions(subs);
         setItemRequirements(reqs);

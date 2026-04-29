@@ -67,7 +67,7 @@ export default function CspsgSubmitPage() {
       setActiveRequest(active);
 
       if (org) {
-        const reqs = await getPublishedRequirementsBySource("cspsg", org.id);
+        const reqs = await getPublishedRequirementsBySource("cspsg", org.id, profile.year_level);
         if (cancelled.value || gen !== loadGenRef.current) return;
         setRequirements(reqs);
 

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { CheckCircle, Clock, XCircle, PauseCircle, MinusCircle, Info, History, PartyPopper } from "lucide-react";
+import { CheckCircle, Clock, XCircle, PauseCircle, MinusCircle, Info, History, PartyPopper, Loader2 } from "lucide-react";
 import { Card } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -26,11 +26,11 @@ interface Props {
   submitHref: string;
 }
 
-function SkeletonCard() {
+function SimpleLoader() {
   return (
-    <div className="animate-pulse">
-      <div className="h-5 bg-gray-200 rounded w-1/3 mb-2" />
-      <div className="h-4 bg-gray-100 rounded w-1/4" />
+    <div className="flex flex-col items-center justify-center p-12 bg-white rounded-xl border border-gray-100 shadow-sm">
+      <Loader2 className="w-10 h-10 text-blue-500 animate-spin mb-4" />
+      <p className="text-gray-500 font-medium">Loading status...</p>
     </div>
   );
 }
@@ -56,15 +56,7 @@ export default function ClearanceStatusView({
   const [historyItem, setHistoryItem] = useState<{ item: ClearanceItem; sourceName: string } | null>(null);
 
   if (loading) {
-    return (
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <Card key={i} padding="md">
-            <SkeletonCard />
-          </Card>
-        ))}
-      </div>
-    );
+    return <SimpleLoader />;
   }
 
   if (clearanceRequest === null) {

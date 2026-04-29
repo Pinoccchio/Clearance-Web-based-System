@@ -220,6 +220,7 @@ export default function CspsgDivisionRequirementsPage() {
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-warm-muted uppercase tracking-wider w-24">Scan</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-warm-muted uppercase tracking-wider w-28">Link</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-warm-muted uppercase tracking-wider w-32">Applies To</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-warm-muted uppercase tracking-wider w-24">Status</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-warm-muted uppercase tracking-wider w-28">
                     Added
@@ -284,6 +285,20 @@ export default function CspsgDivisionRequirementsPage() {
                         </div>
                       ) : (
                         <span className="text-xs text-gray-400">—</span>
+                      )}
+                    </td>
+                    {/* Applies To */}
+                    <td className="px-4 py-4">
+                      {(req.applicable_year_levels ?? []).length === 0 ? (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">All Years</span>
+                      ) : (
+                        <div className="flex flex-wrap gap-1">
+                          {[...req.applicable_year_levels].sort().map((yr) => (
+                            <span key={yr} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-cjc-red/10 text-cjc-red">
+                              Yr {yr}
+                            </span>
+                          ))}
+                        </div>
                       )}
                     </td>
                     <td className="px-4 py-4">

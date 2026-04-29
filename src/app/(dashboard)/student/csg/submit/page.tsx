@@ -67,7 +67,7 @@ export default function CsgSubmitPage() {
       setActiveRequest(active);
 
       if (d) {
-        const reqs = await getPublishedRequirementsBySource("csg", d.id);
+        const reqs = await getPublishedRequirementsBySource("csg", d.id, profile.year_level);
         if (cancelled.value || gen !== loadGenRef.current) return;
         setRequirements(reqs);
 
@@ -85,7 +85,7 @@ export default function CsgSubmitPage() {
         }
       }
     } catch {
-      if (!cancelled.value && gen === loadGenRef.current && !silent) {
+      if (!cancelled.value && gen !== loadGenRef.current && !silent) {
         showToast("error", "Load failed", "Failed to load submission data.");
       }
     } finally {

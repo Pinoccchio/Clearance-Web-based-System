@@ -76,7 +76,8 @@ export default function StudentClubsClearancePage() {
 
       await Promise.all(
         validClubs.map(async (club) => {
-          const reqs = await getRequirementsBySource("club", club.id);
+          const reqs = await getRequirementsBySource("club", club.id, profile.year_level);
+
           counts[club.id] = reqs.length;
 
           if (active) {

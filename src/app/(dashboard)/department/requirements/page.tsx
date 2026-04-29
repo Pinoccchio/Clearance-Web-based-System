@@ -219,6 +219,7 @@ export default function DepartmentRequirementsPage() {
                   </th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-warm-muted uppercase tracking-wider w-24 hidden sm:table-cell">Scan</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-warm-muted uppercase tracking-wider w-28 hidden md:table-cell">Link</th>
+                  <th className="px-4 py-3 text-left text-xs font-semibold text-warm-muted uppercase tracking-wider w-32 hidden sm:table-cell">Applies To</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-warm-muted uppercase tracking-wider w-24 hidden sm:table-cell">Status</th>
                   <th className="px-4 py-3 text-left text-xs font-semibold text-warm-muted uppercase tracking-wider w-28 hidden lg:table-cell">
                     Added
@@ -283,6 +284,20 @@ export default function DepartmentRequirementsPage() {
                             </div>
                           ) : (
                             <span className="text-xs text-gray-400">—</span>
+                          )}
+                        </td>
+                        {/* Applies To */}
+                        <td className="px-4 py-4 hidden sm:table-cell">
+                          {(req.applicable_year_levels ?? []).length === 0 ? (
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-500">All Years</span>
+                          ) : (
+                            <div className="flex flex-wrap gap-1">
+                              {[...req.applicable_year_levels].sort().map((yr) => (
+                                <span key={yr} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-cjc-red/10 text-cjc-red">
+                                  Yr {yr}
+                                </span>
+                              ))}
+                            </div>
                           )}
                         </td>
                         <td className="px-4 py-4 hidden sm:table-cell">

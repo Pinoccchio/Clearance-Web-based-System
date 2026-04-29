@@ -94,7 +94,6 @@ const yearLevelOptions = [
   { value: "2", label: "2nd Year" },
   { value: "3", label: "3rd Year" },
   { value: "4", label: "4th Year" },
-  { value: "5", label: "5th Year" },
 ];
 
 const STUDENT_ID_REGEX = /^\d{4}-\d{4}-\d+$/;

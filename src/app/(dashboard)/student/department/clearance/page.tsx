@@ -17,9 +17,10 @@ import {
   getDepartmentByCode,
   getStudentClearanceRequests,
   getClearanceItemForRequest,
-  getRequirementsBySource,
+  getRequirementsByMultipleSources,
   getSystemSettings,
 } from "@/lib/supabase";
+
 
 export default function DepartmentClearancePage() {
   const { profile, isLoading: authLoading } = useAuth();
@@ -53,11 +54,15 @@ export default function DepartmentClearancePage() {
       setActiveRequest(active);
 
       if (d) {
-        const [deptReqs, item] = await Promise.all([
-          getRequirementsBySource("department", d.id),
+        const reqMap = await getRequirementsByMultipleSources(
+          [{ source_type: "department", source_id: d.id }],
+          profile.year_level
+        );
+        const [item] = await Promise.all([
           active ? getClearanceItemForRequest(active.id, "department", d.id) : Promise.resolve(null),
         ]);
-        setRequirementCount(deptReqs.length);
+        setRequirementCount(reqMap[`department:${d.id}`]?.length ?? 0);
+
         setClearanceItem(item);
       }
     } catch (err) {

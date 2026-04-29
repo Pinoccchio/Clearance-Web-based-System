@@ -38,7 +38,7 @@ export interface ParsedData {
 
 const STUDENT_ID_REGEX = /^\d{4}-\d{4}-\d+$/;
 const EMAIL_DOMAIN = '@g.cjc.edu.ph';
-const VALID_YEAR_LEVELS = ['1', '2', '3', '4', '5'];
+const VALID_YEAR_LEVELS = ['1', '2', '3', '4'];
 
 // Column headers expected in the Excel file
 const EXPECTED_HEADERS = [
@@ -200,7 +200,7 @@ export function validateRows(
     if (!yearLevel) {
       errors.push({ row: rowNum, field: 'Year Level', message: 'Year level is required' });
     } else if (!VALID_YEAR_LEVELS.includes(yearLevel)) {
-      errors.push({ row: rowNum, field: 'Year Level', message: 'Must be 1, 2, 3, 4, or 5' });
+      errors.push({ row: rowNum, field: 'Year Level', message: 'Must be 1, 2, 3, or 4' });
     }
 
     // Validate Enrolled Clubs (optional)

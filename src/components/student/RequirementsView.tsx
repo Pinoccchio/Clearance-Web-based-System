@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Card } from "@/components/ui/Card";
-import { CheckSquare, Upload, ChevronDown, ChevronUp, ExternalLink, CheckCircle, Clock, XCircle, AlertCircle, PauseCircle } from "lucide-react";
+import { CheckSquare, Upload, ChevronDown, ChevronUp, ExternalLink, CheckCircle, Clock, XCircle, AlertCircle, PauseCircle, Loader2 } from "lucide-react";
 import { Requirement, SubmissionWithRequirement, ClearanceItem } from "@/lib/supabase";
 
 interface Source {
@@ -21,19 +21,11 @@ interface Props {
   submissionsByItem?: Record<string, SubmissionWithRequirement[]>;
 }
 
-function SkeletonRows() {
+function SimpleLoader() {
   return (
-    <div className="divide-y divide-gray-100 animate-pulse">
-      {[1, 2, 3].map((i) => (
-        <div key={i} className="px-6 py-4 flex gap-4 items-center">
-          <div className="w-6 h-4 bg-gray-200 rounded" />
-          <div className="flex-1 space-y-1.5">
-            <div className="h-4 bg-gray-200 rounded w-1/2" />
-            <div className="h-3 bg-gray-100 rounded w-1/3" />
-          </div>
-          <div className="h-5 w-16 bg-gray-100 rounded-full" />
-        </div>
-      ))}
+    <div className="flex flex-col items-center justify-center p-12">
+      <Loader2 className="w-8 h-8 text-blue-500 animate-spin mb-4" />
+      <p className="text-sm text-gray-500 font-medium">Loading requirements...</p>
     </div>
   );
 }
@@ -159,17 +151,7 @@ export default function RequirementsView({
   const hasSubmissions = !!(clearanceItemsBySource && submissionsByItem);
 
   if (loading) {
-    return (
-      <Card padding="none">
-        <div className="px-6 pt-5 pb-4 border-b border-gray-100">
-          <div className="flex items-center gap-2">
-            <CheckSquare className="w-5 h-5 text-cjc-gold" />
-            <span className="font-semibold text-cjc-navy">Requirements</span>
-          </div>
-        </div>
-        <SkeletonRows />
-      </Card>
-    );
+    return <SimpleLoader />;
   }
 
   if (sources.length === 0) {

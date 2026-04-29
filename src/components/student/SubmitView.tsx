@@ -352,7 +352,7 @@ export default function SubmitView({
   async function handleSubmitForReview(sourceId: string, item: ClearanceItem) {
     setSubmittingSource(sourceId);
     try {
-      await submitClearanceItem(item.id, studentId, item.status);
+      await submitClearanceItem(item.id, studentId);
       setSubmittedSources((prev) => new Set(prev).add(sourceId));
       showToast("success", "Submitted for review", "Your submission is now in the review queue.");
       onUploadComplete?.();
@@ -365,8 +365,9 @@ export default function SubmitView({
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-16">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+      <div className="flex flex-col items-center justify-center p-12 bg-white rounded-xl border border-gray-100 shadow-sm animate-in fade-in duration-500">
+        <Loader2 className="w-10 h-10 text-blue-500 animate-spin mb-4" />
+        <p className="text-gray-500 font-medium">Loading requirements...</p>
       </div>
     );
   }
@@ -505,6 +506,9 @@ export default function SubmitView({
         );
         const isOpen = openSections.has(source.id);
 
+        // If request exists but item doesn't yet, show checking state
+        const isChecking = !!clearanceRequest && !item;
+
         // Determine item status badge
         let badgeVariant: "default" | "warning" | "success" | "danger" | "onHold" | "neutral" = "default";
         let badgeLabel = "Not Started";
@@ -514,6 +518,7 @@ export default function SubmitView({
         else if (item?.status === "approved") { badgeVariant = "success"; badgeLabel = "Approved"; }
         else if (item?.status === "rejected") { badgeVariant = "danger"; badgeLabel = "Rejected"; }
         else if (item?.status === "on_hold") { badgeVariant = "onHold"; badgeLabel = "On Hold"; }
+        else if (isChecking) { badgeVariant = "neutral"; badgeLabel = "Initializing..."; }
 
         return (
           <Card key={source.id} padding="none" className="overflow-hidden">
@@ -589,6 +594,18 @@ export default function SubmitView({
               const isOnHold = item?.status === 'on_hold';
 
               const isAlreadySubmitted = isLocked || isRejected || isOnHold;
+
+              if (isChecking) {
+                return (
+                  <div className="border-t border-gray-100 p-8 flex flex-col items-center justify-center text-center space-y-3">
+                    <Loader2 className="w-6 h-6 animate-spin text-cjc-blue" />
+                    <div>
+                      <p className="text-sm font-medium text-cjc-navy">Syncing your clearance status...</p>
+                      <p className="text-xs text-gray-400 mt-1">This usually takes just a few seconds.</p>
+                    </div>
+                  </div>
+                );
+              }
 
               return (
               <div className="border-t border-gray-100">
@@ -781,7 +798,7 @@ export default function SubmitView({
                                     </div>
                                   ) : !item ? (
                                     <p className="text-xs text-gray-400 italic">
-                                      Clearance item not yet created.
+                                      {clearanceRequest ? "Syncing..." : "Clearance item not yet created."}
                                     </p>
                                   ) : null}
 

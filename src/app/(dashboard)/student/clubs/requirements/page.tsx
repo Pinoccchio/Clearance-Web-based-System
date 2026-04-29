@@ -52,7 +52,7 @@ export default function StudentClubsRequirementsPage() {
       const reqsBySource: Record<string, Requirement[]> = {};
       await Promise.all(
         validClubs.map(async (club) => {
-          const reqs = await getPublishedRequirementsBySource("club", club.id);
+          const reqs = await getPublishedRequirementsBySource("club", club.id, profile.year_level);
           reqsBySource[club.id] = reqs;
         })
       );

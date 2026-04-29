@@ -67,7 +67,7 @@ export default function CsgDepartmentLguSubmitPage() {
       setActiveRequest(active);
 
       if (d) {
-        const reqs = await getPublishedRequirementsBySource("csg_department_lgu", d.id);
+        const reqs = await getPublishedRequirementsBySource("csg_department_lgu", d.id, profile.year_level);
         if (cancelled.value || gen !== loadGenRef.current) return;
         setRequirements(reqs);
 

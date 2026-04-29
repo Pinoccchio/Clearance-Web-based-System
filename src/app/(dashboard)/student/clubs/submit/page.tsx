@@ -90,7 +90,7 @@ export default function StudentClubsSubmitPage() {
 
       await Promise.all(
         validClubs.map(async (club) => {
-          const reqs = await getPublishedRequirementsBySource("club", club.id);
+          const reqs = await getPublishedRequirementsBySource("club", club.id, profile.year_level);
           if (cancelled.value || gen !== loadGenRef.current) return;
           reqsBySource[club.id] = reqs;
 

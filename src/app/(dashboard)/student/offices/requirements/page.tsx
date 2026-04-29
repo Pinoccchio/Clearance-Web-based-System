@@ -31,7 +31,8 @@ export default function OfficesRequirementsPage() {
       setOffices(allOffices);
 
       const reqMap = await getPublishedRequirementsByMultipleSources(
-        allOffices.map((o) => ({ source_type: "office", source_id: o.id }))
+        allOffices.map((o) => ({ source_type: "office", source_id: o.id })),
+        profile.year_level
       );
 
       // Re-key from "office:UUID" → "UUID"

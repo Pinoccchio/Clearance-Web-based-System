@@ -2405,6 +2405,8 @@ export interface Requirement {
   requires_upload: boolean;
   is_published: boolean;
   is_attendance: boolean;
+  /** Array of year levels this requirement applies to. Empty = all years. Values: '1','2','3','4' */
+  applicable_year_levels: string[];
   first_published_at: string | null;
   order: number;
   created_at: string;
@@ -2415,7 +2417,9 @@ export interface Requirement {
 /** Get all requirements for a given source (department/office/club), with embedded links */
 export async function getRequirementsBySource(
   sourceType: string,
-  sourceId: string
+  sourceId: string,
+  studentYearLevel?: string | null
+
 ): Promise<Requirement[]> {
   const { data, error } = await supabase
     .from('requirements')
@@ -2426,11 +2430,22 @@ export async function getRequirementsBySource(
     .order('created_at', { ascending: true });
 
   if (error) throw error;
-  return (data || []).map((r) => ({
+  
+  let requirements = data || [];
+  if (studentYearLevel) {
+    requirements = requirements.filter(r => 
+      !r.applicable_year_levels || 
+      r.applicable_year_levels.length === 0 || 
+      r.applicable_year_levels.includes(studentYearLevel)
+    );
+  }
+
+  return requirements.map((r) => ({
     ...r,
     links: ((r.links as RequirementLink[]) || []).sort((a, b) => a.order - b.order),
   }));
 }
+
 
 // ==========================================
 // Requirement Links CRUD
@@ -2521,6 +2536,7 @@ export async function createRequirement(data: {
   is_required?: boolean;
   requires_upload?: boolean;
   is_attendance?: boolean;
+  applicable_year_levels?: string[];
   order?: number;
 }): Promise<Requirement> {
   const { data: created, error } = await supabase
@@ -2530,13 +2546,37 @@ export async function createRequirement(data: {
     .single();
 
   if (error) throw error;
+
+  if (created.is_published) {
+    await revalidateSourceClearanceItems(
+      created.source_type,
+      created.source_id,
+      "A requirement was added after your submission. Please review and re-submit."
+    );
+  }
+
   return created;
+}
+
+export async function revalidateSourceClearanceItems(
+  sourceType: string,
+  sourceId: string,
+  reason?: string
+): Promise<number> {
+  const { data, error } = await supabase.rpc('revalidate_source_clearance_items', {
+    p_source_type: sourceType,
+    p_source_id: sourceId,
+    p_reason: reason ?? null,
+  });
+
+  if (error) throw error;
+  return typeof data === 'number' ? data : 0;
 }
 
 /** Update a requirement */
 export async function updateRequirement(
   id: string,
-  data: Partial<Pick<Requirement, 'name' | 'description' | 'is_required' | 'requires_upload' | 'is_attendance' | 'order' | 'is_published'>>
+  data: Partial<Pick<Requirement, 'name' | 'description' | 'is_required' | 'requires_upload' | 'is_attendance' | 'applicable_year_levels' | 'order' | 'is_published'>>
 ): Promise<Requirement> {
   const { data: updated, error } = await supabase
     .from('requirements')
@@ -2546,6 +2586,20 @@ export async function updateRequirement(
     .single();
 
   if (error) throw error;
+
+  const needsRevalidation =
+    Object.prototype.hasOwnProperty.call(data, 'applicable_year_levels') ||
+    Object.prototype.hasOwnProperty.call(data, 'is_required') ||
+    Object.prototype.hasOwnProperty.call(data, 'is_published');
+
+  if (needsRevalidation) {
+    await revalidateSourceClearanceItems(
+      updated.source_type,
+      updated.source_id,
+      "A requirement was updated after your submission. Please review and re-submit."
+    );
+  }
+
   return updated;
 }
 
@@ -3028,7 +3082,7 @@ export async function acknowledgeRequirement(data: {
 /** Set a clearance item's status to 'submitted' (visible to dept queue).
  *  Also clears previous review data so the department sees a fresh submission.
  *  Logs the transition to clearance_item_history. */
-export async function submitClearanceItem(
+async function submitClearanceItemLegacy(
   itemId: string,
   studentId: string,
   currentStatus: string
@@ -3058,14 +3112,30 @@ export async function submitClearanceItem(
   }
 }
 
+export async function submitClearanceItem(
+  itemId: string,
+  studentId: string
+): Promise<void> {
+  const { error } = await supabase.rpc('submit_clearance_item_if_complete', {
+    p_item_id: itemId,
+    p_student_id: studentId,
+  });
+  if (error) throw error;
+}
+
 
 /**
  * Get all requirements for multiple (source_type, source_id) pairs in one query.
  * Returns a map: `${source_type}:${source_id}` → Requirement[]
  */
+/**
+ * Get all requirements for multiple sources (staff view)
+ */
 export async function getRequirementsByMultipleSources(
-  sources: Array<{ source_type: string; source_id: string }>
+  sources: Array<{ source_type: string; source_id: string }>,
+  studentYearLevel?: string | null
 ): Promise<Record<string, Requirement[]>> {
+
   if (sources.length === 0) return {};
 
   // Fetch all requirements for any of these source_ids, with embedded links
@@ -3079,9 +3149,18 @@ export async function getRequirementsByMultipleSources(
 
   if (error) throw error;
 
+  let filteredData = data ?? [];
+  if (studentYearLevel) {
+    filteredData = filteredData.filter(r => 
+      !r.applicable_year_levels || 
+      r.applicable_year_levels.length === 0 || 
+      r.applicable_year_levels.includes(studentYearLevel)
+    );
+  }
+
   // Group by `${source_type}:${source_id}`
   const map: Record<string, Requirement[]> = {};
-  for (const req of data ?? []) {
+  for (const req of filteredData) {
     const key = `${req.source_type}:${req.source_id}`;
     if (!map[key]) map[key] = [];
     map[key].push({
@@ -3092,10 +3171,13 @@ export async function getRequirementsByMultipleSources(
   return map;
 }
 
+
 /** Get only published requirements for a given source (student-facing) */
 export async function getPublishedRequirementsBySource(
   sourceType: string,
-  sourceId: string
+  sourceId: string,
+  studentYearLevel?: string | null
+
 ): Promise<Requirement[]> {
   const { data, error } = await supabase
     .from('requirements')
@@ -3107,7 +3189,15 @@ export async function getPublishedRequirementsBySource(
     .order('created_at', { ascending: true });
 
   if (error) throw error;
-  return (data || []).map((r) => ({
+  let requirements = data || [];
+  if (studentYearLevel) {
+    requirements = requirements.filter(r => 
+      !r.applicable_year_levels || 
+      r.applicable_year_levels.length === 0 || 
+      r.applicable_year_levels.includes(studentYearLevel)
+    );
+  }
+  return requirements.map((r) => ({
     ...r,
     links: ((r.links as RequirementLink[]) || []).sort((a, b) => a.order - b.order),
   }));
@@ -3115,7 +3205,9 @@ export async function getPublishedRequirementsBySource(
 
 /** Get only published requirements for multiple sources (student-facing) */
 export async function getPublishedRequirementsByMultipleSources(
-  sources: Array<{ source_type: string; source_id: string }>
+  sources: Array<{ source_type: string; source_id: string }>,
+  studentYearLevel?: string | null
+
 ): Promise<Record<string, Requirement[]>> {
   if (sources.length === 0) return {};
 
@@ -3130,8 +3222,17 @@ export async function getPublishedRequirementsByMultipleSources(
 
   if (error) throw error;
 
+  let filteredData = data ?? [];
+  if (studentYearLevel) {
+    filteredData = filteredData.filter(r => 
+      !r.applicable_year_levels || 
+      r.applicable_year_levels.length === 0 || 
+      r.applicable_year_levels.includes(studentYearLevel)
+    );
+  }
+
   const map: Record<string, Requirement[]> = {};
-  for (const req of data ?? []) {
+  for (const req of filteredData) {
     const key = `${req.source_type}:${req.source_id}`;
     if (!map[key]) map[key] = [];
     map[key].push({

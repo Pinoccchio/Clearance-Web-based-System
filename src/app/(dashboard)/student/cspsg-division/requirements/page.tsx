@@ -30,7 +30,7 @@ export default function CspsgDivisionRequirementsPage() {
       setDivision(d);
 
       if (d) {
-        const reqs = await getPublishedRequirementsBySource("cspsg_division", d.id);
+        const reqs = await getPublishedRequirementsBySource("cspsg_division", d.id, profile.year_level);
         setRequirements(reqs);
       }
     } catch {

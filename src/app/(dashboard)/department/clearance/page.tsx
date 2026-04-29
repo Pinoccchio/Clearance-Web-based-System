@@ -144,9 +144,13 @@ export default function DepartmentClearancePage() {
 
   // Filters
   const [statusFilter, setStatusFilter] = useState("all");
+  const [yearLevelFilter, setYearLevelFilter] = useState("all");
+  const [studentTypeFilter, setStudentTypeFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("latest");
   const [search, setSearch] = useState("");
   const [periodFilter, setPeriodFilter] = useState("");
   const [distinctPeriods, setDistinctPeriods] = useState<DistinctPeriod[]>([]);
+
 
   const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
 
@@ -209,8 +213,13 @@ export default function DepartmentClearancePage() {
     setIsLoadingSubmissions(true);
     Promise.all([
       getSubmissionsByItem(selectedItem.id),
-      getRequirementsBySource(selectedItem.source_type, selectedItem.source_id),
+      getRequirementsBySource(
+        selectedItem.source_type, 
+        selectedItem.source_id,
+        selectedItem.request?.student?.year_level
+      ),
     ])
+
       .then(([subs, reqs]) => {
         setSubmissions(subs);
         setItemRequirements(reqs);
@@ -244,8 +253,41 @@ export default function DepartmentClearancePage() {
       studentNum.includes(search.toLowerCase());
     const matchesStatus =
       statusFilter === "all" || item.status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesYearLevel =
+      yearLevelFilter === "all" || student?.year_level === yearLevelFilter;
+    
+    const isCSP = student?.department === 'CSP' || !!student?.cspsg_division;
+    const matchesStudentType = 
+      studentTypeFilter === "all" || 
+      (studentTypeFilter === "csp" && isCSP) || 
+      (studentTypeFilter === "regular" && !isCSP);
+    
+    return matchesSearch && matchesStatus && matchesYearLevel && matchesStudentType;
   });
+
+  // Sorted items
+  const sorted = [...filtered].sort((a, b) => {
+    switch (sortBy) {
+      case "oldest":
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
+      case "name":
+        const nameA = `${a.request?.student?.first_name} ${a.request?.student?.last_name}`.toLowerCase();
+        const nameB = `${b.request?.student?.first_name} ${b.request?.student?.last_name}`.toLowerCase();
+        return nameA.localeCompare(nameB);
+      case "year_asc":
+        return (a.request?.student?.year_level || "").localeCompare(b.request?.student?.year_level || "");
+      case "year_desc":
+        return (b.request?.student?.year_level || "").localeCompare(a.request?.student?.year_level || "");
+      case "type":
+        const typeA = (a.request?.student?.department === 'CSP' || !!a.request?.student?.cspsg_division) ? "CSP" : "Regular";
+        const typeB = (b.request?.student?.department === 'CSP' || !!b.request?.student?.cspsg_division) ? "CSP" : "Regular";
+        return typeA.localeCompare(typeB);
+      case "latest":
+      default:
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    }
+  });
+
 
   async function handleAction() {
     if (!selectedItem || !actionType || !profile?.id) return;
@@ -330,15 +372,54 @@ export default function DepartmentClearancePage() {
           </div>
           <div className="w-full sm:w-48">
             <Select
+              options={[
+                { value: "all", label: "All Years" },
+                { value: "1", label: "1st Year" },
+                { value: "2", label: "2nd Year" },
+                { value: "3", label: "3rd Year" },
+                { value: "4", label: "4th Year" },
+              ]}
+              value={yearLevelFilter}
+              onChange={(e) => setYearLevelFilter(e.target.value)}
+            />
+          </div>
+          <div className="w-full sm:w-40">
+            <Select
+              options={[
+                { value: "all", label: "All Types" },
+                { value: "regular", label: "Regular" },
+                { value: "csp", label: "CSP" },
+              ]}
+              value={studentTypeFilter}
+              onChange={(e) => setStudentTypeFilter(e.target.value)}
+            />
+          </div>
+          <div className="w-full sm:w-48">
+            <Select
               options={STATUS_OPTIONS}
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
+            />
+          </div>
+          <div className="w-full sm:w-48">
+            <Select
+              options={[
+                { value: "latest", label: "Latest First" },
+                { value: "oldest", label: "Oldest First" },
+                { value: "name", label: "Student Name" },
+                { value: "year_asc", label: "Year Level (↑)" },
+                { value: "year_desc", label: "Year Level (↓)" },
+                { value: "type", label: "Student Type" },
+              ]}
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
             />
           </div>
           <Button variant="secondary" onClick={loadData} disabled={isLoading}>
             <RefreshCw className={`w-4 h-4 ${isLoading ? "animate-spin" : ""}`} />
             Refresh
           </Button>
+
         </div>
 
         {/* Main content */}
@@ -358,7 +439,7 @@ export default function DepartmentClearancePage() {
               title="No Clearance Requests"
               description="No students have submitted clearance requests for your department yet."
             />
-          ) : filtered.length === 0 ? (
+          ) : sorted.length === 0 ? (
             <EmptyState
               icon={<Search className="w-8 h-8 text-gray-400" />}
               title="No Results"
@@ -378,7 +459,8 @@ export default function DepartmentClearancePage() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filtered.map((item) => {
+                {sorted.map((item) => {
+
                   const s = item.request?.student;
                   const fullName = s ? `${s.first_name} ${s.last_name}` : "Unknown";
                   return (
@@ -463,8 +545,9 @@ export default function DepartmentClearancePage() {
         {/* Footer count */}
         {!isLoading && !error && items.length > 0 && (
           <p className="text-sm text-gray-500">
-            Showing {filtered.length} of {items.length} requests
+            Showing {sorted.length} of {items.length} requests
           </p>
+
         )}
       </div>
 

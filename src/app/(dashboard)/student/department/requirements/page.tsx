@@ -30,7 +30,7 @@ export default function DepartmentRequirementsPage() {
       setDept(d);
 
       if (d) {
-        const reqs = await getPublishedRequirementsBySource("department", d.id);
+        const reqs = await getPublishedRequirementsBySource("department", d.id, profile.year_level);
         setRequirements(reqs);
       }
     } catch {
